@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eaji — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#12141C; --surface:#1B1E29; --surface2:#232838; --line:#2C3140;
+  --gold:#F0A63C; --teal:#45C7B5; --coral:#E8654F;
+  --text:#F3F1EB; --muted:#8A8FA0;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);}
+body{
+  height:100%;margin:0;background:var(--bg);color:var(--text);
+  font-family:'Inter',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.num{font-family:'Sora',sans-serif;}
+.app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;}
+.topbar{
+  padding:20px 20px 12px;display:flex;align-items:center;justify-content:space-between;
+}
+.brand{font-family:'Sora',sans-serif;font-weight:700;font-size:19px;letter-spacing:-0.01em;}
+.brand span{color:var(--gold);}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--surface2);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--teal);}
+.screens{flex:1;overflow-y:auto;padding:4px 20px 100px;}
+.screen{display:none;}
+.screen.active{display:block;animation:rise .35s ease both;}
+@keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ---- Accueil ---- */
+.hero-card{
+  background:linear-gradient(155deg,var(--surface2),var(--surface));
+  border:1px solid var(--line); border-radius:20px; padding:22px 20px; margin-top:8px;
+}
+.hero-label{color:var(--muted);font-size:13px;margin:0 0 6px;}
+.hero-num{font-size:42px;font-weight:800;margin:0;line-height:1;}
+.hero-sub{font-size:13px;color:var(--muted);margin:6px 0 16px;}
+.progress-track{height:8px;border-radius:99px;background:var(--surface);overflow:hidden;border:1px solid var(--line);}
+.progress-fill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--teal),var(--gold));
+  transition:width 1.1s cubic-bezier(.2,.8,.2,1);}
+.progress-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--muted);}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;margin-top:14px;}
+.badge.wait{background:rgba(240,166,60,.14);color:var(--gold);}
+.badge.ok{background:rgba(69,199,181,.14);color:var(--teal);}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+.section-title{font-size:15px;font-weight:600;margin:26px 0 12px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.stat-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;}
+.stat-card .label{font-size:12px;color:var(--muted);margin:0 0 6px;}
+.stat-card .val{font-size:20px;font-weight:700;margin:0;}
+
+/* ---- Contenu ---- */
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;}
+.chip{padding:9px 15px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
+  font-size:13px;color:var(--muted);cursor:pointer;transition:.15s;}
+.chip.sel{background:var(--gold);color:#1A1206;border-color:var(--gold);font-weight:600;}
+.zone-list{display:flex;flex-direction:column;gap:10px;}
+.zone-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface);
+  border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;}
+.zone-item.sel{border-color:var(--teal);}
+.zone-name{font-size:14px;font-weight:500;}
+.zone-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.check{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);flex-shrink:0;}
+.zone-item.sel .check{border-color:var(--teal);background:var(--teal);position:relative;}
+.zone-item.sel .check::after{content:'';position:absolute;left:6px;top:2px;width:5px;height:9px;
+  border-right:2px solid #0D1512;border-bottom:2px solid #0D1512;transform:rotate(45deg);}
+.rule-box{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;
+  font-size:13px;color:var(--muted);line-height:1.55;}
+.rule-box b{color:var(--text);}
+
+/* ---- Paiements ---- */
+.balance-card{background:var(--surface2);border:1px solid var(--line);border-radius:20px;padding:22px 20px;margin-top:8px;}
+.balance-label{color:var(--muted);font-size:13px;margin:0 0 4px;}
+.balance-num{font-size:36px;font-weight:800;}
+.withdraw-btn{width:100%;margin-top:18px;padding:14px;border:none;border-radius:14px;background:var(--gold);
+  color:#1A1206;font-weight:700;font-size:15px;font-family:'Inter',sans-serif;cursor:pointer;}
+.pay-methods{display:flex;gap:10px;margin-top:26px;}
+.method{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 12px;text-align:center;font-size:12px;color:var(--muted);}
+.tx-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);}
+.tx-row:last-child{border-bottom:none;}
+.tx-name{font-size:13px;font-weight:500;}
+.tx-date{font-size:11px;color:var(--muted);margin-top:2px;}
+.tx-amt{font-size:14px;font-weight:700;color:var(--teal);}
+
+/* ---- Profil ---- */
+.profile-head{display:flex;align-items:center;gap:14px;margin:8px 0 24px;}
+.profile-avatar{width:60px;height:60px;border-radius:50%;background:var(--surface2);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--gold);}
+.profile-name{font-size:17px;font-weight:700;}
+.profile-loc{font-size:13px;color:var(--muted);margin-top:2px;}
+.info-list{display:flex;flex-direction:column;gap:1px;background:var(--line);border-radius:14px;overflow:hidden;}
+.info-row{display:flex;justify-content:space-between;padding:14px 16px;background:var(--surface);font-size:13px;}
+.info-row .k{color:var(--muted);}
+.verif{display:inline-flex;align-items:center;gap:6px;color:var(--teal);font-weight:600;}
+
+/* ---- Tab bar ---- */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;
+  display:flex;justify-content:center;
+  background:rgba(18,20,28,.92);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));
+}
+.tabbar-inner{max-width:480px;width:100%;display:flex;justify-content:space-around;}
+.tab{background:none;border:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;
+  display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:4px 10px;}
+.tab.active{color:var(--gold);}
+.tab-ic{width:20px;height:20px;display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">Ea<span>ji</span></div>
+    <div class="avatar">A</div>
+  </div>
+
+  <div class="screens">
+
+    <!-- ACCUEIL -->
+    <section class="screen active" id="s-accueil">
+      <div class="hero-card">
+        <p class="hero-label">Abonn&eacute;s v&eacute;rifi&eacute;s</p>
+        <p class="hero-num num" id="sub-count">0</p>
+        <p class="hero-sub">742 sur 1 000 requis pour ce type de contenu</p>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-meta"><span>0</span><span>1 000</span></div>
+        <div class="badge wait"><span class="badge-dot"></span>258 abonn&eacute;s avant &eacute;ligibilit&eacute;</div>
+      </div>
+
+      <div class="section-title">Aper&ccedil;u</div>
+      <div class="stat-grid">
+        <div class="stat-card"><p class="label">Zone</p><p class="val">Afrique</p></div>
+        <div class="stat-card"><p class="label">Contenu</p><p class="val">Vid&eacute;o</p></div>
+        <div class="stat-card"><p class="label">Solde en attente</p><p class="val">0 &euro;</p></div>
+        <div class="stat-card"><p class="label">Taux appliqu&eacute;</p><p class="val">&mdash;</p></div>
+      </div>
+    </section>
+
+    <!-- CONTENU -->
+    <section class="screen" id="s-contenu">
+      <div class="section-title" style="margin-top:14px;">Type de contenu</div>
+      <div class="chip-row" id="chip-row">
+        <div class="chip sel">Vid&eacute;o</div>
+        <div class="chip">Podcast</div>
+        <div class="chip">Article</div>
+        <div class="chip">Live</div>
+      </div>
+
+      <div class="section-title" style="margin-top:4px;">Zone g&eacute;ographique</div>
+      <div class="zone-list" id="zone-list">
+        <div class="zone-item sel"><div><div class="zone-name">Afrique</div><div class="zone-sub">54 pays &eacute;ligibles</div></div><div class="check"></div></div>
+        <div class="zone-item"><div><div class="zone-name">Cara&iuml;bes</div><div class="zone-sub">13 pays &eacute;ligibles</div></div><div class="check"></div></div>
+        <div class="zone-item"><div><div class="zone-name">Asie</div><div class="zone-sub">21 pays &eacute;ligibles</div></div><div class="check"></div></div>
+        <div class="zone-item"><div><div class="zone-name">Europe centrale</div><div class="zone-sub">9 pays &eacute;ligibles</div></div><div class="check"></div></div>
+      </div>
+
+      <div class="rule-box">
+        <b>Comment la r&eacute;mun&eacute;ration est calcul&eacute;e&nbsp;:</b> d&egrave;s 1 000 abonn&eacute;s v&eacute;rifi&eacute;s, un taux est appliqu&eacute; selon la combinaison zone &times; type de contenu. Les taux varient par march&eacute; pour refl&eacute;ter le co&ucirc;t de la vie et la valeur publicitaire locale.
+      </div>
+    </section>
+
+    <!-- PAIEMENTS -->
+    <section class="screen" id="s-paiements">
+      <div class="balance-card">
+        <p class="balance-label">Solde disponible</p>
+        <p class="balance-num num">142,50 &euro;</p>
+        <button class="withdraw-btn">Retirer</button>
+      </div>
+
+      <div class="section-title">Moyen de paiement</div>
+      <div class="pay-methods">
+        <div class="method">Mobile money</div>
+        <div class="method">Virement</div>
+        <div class="method">Carte</div>
+      </div>
+
+      <div class="section-title">Historique</div>
+      <div class="info-list" style="background:var(--surface);border-radius:16px;border:1px solid var(--line);padding:4px 16px;">
+        <div class="tx-row"><div><div class="tx-name">Paiement mensuel</div><div class="tx-date">3 sept. 2026</div></div><div class="tx-amt">+38,20 &euro;</div></div>
+        <div class="tx-row"><div><div class="tx-name">Paiement mensuel</div><div class="tx-date">3 ao&ucirc;t 2026</div></div><div class="tx-amt">+31,90 &euro;</div></div>
+        <div class="tx-row"><div><div class="tx-name">Paiement mensuel</div><div class="tx-date">3 juil. 2026</div></div><div class="tx-amt">+29,40 &euro;</div></div>
+      </div>
+    </section>
+
+    <!-- PROFIL -->
+    <section class="screen" id="s-profil">
+      <div class="profile-head">
+        <div class="profile-avatar">A</div>
+        <div>
+          <div class="profile-name">Amina D.</div>
+          <div class="profile-loc">Dakar, S&eacute;n&eacute;gal</div>
+        </div>
+      </div>
+      <div class="info-list">
+        <div class="info-row"><span class="k">Zone</span><span>Afrique</span></div>
+        <div class="info-row"><span class="k">Contenu principal</span><span>Vid&eacute;o</span></div>
+        <div class="info-row"><span class="k">V&eacute;rification</span><span class="verif">Confirm&eacute;e</span></div>
+        <div class="info-row"><span class="k">Moyen de paiement</span><span>Mobile money</span></div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="tabbar">
+    <div class="tabbar-inner">
+      <button class="tab active" data-target="s-accueil">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/></svg>
+        Accueil
+      </button>
+      <button class="tab" data-target="s-contenu">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg>
+        Contenu
+      </button>
+      <button class="tab" data-target="s-paiements">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/></svg>
+        Paiements
+      </button>
+      <button class="tab" data-target="s-profil">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8.5" r="3.3"/><path d="M5 20c1.2-4 4.3-6 7-6s5.8 2 7 6"/></svg>
+        Profil
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.target).classList.add('active');
+    document.querySelector('.screens').scrollTop=0;
+  });
+});
+document.querySelectorAll('.chip').forEach(c=>{
+  c.addEventListener('click',()=>{
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
+    c.classList.add('sel');
+  });
+});
+document.querySelectorAll('.zone-item').forEach(z=>{
+  z.addEventListener('click',()=>{
+    document.querySelectorAll('.zone-item').forEach(x=>x.classList.remove('sel'));
+    z.classList.add('sel');
+  });
+});
+// ==== Intégration API réelle ====
+// Une fois le backend déployé (Railway), remplace cette URL par la vraie.
+const API_BASE_URL = 'https://eajimmy-production.up.railway.app';
+const CREATOR_ID = 'creator_demo'; // en prod : l'id du créateur connecté
+const CREATOR_TOKEN = null; // en prod : le token de session obtenu après connexion + 2FA
+
+function updateDashboard({ subscribers, missingSubscribers, eligible, amount, currency }) {
+  const target = subscribers;
+  const pct = Math.min(100, (subscribers / 1000) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  const el = document.getElementById('sub-count');
+  let n = 0;
+  const t = setInterval(() => {
+    n += Math.max(1, Math.round(target / 20));
+    if (n >= target) { n = target; clearInterval(t); }
+    el.textContent = n.toLocaleString('fr-FR');
+  }, 30);
+
+  const badge = document.querySelector('.badge');
+  if (eligible) {
+    badge.className = 'badge ok';
+    badge.innerHTML = `<span class="badge-dot"></span>Éligible — ${amount} ${currency} ce mois-ci`;
+  } else {
+    badge.className = 'badge wait';
+    badge.innerHTML = `<span class="badge-dot"></span>${missingSubscribers} abonnés avant éligibilité`;
+  }
+}
+
+async function loadRealData() {
+  const res = await fetch(`${API_BASE_URL}/api/creators/${CREATOR_ID}/payout-preview?currency=USD`, {
+    headers: CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {},
+  });
+  if (!res.ok) throw new Error('API indisponible');
+  const data = await res.json();
+  updateDashboard({
+    subscribers: data.subscribers ?? 0,
+    missingSubscribers: data.missingSubscribers ?? 0,
+    eligible: data.eligible,
+    amount: data.amount,
+    currency: data.currency,
+  });
+}
+
+window.addEventListener('load', async () => {
+  try {
+    await loadRealData(); // vraie donnée si l'API est en ligne
+  } catch (e) {
+    // Repli démo tant que le backend n'est pas encore déployé
+    updateDashboard({ subscribers: 742, missingSubscribers: 258, eligible: false });
+  }
+});
+
+</script>
+</body>
+</html>

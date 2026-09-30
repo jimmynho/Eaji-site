@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eaji — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#12141C;--surface:#1B1E29;--surface2:#232838;--line:#2C3140;
+  --gold:#F0A63C;--teal:#45C7B5;--coral:#E8654F;
+  --text:#F3F1EB;--muted:#8A8FA0;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100%;}
+h1,h2,.num{font-family:'Sora',sans-serif;}
+.shell{max-width:960px;margin:0 auto;padding:20px 20px 60px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+.brand{font-family:'Sora',sans-serif;font-weight:700;font-size:19px;}
+.brand span{color:var(--gold);}
+.role-tag{font-size:12px;color:var(--teal);background:rgba(69,199,181,.14);padding:5px 12px;border-radius:99px;font-weight:600;}
+
+.tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:22px;padding-bottom:4px;}
+.tab{flex-shrink:0;padding:9px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
+  color:var(--muted);font-size:13px;cursor:pointer;font-weight:500;}
+.tab.active{background:var(--gold);color:#1A1206;border-color:var(--gold);font-weight:700;}
+
+.view{display:none;}
+.view.active{display:block;animation:rise .3s ease both;}
+@keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:26px;}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;}
+.kpi .label{font-size:12px;color:var(--muted);margin:0 0 6px;}
+.kpi .val{font-size:24px;font-weight:800;margin:0;}
+
+.section-title{font-size:15px;font-weight:600;margin:6px 0 12px;}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+th,td{padding:12px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--line);}
+th{color:var(--muted);font-weight:500;font-size:12px;}
+tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;}
+.badge.wait{background:rgba(240,166,60,.14);color:var(--gold);}
+.badge.ok{background:rgba(69,199,181,.14);color:var(--teal);}
+.badge.danger{background:rgba(232,101,79,.14);color:var(--coral);}
+.btn{padding:6px 13px;border-radius:9px;border:none;font-size:12px;font-weight:700;cursor:pointer;}
+.btn.approve{background:var(--teal);color:#0A2320;}
+.btn.remove{background:var(--coral);color:#2A0D07;}
+.btn:disabled{opacity:.4;cursor:default;}
+.empty{color:var(--muted);font-size:13px;padding:14px 2px;}
+
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px 24px;}
+.login-title{font-size:18px;font-weight:700;margin:0 0 4px;}
+.login-sub{font-size:13px;color:var(--muted);margin:0 0 22px;}
+.field-label{font-size:12px;color:var(--muted);margin:0 0 6px;display:block;}
+.field{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);
+  color:var(--text);font-size:14px;font-family:'Inter',sans-serif;margin-bottom:16px;}
+.field:focus{outline:none;border-color:var(--teal);}
+.login-btn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--gold);color:#1A1206;
+  font-weight:700;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;}
+.login-error{color:var(--coral);font-size:12px;margin:-8px 0 14px;display:none;}
+.login-hint{font-size:11px;color:var(--muted);margin-top:16px;text-align:center;}
+.logout-btn{background:none;border:1px solid var(--line);color:var(--muted);font-size:12px;padding:6px 12px;
+  border-radius:9px;cursor:pointer;font-family:'Inter',sans-serif;}
+</style>
+</head>
+<body>
+
+<!-- ÉCRAN DE CONNEXION -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <p class="login-title">Connexion administrateur</p>
+    <p class="login-sub" id="login-step-label">Réservé aux numéros de l'administrateur principal.</p>
+
+    <div id="step-credentials">
+      <label class="field-label">Numéro de téléphone</label>
+      <input class="field" id="admin-phone" placeholder="+243823239572" />
+      <label class="field-label">Mot de passe</label>
+      <input class="field" id="admin-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+      <p class="login-error" id="login-error-1">Numéro non reconnu comme administrateur principal.</p>
+      <button class="login-btn" onclick="checkCredentials()">Continuer</button>
+    </div>
+
+    <div id="step-2fa" style="display:none;">
+      <label class="field-label">Code envoyé par SMS</label>
+      <input class="field" id="admin-otp" placeholder="123456" />
+      <p class="login-error" id="login-error-2">Code invalide.</p>
+      <button class="login-btn" onclick="checkOtp()">Valider et entrer</button>
+    </div>
+
+    <p class="login-hint">Démo : n'importe quel mot de passe fonctionne, code de test <b>123456</b>. En production, ces deux écrans appellent /api/auth/login puis /api/auth/login/verify-2fa (voir api-server.js).</p>
+  </div>
+</div>
+
+<div class="shell" id="app-shell" style="display:none;">
+  <div class="topbar">
+    <div class="brand">Ea<span>ji</span> Admin</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="role-tag">Administrateur principal &mdash; Jimmy Komba</div>
+      <button class="logout-btn" onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-target="v-overview">Vue d'ensemble</div>
+    <div class="tab" data-target="v-creators">Cr&eacute;ateurs</div>
+    <div class="tab" data-target="v-moderation">Mod&eacute;ration</div>
+    <div class="tab" data-target="v-admins">Administrateurs</div>
+    <div class="tab" data-target="v-commissions">Commissions</div>
+    <div class="tab" data-target="v-security">S&eacute;curit&eacute;</div>
+  </div>
+
+  <!-- VUE D'ENSEMBLE -->
+  <section class="view active" id="v-overview">
+    <div class="kpi-grid">
+      <div class="kpi"><p class="label">Comptes cr&eacute;ateurs</p><p class="val">1 284</p></div>
+      <div class="kpi"><p class="label">&Eacute;ligibles ce mois</p><p class="val">312</p></div>
+      <div class="kpi"><p class="label">Signalements en attente</p><p class="val">4</p></div>
+      <div class="kpi"><p class="label">Commissions dues</p><p class="val">186 &euro;</p></div>
+    </div>
+    <div class="section-title">Derni&egrave;re activit&eacute;</div>
+    <table>
+      <tr><th>&Eacute;v&eacute;nement</th><th>D&eacute;tail</th><th>Date</th></tr>
+      <tr><td>Nouveau compte</td><td>Cr&eacute;ateur v&eacute;rifi&eacute; &mdash; RDC</td><td>Aujourd'hui</td></tr>
+      <tr><td>Signalement</td><td>Vid&eacute;o signal&eacute;e &mdash; contenu dangereux</td><td>Hier</td></tr>
+      <tr><td>Retrait</td><td>142,50 &euro; vers&eacute;s &mdash; Ha&iuml;ti</td><td>Hier</td></tr>
+    </table>
+  </section>
+
+  <!-- CR&Eacute;ATEURS -->
+  <section class="view" id="v-creators">
+    <div class="section-title">Comptes cr&eacute;ateurs</div>
+    <table>
+      <tr><th>Nom</th><th>Pays</th><th>Abonn&eacute;s</th><th>Statut</th></tr>
+      <tr><td>Amina D.</td><td>RDC</td><td>742</td><td><span class="badge wait">En attente</span></td></tr>
+      <tr><td>Jean B.</td><td>Ha&iuml;ti</td><td>4 200</td><td><span class="badge ok">&Eacute;ligible</span></td></tr>
+      <tr><td>Grace K.</td><td>Nig&eacute;ria</td><td>1 050</td><td><span class="badge ok">&Eacute;ligible</span></td></tr>
+    </table>
+  </section>
+
+  <!-- MOD&Eacute;RATION -->
+  <section class="view" id="v-moderation">
+    <div class="section-title">Contenus signal&eacute;s</div>
+    <table id="mod-table">
+      <tr><th>Contenu</th><th>Cr&eacute;ateur</th><th>Motif</th><th></th></tr>
+      <tr data-row data-content-id="content_001"><td>Vid&eacute;o &mdash; "Live du 12/09"</td><td>Jean B.</td><td>Contenu dangereux</td>
+        <td><button class="btn remove" onclick="removeContent(this)">Retirer</button></td></tr>
+      <tr data-row data-content-id="content_002"><td>Publication &mdash; article</td><td>Grace K.</td><td>Signalement multiple</td>
+        <td><button class="btn remove" onclick="removeContent(this)">Retirer</button></td></tr>
+    </table>
+  </section>
+
+  <!-- ADMINS -->
+  <section class="view" id="v-admins">
+    <div class="section-title">Demandes d'administrateur en attente</div>
+    <table id="admin-table">
+      <tr><th>Nom</th><th>T&eacute;l&eacute;phone</th><th></th></tr>
+      <tr data-row><td>Paul M.</td><td>+243 8xx xxx xxx</td>
+        <td><button class="btn approve" onclick="approveAdmin(this)">Approuver</button></td></tr>
+    </table>
+    <div class="section-title" style="margin-top:24px;">Administrateurs actifs</div>
+    <table>
+      <tr><th>Nom</th><th>R&ocirc;le</th><th>Statut</th></tr>
+      <tr><td>Jimmy Komba</td><td>Administrateur principal</td><td><span class="badge ok">Actif</span></td></tr>
+    </table>
+  </section>
+
+  <!-- SÉCURITÉ -->
+  <section class="view" id="v-security">
+    <div class="section-title">Changer le mot de passe</div>
+    <div style="max-width:360px;">
+      <label class="field-label">Mot de passe actuel</label>
+      <input class="field" id="pwd-current" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+      <label class="field-label">Nouveau mot de passe</label>
+      <input class="field" id="pwd-new" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+      <label class="field-label">Confirmer le nouveau mot de passe</label>
+      <input class="field" id="pwd-confirm" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+      <p class="login-error" id="pwd-error">Les deux mots de passe ne correspondent pas.</p>
+      <p class="login-error" id="pwd-success" style="display:none;color:var(--teal);">Mot de passe mis à jour.</p>
+      <button class="login-btn" onclick="changePassword()">Mettre à jour</button>
+      <p class="login-hint">Démo : aucune vérification réelle du mot de passe actuel. En production, cet écran appelle POST /api/auth/change-password (voir api-server.js), qui vérifie le mot de passe actuel avant d'accepter le nouveau.</p>
+    </div>
+  </section>
+</div>
+
+
+<script>
+// ==== Intégration API réelle ====
+// Une fois le backend déployé (Railway), remplace cette URL par la vraie.
+const API_BASE_URL = 'https://eajimmy-production.up.railway.app';
+let ADMIN_ID = null;
+let PENDING_LOGIN_ID = null;
+
+// Les deux seuls numéros valides pour le compte administrateur principal
+// (repli local si l'API n'est pas encore en ligne).
+const ADMIN_PRINCIPAL_PHONES = ['+243823239572', '+243850171480'];
+const DEMO_OTP = '123456';
+
+function normalizePhone(v){ return (v || '').replace(/[\s.-]/g, ''); }
+
+async function checkCredentials(){
+  const phone = normalizePhone(document.getElementById('admin-phone').value);
+  const password = document.getElementById('admin-password').value;
+  const errorEl = document.getElementById('login-error-1');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: phone, password }),
+    });
+    if (!res.ok) throw new Error('identifiants refusés par l\'API');
+    const data = await res.json();
+    PENDING_LOGIN_ID = data.creatorId;
+  } catch (e) {
+    // Repli démo tant que le backend n'est pas déployé
+    if (!ADMIN_PRINCIPAL_PHONES.includes(phone) || !password) {
+      errorEl.style.display = 'block';
+      return;
+    }
+    PENDING_LOGIN_ID = 'admin_jimmy';
+  }
+
+  errorEl.style.display = 'none';
+  document.getElementById('step-credentials').style.display = 'none';
+  document.getElementById('step-2fa').style.display = 'block';
+  document.getElementById('login-step-label').textContent = 'Code de vérification envoyé par SMS.';
+}
+
+async function checkOtp(){
+  const code = document.getElementById('admin-otp').value.trim();
+  const errorEl = document.getElementById('login-error-2');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/login/verify-2fa`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ creatorId: PENDING_LOGIN_ID, code }),
+    });
+    if (!res.ok) throw new Error('code refusé par l\'API');
+    const data = await res.json();
+    ADMIN_ID = PENDING_LOGIN_ID;
+    sessionStorage.setItem('eaji_admin_token', data.token);
+  } catch (e) {
+    if (code !== DEMO_OTP) {
+      errorEl.style.display = 'block';
+      return;
+    }
+    ADMIN_ID = PENDING_LOGIN_ID;
+  }
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'block';
+}
+
+function authHeaders(){
+  const token = sessionStorage.getItem('eaji_admin_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    'x-admin-id': ADMIN_ID || '',
+  };
+}
+
+async function changePassword(){
+  const current = document.getElementById('pwd-current').value;
+  const next = document.getElementById('pwd-new').value;
+  const confirmVal = document.getElementById('pwd-confirm').value;
+  const errorEl = document.getElementById('pwd-error');
+  const successEl = document.getElementById('pwd-success');
+
+  successEl.style.display = 'none';
+  if (!current || !next || next !== confirmVal) {
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ currentPassword: current, newPassword: next }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || 'échec');
+  } catch (e) {
+    // Repli démo tant que le backend n'est pas déployé — pas de vérification réelle.
+  }
+
+  errorEl.style.display = 'none';
+  successEl.style.display = 'block';
+  document.getElementById('pwd-current').value = '';
+  document.getElementById('pwd-new').value = '';
+  document.getElementById('pwd-confirm').value = '';
+}
+
+function changePassword(){
+  const current = document.getElementById('pwd-current').value;
+  const next = document.getElementById('pwd-new').value;
+  const confirm = document.getElementById('pwd-confirm').value;
+  const errorEl = document.getElementById('pwd-error');
+  const successEl = document.getElementById('pwd-success');
+
+  successEl.style.display = 'none';
+  if (!current || !next || next !== confirm) {
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+  successEl.style.display = 'block';
+  document.getElementById('pwd-current').value = '';
+  document.getElementById('pwd-new').value = '';
+  document.getElementById('pwd-confirm').value = '';
+  // En production : appelle POST /api/auth/change-password avec { current, next } (voir api-server.js)
+}
+
+function logout(){
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('step-2fa').style.display = 'none';
+  document.getElementById('step-credentials').style.display = 'block';
+  document.getElementById('login-step-label').textContent = "Réservé aux numéros de l'administrateur principal.";
+  document.getElementById('admin-phone').value = '';
+  document.getElementById('admin-password').value = '';
+  document.getElementById('admin-otp').value = '';
+}
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.target).classList.add('active');
+  });
+});
+async function removeContent(btn){
+  const row=btn.closest('[data-row]');
+  const contentId = row.dataset.contentId || 'content_demo';
+  const reason = 'Contenu jugé dangereux';
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/content/${contentId}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+      body: JSON.stringify({ reason }),
+    });
+    if (!res.ok) throw new Error('échec API');
+  } catch (e) {
+    // Repli démo tant que le backend n'est pas déployé
+  }
+  row.querySelector('td:last-child').innerHTML='<span class="badge danger">Retir&eacute;</span>';
+  btn.remove();
+}
+
+async function approveAdmin(btn){
+  const row=btn.closest('[data-row]');
+  const name = row.children[0].textContent.trim();
+  const phone = row.children[1].textContent.trim();
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/admin/approve`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ name, phone }),
+    });
+    if (!res.ok) throw new Error('échec API');
+  } catch (e) {
+    // Repli démo tant que le backend n'est pas déployé
+  }
+  row.querySelector('td:last-child').innerHTML='<span class="badge ok">Approuv&eacute;</span>';
+  btn.remove();
+}
+</script>
+</body>
+</html>
