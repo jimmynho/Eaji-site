@@ -104,6 +104,54 @@ h1,h2,h3,.num{font-family:'Sora',sans-serif;}
 .info-row .k{color:var(--muted);}
 .verif{display:inline-flex;align-items:center;gap:6px;color:var(--teal);font-weight:600;}
 
+/* ---- Formulaires (inscription, profil) ---- */
+.field-label{font-size:12px;color:var(--muted);margin:0 0 6px;display:block;}
+.field{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
+  color:var(--text);font-size:14px;font-family:'Inter',sans-serif;margin-bottom:14px;}
+.field:focus{outline:none;border-color:var(--teal);}
+select.field{appearance:none;}
+.primary-btn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--gold);color:#1A1206;
+  font-weight:700;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;}
+.form-error{color:var(--coral);font-size:12px;margin:-8px 0 12px;display:none;}
+.form-success{color:var(--teal);font-size:12px;margin:-8px 0 12px;display:none;}
+
+/* ---- Écran d'inscription ---- */
+.onboarding{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.onboarding-card{width:100%;max-width:400px;}
+.onboarding-title{font-size:20px;font-weight:700;margin:0 0 4px;}
+.onboarding-sub{font-size:13px;color:var(--muted);margin:0 0 22px;}
+
+/* ---- Fil de contenus (Découvrir) ---- */
+.feed-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+.feed-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.feed-avatar{width:34px;height:34px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;
+  justify-content:center;font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0;}
+.feed-creator{font-size:13px;font-weight:600;}
+.feed-type{font-size:11px;color:var(--muted);}
+.follow-btn{margin-left:auto;background:none;border:1px solid var(--teal);color:var(--teal);font-size:11px;
+  font-weight:700;padding:5px 11px;border-radius:99px;cursor:pointer;font-family:'Inter',sans-serif;}
+.follow-btn.following{background:var(--teal);color:#0A2320;}
+.feed-title{font-size:14px;margin:0 0 12px;}
+.feed-actions{display:flex;gap:18px;border-top:1px solid var(--line);padding-top:10px;}
+.feed-action{background:none;border:none;color:var(--muted);font-size:12px;display:flex;align-items:center;gap:5px;
+  cursor:pointer;font-family:'Inter',sans-serif;padding:0;}
+.feed-action.liked{color:var(--coral);}
+.feed-action svg{width:16px;height:16px;}
+.comments-box{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:none;}
+.comments-box.open{display:block;}
+.comment-line{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.comment-line b{color:var(--text);}
+.comment-input-row{display:flex;gap:8px;margin-top:8px;}
+.comment-input-row input{flex:1;margin-bottom:0;padding:9px 12px;font-size:12px;}
+.comment-send{background:var(--teal);color:#0A2320;border:none;border-radius:9px;padding:0 14px;font-weight:700;
+  font-size:12px;cursor:pointer;}
+
+/* ---- Profil modifiable ---- */
+.avatar-edit{width:72px;height:72px;border-radius:50%;background:var(--surface2);border:2px dashed var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--gold);
+  cursor:pointer;margin-bottom:18px;}
+.avatar-edit-label{font-size:11px;color:var(--muted);text-align:center;margin:-12px 0 20px;}
+
 /* ---- Tab bar ---- */
 .tabbar{
   position:fixed;left:0;right:0;bottom:0;
@@ -120,7 +168,92 @@ h1,h2,h3,.num{font-family:'Sora',sans-serif;}
 </style>
 </head>
 <body>
-<div class="app">
+
+<!-- ÉCRAN D'INSCRIPTION -->
+<div class="onboarding" id="onboarding-screen">
+  <div class="onboarding-card">
+    <p class="onboarding-title">Cr&eacute;er ton compte Eaji</p>
+    <p class="onboarding-sub">Rejoins les cr&eacute;ateurs d&eacute;j&agrave; r&eacute;mun&eacute;r&eacute;s sur Eaji.</p>
+
+    <label class="field-label">Nom complet</label>
+    <input class="field" id="reg-name" placeholder="Amina D." />
+
+    <label class="field-label">Email</label>
+    <input class="field" id="reg-email" type="email" placeholder="toi@exemple.com" />
+
+    <label class="field-label">T&eacute;l&eacute;phone</label>
+    <input class="field" id="reg-phone" placeholder="+243900000001" />
+
+    <label class="field-label">Mot de passe</label>
+    <input class="field" id="reg-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+
+    <label class="field-label">Pays d'origine</label>
+    <select class="field" id="reg-country">
+      <option value="CD">R&eacute;publique d&eacute;mocratique du Congo</option>
+      <option value="NG">Nig&eacute;ria</option>
+      <option value="KE">Kenya</option>
+      <option value="SN">S&eacute;n&eacute;gal</option>
+      <option value="HT">Ha&iuml;ti</option>
+      <option value="JM">Jama&iuml;que</option>
+      <option value="DO">R&eacute;publique dominicaine</option>
+      <option value="PH">Philippines</option>
+      <option value="BD">Bangladesh</option>
+      <option value="IN">Inde</option>
+      <option value="ID">Indon&eacute;sie</option>
+      <option value="PL">Pologne</option>
+      <option value="CZ">Tch&eacute;quie</option>
+      <option value="HU">Hongrie</option>
+    </select>
+
+    <label class="field-label">Type de contenu principal</label>
+    <select class="field" id="reg-content-type">
+      <option value="video_courte">Vid&eacute;o courte</option>
+      <option value="video_longue">Vid&eacute;o longue</option>
+      <option value="podcast">Podcast</option>
+      <option value="audio">Audio</option>
+      <option value="live">Live</option>
+      <option value="photo">Photo</option>
+      <option value="livre">Livre</option>
+      <option value="pdf">PDF</option>
+      <option value="powerpoint">PowerPoint</option>
+      <option value="publication">Publication</option>
+      <option value="telechargement">T&eacute;l&eacute;chargement</option>
+    </select>
+
+    <p class="form-error" id="reg-error">Merci de remplir tous les champs.</p>
+    <p class="form-success" id="reg-success">Compte cr&eacute;&eacute; — v&eacute;rification en cours&hellip;</p>
+    <button class="primary-btn" onclick="registerCreator()">Cr&eacute;er mon compte</button>
+
+    <p class="avatar-edit-label" style="margin-top:18px;">D&eacute;j&agrave; inscrit ? <a href="#" onclick="showLoginForm();return false;" style="color:var(--teal);">Se connecter</a></p>
+  </div>
+</div>
+
+<!-- ÉCRAN DE CONNEXION (compte existant) -->
+<div class="onboarding" id="login-screen" style="display:none;">
+  <div class="onboarding-card">
+    <p class="onboarding-title">Connexion</p>
+    <p class="onboarding-sub">Retrouve ton compte Eaji.</p>
+
+    <div id="login-step-credentials">
+      <label class="field-label">Email</label>
+      <input class="field" id="login-email" type="email" placeholder="toi@exemple.com" />
+      <label class="field-label">Mot de passe</label>
+      <input class="field" id="login-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+      <p class="form-error" id="login-error-1">Identifiants invalides.</p>
+      <button class="primary-btn" onclick="loginCreator()">Continuer</button>
+    </div>
+
+    <div id="login-step-2fa" style="display:none;">
+      <label class="field-label">Code de v&eacute;rification</label>
+      <input class="field" id="login-otp" placeholder="123456" />
+      <p class="avatar-edit-label" id="login-dev-hint" style="margin:-8px 0 14px;"></p>
+      <p class="form-error" id="login-error-2">Code invalide.</p>
+      <button class="primary-btn" onclick="verifyLoginCode()">Valider et entrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="app-shell" style="display:none;">
   <div class="topbar">
     <div class="brand">Ea<span>ji</span></div>
     <div class="avatar">A</div>
@@ -146,6 +279,12 @@ h1,h2,h3,.num{font-family:'Sora',sans-serif;}
         <div class="stat-card"><p class="label">Solde en attente</p><p class="val">0 &euro;</p></div>
         <div class="stat-card"><p class="label">Taux appliqu&eacute;</p><p class="val">&mdash;</p></div>
       </div>
+    </section>
+
+    <!-- DÉCOUVRIR -->
+    <section class="screen" id="s-decouvrir">
+      <div class="section-title" style="margin-top:14px;">Contenus de la communaut&eacute;</div>
+      <div id="feed-list"></div>
     </section>
 
     <!-- CONTENU -->
@@ -196,18 +335,47 @@ h1,h2,h3,.num{font-family:'Sora',sans-serif;}
 
     <!-- PROFIL -->
     <section class="screen" id="s-profil">
-      <div class="profile-head">
-        <div class="profile-avatar">A</div>
-        <div>
-          <div class="profile-name">Amina D.</div>
-          <div class="profile-loc">Dakar, S&eacute;n&eacute;gal</div>
-        </div>
+      <div class="avatar-edit" id="avatar-edit">A</div>
+      <p class="avatar-edit-label">Touche pour changer ta photo</p>
+
+      <label class="field-label">Nom complet</label>
+      <input class="field" id="prof-name" value="Amina D." />
+
+      <label class="field-label">Num&eacute;ro pour les retraits (mobile money)</label>
+      <input class="field" id="prof-withdrawal-phone" placeholder="+243900000001" />
+
+      <label class="field-label">Pays d'origine</label>
+      <select class="field" id="prof-country">
+        <option value="CD" selected>R&eacute;publique d&eacute;mocratique du Congo</option>
+        <option value="NG">Nig&eacute;ria</option>
+        <option value="KE">Kenya</option>
+        <option value="SN">S&eacute;n&eacute;gal</option>
+        <option value="HT">Ha&iuml;ti</option>
+        <option value="JM">Jama&iuml;que</option>
+        <option value="DO">R&eacute;publique dominicaine</option>
+        <option value="PH">Philippines</option>
+        <option value="BD">Bangladesh</option>
+        <option value="IN">Inde</option>
+        <option value="ID">Indon&eacute;sie</option>
+        <option value="PL">Pologne</option>
+        <option value="CZ">Tch&eacute;quie</option>
+        <option value="HU">Hongrie</option>
+      </select>
+
+      <p class="form-success" id="prof-success">Profil mis &agrave; jour.</p>
+      <button class="primary-btn" onclick="saveProfile()">Enregistrer</button>
+
+      <div class="section-title" style="margin-top:24px;">Statistiques</div>
+      <div class="stat-grid">
+        <div class="stat-card"><p class="label">Abonn&eacute;s</p><p class="val" id="prof-stat-subs">742</p></div>
+        <div class="stat-card"><p class="label">J'aime re&ccedil;us</p><p class="val" id="prof-stat-likes">0</p></div>
       </div>
+
+      <div class="section-title" style="margin-top:24px;">Informations du compte</div>
       <div class="info-list">
         <div class="info-row"><span class="k">Zone</span><span>Afrique</span></div>
         <div class="info-row"><span class="k">Contenu principal</span><span>Vid&eacute;o</span></div>
         <div class="info-row"><span class="k">V&eacute;rification</span><span class="verif">Confirm&eacute;e</span></div>
-        <div class="info-row"><span class="k">Moyen de paiement</span><span>Mobile money</span></div>
       </div>
     </section>
 
@@ -218,6 +386,10 @@ h1,h2,h3,.num{font-family:'Sora',sans-serif;}
       <button class="tab active" data-target="s-accueil">
         <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/></svg>
         Accueil
+      </button>
+      <button class="tab" data-target="s-decouvrir">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5 13 13l-4.5 2.5L11 11z"/></svg>
+        D&eacute;couvrir
       </button>
       <button class="tab" data-target="s-contenu">
         <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg>
@@ -260,8 +432,9 @@ document.querySelectorAll('.zone-item').forEach(z=>{
 // ==== Intégration API réelle ====
 // Une fois le backend déployé (Railway), remplace cette URL par la vraie.
 const API_BASE_URL = 'https://eajimmy-production.up.railway.app';
-const CREATOR_ID = 'creator_demo'; // en prod : l'id du créateur connecté
-const CREATOR_TOKEN = null; // en prod : le token de session obtenu après connexion + 2FA
+let CREATOR_ID = 'creator_demo'; // en prod : l'id du créateur connecté
+let CREATOR_TOKEN = sessionStorage.getItem('eaji_creator_token'); // vrai jeton une fois connecté
+let PENDING_LOGIN_ID = null;
 
 function updateDashboard({ subscribers, missingSubscribers, eligible, amount, currency }) {
   const target = subscribers;
@@ -300,11 +473,279 @@ async function loadRealData() {
   });
 }
 
-window.addEventListener('load', async () => {
+// ==== Fil de contenus (démo si l'API ne renvoie rien) ====
+const DEMO_FEED = [
+  { id: 'c1', creator_name: 'Jean B.', content_type: 'video_courte', title: 'Live du marché de Port-au-Prince', like_count: 24, comment_count: 3 },
+  { id: 'c2', creator_name: 'Grace K.', content_type: 'podcast', title: 'Épisode 12 — Lancer son activité avec peu de moyens', like_count: 11, comment_count: 1 },
+  { id: 'c3', creator_name: 'Paul M.', content_type: 'photo', title: 'Coucher de soleil sur Kinshasa', like_count: 48, comment_count: 7 },
+];
+const likedSet = new Set();
+const followingSet = new Set();
+
+function contentTypeLabel(t) {
+  const labels = { video_courte: 'Vidéo courte', video_longue: 'Vidéo longue', podcast: 'Podcast', audio: 'Audio',
+    live: 'Live', photo: 'Photo', livre: 'Livre', pdf: 'PDF', powerpoint: 'PowerPoint', publication: 'Publication', telechargement: 'Téléchargement' };
+  return labels[t] || t;
+}
+
+function renderFeed(items) {
+  const list = document.getElementById('feed-list');
+  list.innerHTML = items.map(item => `
+    <div class="feed-card" data-id="${item.id}">
+      <div class="feed-head">
+        <div class="feed-avatar">${item.creator_name[0]}</div>
+        <div>
+          <div class="feed-creator">${item.creator_name}</div>
+          <div class="feed-type">${contentTypeLabel(item.content_type)}</div>
+        </div>
+        <button class="follow-btn" onclick="toggleFollow('${item.creator_id || item.id}', this)">Suivre</button>
+      </div>
+      <p class="feed-title">${item.title}</p>
+      <div class="feed-actions">
+        <button class="feed-action" onclick="toggleLike('${item.id}', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4 6 4c2.2 0 3.6 1.3 6 3.6C14.4 5.3 15.8 4 18 4c4 0 5.5 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
+          <span class="like-count">${item.like_count}</span>
+        </button>
+        <button class="feed-action" onclick="toggleComments('${item.id}', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span class="comment-count">${item.comment_count}</span>
+        </button>
+        <button class="feed-action" onclick="shareContent('${item.id}', '${item.title.replace(/'/g, "")}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v14"/></svg>
+          Partager
+        </button>
+      </div>
+      <div class="comments-box" id="comments-${item.id}">
+        <div class="comment-line"><b>Grace K.</b> Super contenu, merci !</div>
+        <div class="comment-input-row">
+          <input class="field" placeholder="Écrire un commentaire…" id="comment-input-${item.id}">
+          <button class="comment-send" onclick="postComment('${item.id}')">Envoyer</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadFeed() {
   try {
-    await loadRealData(); // vraie donnée si l'API est en ligne
+    const res = await fetch(`${API_BASE_URL}/api/feed`);
+    if (!res.ok) throw new Error('offline');
+    const data = await res.json();
+    renderFeed(data.items.length ? data.items : DEMO_FEED);
   } catch (e) {
-    // Repli démo tant que le backend n'est pas encore déployé
+    renderFeed(DEMO_FEED);
+  }
+}
+
+async function toggleLike(contentId, btn) {
+  const isLiked = likedSet.has(contentId);
+  const countEl = btn.querySelector('.like-count');
+  const newCount = isLiked ? parseInt(countEl.textContent) - 1 : parseInt(countEl.textContent) + 1;
+  countEl.textContent = newCount;
+  btn.classList.toggle('liked', !isLiked);
+  isLiked ? likedSet.delete(contentId) : likedSet.add(contentId);
+  try {
+    await fetch(`${API_BASE_URL}/api/content/${contentId}/like`, {
+      method: isLiked ? 'DELETE' : 'POST',
+      headers: CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {},
+    });
+  } catch (e) { /* repli visuel déjà appliqué */ }
+}
+
+function toggleComments(contentId, btn) {
+  document.getElementById(`comments-${contentId}`).classList.toggle('open');
+}
+
+async function postComment(contentId) {
+  const input = document.getElementById(`comment-input-${contentId}`);
+  const text = input.value.trim();
+  if (!text) return;
+  const box = document.getElementById(`comments-${contentId}`);
+  const line = document.createElement('div');
+  line.className = 'comment-line';
+  line.innerHTML = `<b>Toi</b> ${text}`;
+  box.insertBefore(line, box.querySelector('.comment-input-row'));
+  input.value = '';
+  const card = box.closest('.feed-card');
+  const countEl = card.querySelector('.comment-count');
+  countEl.textContent = parseInt(countEl.textContent) + 1;
+  try {
+    await fetch(`${API_BASE_URL}/api/content/${contentId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
+      body: JSON.stringify({ text }),
+    });
+  } catch (e) { /* repli visuel déjà appliqué */ }
+}
+
+async function toggleFollow(creatorId, btn) {
+  const isFollowing = followingSet.has(creatorId);
+  btn.textContent = isFollowing ? 'Suivre' : 'Suivi';
+  btn.classList.toggle('following', !isFollowing);
+  isFollowing ? followingSet.delete(creatorId) : followingSet.add(creatorId);
+  try {
+    await fetch(`${API_BASE_URL}/api/creators/${creatorId}/follow`, {
+      method: isFollowing ? 'DELETE' : 'POST',
+      headers: CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {},
+    });
+  } catch (e) { /* repli visuel déjà appliqué */ }
+}
+
+function shareContent(contentId, title) {
+  const url = `${location.origin}${location.pathname}#content-${contentId}`;
+  if (navigator.share) {
+    navigator.share({ title: `Eaji — ${title}`, url });
+  } else {
+    navigator.clipboard?.writeText(url);
+    alert('Lien copié : ' + url);
+  }
+}
+
+// ==== Inscription ====
+async function registerCreator() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const countryCode = document.getElementById('reg-country').value;
+  const primaryContentType = document.getElementById('reg-content-type').value;
+  const errorEl = document.getElementById('reg-error');
+  const successEl = document.getElementById('reg-success');
+
+  if (!name || !email || !phone || !password) {
+    errorEl.style.display = 'block';
+    successEl.style.display = 'none';
+    return;
+  }
+  errorEl.style.display = 'none';
+
+  const zoneByCountry = { CD: 'afrique', NG: 'afrique', KE: 'afrique', SN: 'afrique', HT: 'caraibes', JM: 'caraibes',
+    DO: 'caraibes', PH: 'asie', BD: 'asie', IN: 'asie', ID: 'asie', PL: 'europe_centrale', CZ: 'europe_centrale', HU: 'europe_centrale' };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, password, countryCode, zone: zoneByCountry[countryCode], primaryContentType }),
+    });
+    if (!res.ok) throw new Error('échec API');
+    const data = await res.json();
+    CREATOR_ID = data.creatorId;
+  } catch (e) {
+    // Repli démo tant que le backend n'est pas encore déployé ou accessible
+  }
+
+  successEl.style.display = 'block';
+  document.getElementById('prof-name').value = name;
+  document.querySelector('.avatar').textContent = name[0].toUpperCase();
+  document.getElementById('avatar-edit').textContent = name[0].toUpperCase();
+  document.getElementById('prof-country').value = countryCode;
+
+  // Le compte est créé mais pas encore de session ouverte : on enchaîne
+  // directement sur une vraie connexion pour obtenir un vrai jeton.
+  document.getElementById('login-email').value = email;
+  document.getElementById('login-password').value = password;
+  setTimeout(() => {
+    document.getElementById('onboarding-screen').style.display = 'none';
+    loginCreator();
+  }, 600);
+}
+
+// ==== Connexion (compte existant) ====
+function showLoginForm() {
+  document.getElementById('onboarding-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function loginCreator() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errorEl = document.getElementById('login-error-1');
+
+  document.getElementById('login-screen').style.display = 'flex';
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'échec');
+    PENDING_LOGIN_ID = data.creatorId;
+    errorEl.style.display = 'none';
+    document.getElementById('login-step-credentials').style.display = 'none';
+    document.getElementById('login-step-2fa').style.display = 'block';
+    document.getElementById('login-dev-hint').textContent = data.devCode
+      ? `Mode test — code : ${data.devCode}`
+      : 'Un code a été envoyé par SMS.';
+  } catch (e) {
+    errorEl.textContent = 'Connexion impossible — vérifie que le backend est bien en ligne.';
+    errorEl.style.display = 'block';
+  }
+}
+
+async function verifyLoginCode() {
+  const code = document.getElementById('login-otp').value.trim();
+  const errorEl = document.getElementById('login-error-2');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/login/verify-2fa`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ creatorId: PENDING_LOGIN_ID, code }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'code invalide');
+
+    CREATOR_TOKEN = data.token;
+    CREATOR_ID = PENDING_LOGIN_ID;
+    sessionStorage.setItem('eaji_creator_token', CREATOR_TOKEN);
+    sessionStorage.setItem('eaji_creator_id', CREATOR_ID);
+
+    errorEl.style.display = 'none';
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-shell').style.display = 'flex';
+    loadRealData(); // recharge le vrai solde/éligibilité maintenant qu'on a une vraie session
+  } catch (e) {
+    errorEl.style.display = 'block';
+  }
+}
+
+// ==== Profil ====
+async function saveProfile() {
+  const name = document.getElementById('prof-name').value.trim();
+  const withdrawalPhone = document.getElementById('prof-withdrawal-phone').value.trim();
+  const countryCode = document.getElementById('prof-country').value;
+  const successEl = document.getElementById('prof-success');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/creators/me/profile`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
+      body: JSON.stringify({ name, withdrawalPhone, countryCode }),
+    });
+    if (!res.ok) throw new Error('échec API');
+  } catch (e) { /* repli visuel — la mise à jour reste affichée côté écran */ }
+
+  successEl.style.display = 'block';
+  setTimeout(() => { successEl.style.display = 'none'; }, 2500);
+}
+
+window.addEventListener('load', async () => {
+  loadFeed();
+
+  if (CREATOR_TOKEN) {
+    // Session déjà ouverte (rechargement de page) : on saute directement dans l'app.
+    CREATOR_ID = sessionStorage.getItem('eaji_creator_id') || CREATOR_ID;
+    document.getElementById('onboarding-screen').style.display = 'none';
+    document.getElementById('app-shell').style.display = 'flex';
+  }
+
+  try {
+    await loadRealData(); // vraie donnée si l'API est en ligne et la session valide
+  } catch (e) {
+    // Repli démo tant que le backend n'est pas encore déployé, ou pas encore connecté
     updateDashboard({ subscribers: 742, missingSubscribers: 258, eligible: false });
   }
 });
