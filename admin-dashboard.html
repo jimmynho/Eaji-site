@@ -81,18 +81,40 @@ tr:last-child td{border-bottom:none;}
       <input class="field" id="admin-phone" placeholder="+243823239572" />
       <label class="field-label">Mot de passe</label>
       <input class="field" id="admin-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
-      <p class="login-error" id="login-error-1">Numéro non reconnu comme administrateur principal.</p>
+      <p class="login-error" id="login-error-1">Identifiants refusés.</p>
       <button class="login-btn" onclick="checkCredentials()">Continuer</button>
     </div>
 
     <div id="step-2fa" style="display:none;">
-      <label class="field-label">Code envoyé par SMS</label>
+      <label class="field-label">Code de vérification</label>
       <input class="field" id="admin-otp" placeholder="123456" />
+      <p class="login-hint" id="login-dev-hint" style="margin:-8px 0 14px;"></p>
       <p class="login-error" id="login-error-2">Code invalide.</p>
       <button class="login-btn" onclick="checkOtp()">Valider et entrer</button>
     </div>
 
-    <p class="login-hint">Démo : n'importe quel mot de passe fonctionne, code de test <b>123456</b>. En production, ces deux écrans appellent /api/auth/login puis /api/auth/login/verify-2fa (voir api-server.js).</p>
+    <p class="login-hint" id="bootstrap-link" style="cursor:pointer;" onclick="showBootstrap()">Premier accès ? Définir ton mot de passe</p>
+  </div>
+</div>
+
+<!-- CONFIGURATION INITIALE (une seule fois, à la création du compte admin principal) -->
+<div class="login-screen" id="bootstrap-screen" style="display:none;">
+  <div class="login-card">
+    <p class="login-title">Configurer le compte principal</p>
+    <p class="login-sub">À faire une seule fois — refusé ensuite si déjà fait.</p>
+
+    <label class="field-label">Nom</label>
+    <input class="field" id="bs-name" value="Jimmy Komba" />
+    <label class="field-label">Numéro principal</label>
+    <input class="field" id="bs-phone1" value="+243823239572" />
+    <label class="field-label">Numéro secondaire</label>
+    <input class="field" id="bs-phone2" value="+243850171480" />
+    <label class="field-label">Mot de passe</label>
+    <input class="field" id="bs-password" type="password" placeholder="Choisis un mot de passe fort" />
+    <p class="login-error" id="bootstrap-error">Échec — un administrateur principal existe peut-être déjà.</p>
+    <p class="login-hint" id="bootstrap-success" style="display:none;color:var(--teal);">Compte créé — connecte-toi maintenant.</p>
+    <button class="login-btn" onclick="bootstrapPrincipal()">Créer le compte principal</button>
+    <p class="login-hint" style="cursor:pointer;" onclick="showLogin()">Retour à la connexion</p>
   </div>
 </div>
 
@@ -189,18 +211,46 @@ tr:last-child td{border-bottom:none;}
 
 
 <script>
-// ==== Intégration API réelle ====
-// Une fois le backend déployé (Railway), remplace cette URL par la vraie.
+// ==== Intégration API réelle — authentification admin dédiée ====
 const API_BASE_URL = 'https://eajimmy-production.up.railway.app';
-let ADMIN_ID = null;
+let ADMIN_ID = sessionStorage.getItem('eaji_admin_id');
+let ADMIN_TOKEN = sessionStorage.getItem('eaji_admin_token');
 let PENDING_LOGIN_ID = null;
 
-// Les deux seuls numéros valides pour le compte administrateur principal
-// (repli local si l'API n'est pas encore en ligne).
-const ADMIN_PRINCIPAL_PHONES = ['+243823239572', '+243850171480'];
-const DEMO_OTP = '123456';
-
 function normalizePhone(v){ return (v || '').replace(/[\s.-]/g, ''); }
+
+function showBootstrap(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('bootstrap-screen').style.display = 'flex';
+}
+function showLogin(){
+  document.getElementById('bootstrap-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function bootstrapPrincipal(){
+  const name = document.getElementById('bs-name').value.trim();
+  const phones = [document.getElementById('bs-phone1').value.trim(), document.getElementById('bs-phone2').value.trim()].filter(Boolean);
+  const password = document.getElementById('bs-password').value;
+  const errorEl = document.getElementById('bootstrap-error');
+  const successEl = document.getElementById('bootstrap-success');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/admin/auth/bootstrap-principal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, password, phones }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'échec');
+    errorEl.style.display = 'none';
+    successEl.style.display = 'block';
+    setTimeout(showLogin, 1200);
+  } catch (e) {
+    errorEl.textContent = e.message;
+    errorEl.style.display = 'block';
+  }
+}
 
 async function checkCredentials(){
   const phone = normalizePhone(document.getElementById('admin-phone').value);
@@ -208,27 +258,24 @@ async function checkCredentials(){
   const errorEl = document.getElementById('login-error-1');
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    const res = await fetch(`${API_BASE_URL}/api/admin/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: phone, password }),
+      body: JSON.stringify({ phone, password }),
     });
-    if (!res.ok) throw new Error('identifiants refusés par l\'API');
     const data = await res.json();
-    PENDING_LOGIN_ID = data.creatorId;
+    if (!res.ok) throw new Error(data.error || 'Identifiants refusés.');
+    PENDING_LOGIN_ID = data.adminId;
+    errorEl.style.display = 'none';
+    document.getElementById('step-credentials').style.display = 'none';
+    document.getElementById('step-2fa').style.display = 'block';
+    document.getElementById('login-dev-hint').textContent = data.devCode
+      ? `Mode test — code : ${data.devCode}`
+      : 'Un code a été envoyé.';
   } catch (e) {
-    // Repli démo tant que le backend n'est pas déployé
-    if (!ADMIN_PRINCIPAL_PHONES.includes(phone) || !password) {
-      errorEl.style.display = 'block';
-      return;
-    }
-    PENDING_LOGIN_ID = 'admin_jimmy';
+    errorEl.textContent = e.message;
+    errorEl.style.display = 'block';
   }
-
-  errorEl.style.display = 'none';
-  document.getElementById('step-credentials').style.display = 'none';
-  document.getElementById('step-2fa').style.display = 'block';
-  document.getElementById('login-step-label').textContent = 'Code de vérification envoyé par SMS.';
 }
 
 async function checkOtp(){
@@ -236,34 +283,41 @@ async function checkOtp(){
   const errorEl = document.getElementById('login-error-2');
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/login/verify-2fa`, {
+    const res = await fetch(`${API_BASE_URL}/api/admin/auth/login/verify-2fa`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ creatorId: PENDING_LOGIN_ID, code }),
+      body: JSON.stringify({ adminId: PENDING_LOGIN_ID, code }),
     });
-    if (!res.ok) throw new Error('code refusé par l\'API');
     const data = await res.json();
-    ADMIN_ID = PENDING_LOGIN_ID;
-    sessionStorage.setItem('eaji_admin_token', data.token);
-  } catch (e) {
-    if (code !== DEMO_OTP) {
-      errorEl.style.display = 'block';
-      return;
-    }
-    ADMIN_ID = PENDING_LOGIN_ID;
-  }
+    if (!res.ok) throw new Error(data.error || 'Code invalide.');
 
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app-shell').style.display = 'block';
+    ADMIN_ID = data.adminId;
+    ADMIN_TOKEN = data.token;
+    sessionStorage.setItem('eaji_admin_id', ADMIN_ID);
+    sessionStorage.setItem('eaji_admin_token', ADMIN_TOKEN);
+
+    errorEl.style.display = 'none';
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-shell').style.display = 'block';
+  } catch (e) {
+    errorEl.textContent = e.message;
+    errorEl.style.display = 'block';
+  }
 }
 
 function authHeaders(){
-  const token = sessionStorage.getItem('eaji_admin_token');
   return {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    'x-admin-id': ADMIN_ID || '',
+    ...(ADMIN_TOKEN ? { Authorization: `Bearer ${ADMIN_TOKEN}` } : {}),
   };
+}
+
+// Session déjà ouverte (rechargement de page) : on saute directement dans le tableau de bord.
+if (ADMIN_TOKEN && ADMIN_ID) {
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-shell').style.display = 'block';
+  });
 }
 
 async function changePassword(){
@@ -318,6 +372,10 @@ function changePassword(){
 }
 
 function logout(){
+  sessionStorage.removeItem('eaji_admin_id');
+  sessionStorage.removeItem('eaji_admin_token');
+  ADMIN_ID = null;
+  ADMIN_TOKEN = null;
   document.getElementById('app-shell').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('step-2fa').style.display = 'none';
