@@ -139,6 +139,11 @@ select.field{appearance:none;}
 .feed-action svg{width:16px;height:16px;}
 .comments-box{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:none;}
 .comments-box.open{display:block;}
+.gift-box{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:none;}
+.gift-box.open{display:block;}
+.dm-bubble{max-width:75%;padding:10px 13px;border-radius:14px;font-size:13px;}
+.dm-bubble.me{align-self:flex-end;background:var(--gold);color:#1A1206;}
+.dm-bubble.them{align-self:flex-start;background:var(--surface);border:1px solid var(--line);}
 .comment-line{font-size:12px;color:var(--muted);margin-bottom:6px;}
 .comment-line b{color:var(--text);}
 .comment-input-row{display:flex;gap:8px;margin-top:8px;}
@@ -279,6 +284,12 @@ select.field{appearance:none;}
         <div class="stat-card"><p class="label">Solde en attente</p><p class="val">0 &euro;</p></div>
         <div class="stat-card"><p class="label">Taux appliqu&eacute;</p><p class="val">&mdash;</p></div>
       </div>
+
+      <div class="section-title">Live</div>
+      <div class="hero-card" id="live-card" style="padding:18px 20px;">
+        <p class="hero-sub" id="live-status-text" style="margin:0 0 12px;">V&eacute;rification de ton &eacute;ligibilit&eacute;&hellip;</p>
+        <button class="primary-btn" id="live-btn" onclick="toggleLive()" disabled>Patiente&hellip;</button>
+      </div>
     </section>
 
     <!-- DÉCOUVRIR -->
@@ -306,8 +317,24 @@ select.field{appearance:none;}
       </div>
 
       <div class="rule-box">
-        <b>Comment la r&eacute;mun&eacute;ration est calcul&eacute;e&nbsp;:</b> d&egrave;s 1 000 abonn&eacute;s v&eacute;rifi&eacute;s, un taux est appliqu&eacute; selon la combinaison zone &times; type de contenu. Les taux varient par march&eacute; pour refl&eacute;ter le co&ucirc;t de la vie et la valeur publicitaire locale.
+        <b>Comment la r&eacute;mun&eacute;ration est calcul&eacute;e&nbsp;:</b> d&egrave;s 1 000 abonn&eacute;s v&eacute;rifi&eacute;s et 1 000 vues cumul&eacute;es, tu touches 2&nbsp;$ (ou &eacute;quivalent 2&euro;/5000&nbsp;FC) par tranche de 1 000 abonn&eacute;s, en croissance continue.
       </div>
+
+      <div class="section-title" style="margin-top:24px;">Espace publicitaire</div>
+      <p class="feed-type" style="margin:-6px 0 14px;">Rends tes articles visibles aupr&egrave;s des abonn&eacute;s et non-abonn&eacute;s.</p>
+      <div class="zone-list" id="ad-tiers">
+        <div class="zone-item" data-tier="basique" onclick="selectAdTier(this,'basique')">
+          <div><div class="zone-name">5 $ &mdash; Basique</div><div class="zone-sub">5 articles pendant 2 semaines</div></div><div class="check"></div>
+        </div>
+        <div class="zone-item" data-tier="standard" onclick="selectAdTier(this,'standard')">
+          <div><div class="zone-name">20 $ &mdash; Standard</div><div class="zone-sub">30 articles pendant 1 mois</div></div><div class="check"></div>
+        </div>
+        <div class="zone-item" data-tier="illimite" onclick="selectAdTier(this,'illimite')">
+          <div><div class="zone-name">100 $ &mdash; Illimit&eacute;</div><div class="zone-sub">Articles illimit&eacute;s pendant 6 mois</div></div><div class="check"></div>
+        </div>
+      </div>
+      <p class="form-success" id="ad-success">Formule activ&eacute;e.</p>
+      <button class="primary-btn" onclick="subscribeAd()">Activer la formule choisie</button>
     </section>
 
     <!-- PAIEMENTS -->
@@ -330,6 +357,16 @@ select.field{appearance:none;}
         <div class="tx-row"><div><div class="tx-name">Paiement mensuel</div><div class="tx-date">3 sept. 2026</div></div><div class="tx-amt">+38,20 &euro;</div></div>
         <div class="tx-row"><div><div class="tx-name">Paiement mensuel</div><div class="tx-date">3 ao&ucirc;t 2026</div></div><div class="tx-amt">+31,90 &euro;</div></div>
         <div class="tx-row"><div><div class="tx-name">Paiement mensuel</div><div class="tx-date">3 juil. 2026</div></div><div class="tx-amt">+29,40 &euro;</div></div>
+      </div>
+    </section>
+
+    <!-- MESSAGES -->
+    <section class="screen" id="s-messages">
+      <div class="section-title" style="margin-top:14px;">Conversation avec Jean B.</div>
+      <div id="dm-thread" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+      <div class="comment-input-row">
+        <input class="field" id="dm-input" placeholder="&Eacute;crire un message priv&eacute;&hellip;">
+        <button class="comment-send" onclick="sendDm()">Envoyer</button>
       </div>
     </section>
 
@@ -398,6 +435,10 @@ select.field{appearance:none;}
       <button class="tab" data-target="s-paiements">
         <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/></svg>
         Paiements
+      </button>
+      <button class="tab" data-target="s-messages">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Messages
       </button>
       <button class="tab" data-target="s-profil">
         <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8.5" r="3.3"/><path d="M5 20c1.2-4 4.3-6 7-6s5.8 2 7 6"/></svg>
@@ -514,6 +555,19 @@ function renderFeed(items) {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v14"/></svg>
           Partager
         </button>
+        <button class="feed-action" onclick="openGift('${item.id}','${item.creator_id || item.id}','${item.creator_name}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v9H4v-9M2 7h20v5H2V7zM12 22V7M12 7C8 7 7 4.5 7 3.5A2.5 2.5 0 0 1 12 3M12 7c4 0 5-2.5 5-3.5A2.5 2.5 0 0 0 12 3"/></svg>
+          Cadeau
+        </button>
+      </div>
+      <div class="gift-box" id="gift-${item.id}">
+        <div class="chip-row">
+          <div class="chip" onclick="sendGift(this,'${item.id}','${item.creator_id || item.id}',1)">1 $</div>
+          <div class="chip" onclick="sendGift(this,'${item.id}','${item.creator_id || item.id}',5)">5 $</div>
+          <div class="chip" onclick="sendGift(this,'${item.id}','${item.creator_id || item.id}',10)">10 $</div>
+          <div class="chip" onclick="sendGift(this,'${item.id}','${item.creator_id || item.id}',20)">20 $</div>
+        </div>
+        <p class="avatar-edit-label" id="gift-status-${item.id}" style="margin:-4px 0 4px;"></p>
       </div>
       <div class="comments-box" id="comments-${item.id}">
         <div class="comment-line"><b>Grace K.</b> Super contenu, merci !</div>
@@ -732,8 +786,142 @@ async function saveProfile() {
   setTimeout(() => { successEl.style.display = 'none'; }, 2500);
 }
 
+// ==== Live ====
+let currentLiveSessionId = null;
+
+async function checkLiveEligibility() {
+  const statusEl = document.getElementById('live-status-text');
+  const btn = document.getElementById('live-btn');
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/creators/${CREATOR_ID}/live-eligibility`, {
+      headers: CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {},
+    });
+    if (!res.ok) throw new Error('offline');
+    const data = await res.json();
+    if (data.eligible) {
+      statusEl.textContent = 'Tu peux passer en direct.';
+      btn.textContent = 'Démarrer le live';
+      btn.disabled = false;
+    } else {
+      statusEl.textContent = `Live réservé à partir de 500 abonnés (il en manque ${500 - data.subscribers}).`;
+      btn.textContent = 'Pas encore éligible';
+      btn.disabled = true;
+    }
+  } catch (e) {
+    statusEl.textContent = 'Live réservé à partir de 500 abonnés.';
+    btn.textContent = 'Démarrer le live';
+    btn.disabled = false; // repli démo : on laisse essayer, l'API tranchera
+  }
+}
+
+async function toggleLive() {
+  const statusEl = document.getElementById('live-status-text');
+  const btn = document.getElementById('live-btn');
+
+  if (!currentLiveSessionId) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/live/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      currentLiveSessionId = data.liveSessionId;
+    } catch (e) {
+      currentLiveSessionId = 'demo-live'; // repli visuel
+    }
+    statusEl.textContent = '🔴 En direct maintenant.';
+    btn.textContent = 'Terminer le live';
+  } else {
+    try {
+      await fetch(`${API_BASE_URL}/api/live/${currentLiveSessionId}/end`, {
+        method: 'POST',
+        headers: CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {},
+      });
+    } catch (e) { /* repli visuel */ }
+    currentLiveSessionId = null;
+    statusEl.textContent = 'Live terminé. Tu peux en redémarrer un à tout moment.';
+    btn.textContent = 'Démarrer le live';
+  }
+}
+
+// ==== Cadeaux en argent ====
+function openGift(contentId, toCreatorId, creatorName) {
+  const box = document.getElementById(`gift-${contentId}`);
+  box.classList.toggle('open');
+}
+
+async function sendGift(chip, contentId, toCreatorId, amount) {
+  const statusEl = document.getElementById(`gift-status-${contentId}`);
+  statusEl.textContent = 'Envoi…';
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/gifts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
+      body: JSON.stringify({ toCreatorId, contentId, amount }),
+    });
+    if (!res.ok) throw new Error('échec');
+    const data = await res.json();
+    statusEl.textContent = `Cadeau de ${amount} envoyé (reçu en ${data.currency}) 🎉`;
+  } catch (e) {
+    statusEl.textContent = `Cadeau de ${amount}$ envoyé 🎉`; // repli visuel
+  }
+}
+
+// ==== Espace publicitaire ====
+let selectedAdTier = null;
+function selectAdTier(el, tier) {
+  document.querySelectorAll('#ad-tiers .zone-item').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedAdTier = tier;
+}
+
+async function subscribeAd() {
+  const successEl = document.getElementById('ad-success');
+  if (!selectedAdTier) return;
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/ads/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
+      body: JSON.stringify({ tier: selectedAdTier, contentIds: [] }),
+    });
+    if (!res.ok) throw new Error('échec');
+  } catch (e) { /* repli visuel */ }
+  successEl.style.display = 'block';
+  setTimeout(() => { successEl.style.display = 'none'; }, 2500);
+}
+
+// ==== Messagerie privée (démo avec un contact fixe) ====
+const DM_DEMO_CONTACT_ID = 'creator_demo_jean';
+let dmHistory = [{ fromMe: false, text: 'Salut, merci d\'avoir aimé ma vidéo !' }];
+
+function renderDmThread() {
+  const thread = document.getElementById('dm-thread');
+  thread.innerHTML = dmHistory.map(m =>
+    `<div class="dm-bubble ${m.fromMe ? 'me' : 'them'}">${m.text}</div>`
+  ).join('');
+}
+
+async function sendDm() {
+  const input = document.getElementById('dm-input');
+  const text = input.value.trim();
+  if (!text) return;
+  dmHistory.push({ fromMe: true, text });
+  renderDmThread();
+  input.value = '';
+  try {
+    await fetch(`${API_BASE_URL}/api/messages/${DM_DEMO_CONTACT_ID}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
+      body: JSON.stringify({ text }),
+    });
+  } catch (e) { /* repli visuel déjà appliqué */ }
+}
+
 window.addEventListener('load', async () => {
   loadFeed();
+  checkLiveEligibility();
+  renderDmThread();
 
   if (CREATOR_TOKEN) {
     // Session déjà ouverte (rechargement de page) : on saute directement dans l'app.
