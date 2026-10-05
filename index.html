@@ -734,7 +734,7 @@ async function loginCreator() {
       ? `Mode test — code : ${data.devCode}`
       : 'Un code a été envoyé par SMS.';
   } catch (e) {
-    errorEl.textContent = 'Connexion impossible — vérifie que le backend est bien en ligne.';
+    errorEl.textContent = e.message || 'Connexion impossible — vérifie que le backend est bien en ligne.';
     errorEl.style.display = 'block';
   }
 }
