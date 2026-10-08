@@ -177,7 +177,7 @@ select.field{appearance:none;}
 <!-- ÉCRAN D'INSCRIPTION -->
 <div class="onboarding" id="onboarding-screen">
   <div class="onboarding-card">
-    <p class="onboarding-title">Creacute;er ton compte Eaji</p>
+    <p class="onboarding-title">Cr&eacute;er ton compte Eaji</p>
     <p class="onboarding-sub">Rejoins les cr&eacute;ateurs d&eacute;j&agrave; r&eacute;mun&eacute;r&eacute;s sur Eaji.</p>
 
     <label class="field-label">Nom complet</label>
@@ -226,7 +226,7 @@ select.field{appearance:none;}
     </select>
 
     <p class="form-error" id="reg-error">Merci de remplir tous les champs.</p>
-    <p class="form-success" id="reg-success">Compte creacute;&eacute; — v&eacute;rification en cours&hellip;</p>
+    <p class="form-success" id="reg-success">Compte cr&eacute;&eacute; — v&eacute;rification en cours&hellip;</p>
     <button class="primary-btn" onclick="registerCreator()">Cr&eacute;er mon compte</button>
 
     <p class="avatar-edit-label" style="margin-top:18px;">D&eacute;j&agrave; inscrit ? <a href="#" onclick="showLoginForm();return false;" style="color:var(--teal);">Se connecter</a></p>
@@ -759,6 +759,7 @@ async function registerCreator() {
   const successEl = document.getElementById('reg-success');
 
   if (!name || !email || !phone || !password) {
+    errorEl.textContent = 'Merci de remplir tous les champs.';
     errorEl.style.display = 'block';
     successEl.style.display = 'none';
     return;
@@ -774,11 +775,17 @@ async function registerCreator() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, phone, password, countryCode, zone: zoneByCountry[countryCode], primaryContentType }),
     });
-    if (!res.ok) throw new Error('échec API');
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Inscription impossible pour le moment.');
     CREATOR_ID = data.creatorId;
   } catch (e) {
-    // Repli démo tant que le backend n'est pas encore déployé ou accessible
+    // On affiche la vraie raison et on s'arrête : pas de faux « compte créé ».
+    errorEl.textContent = e.message === 'Failed to fetch'
+      ? 'Impossible de joindre le serveur. Réessaie dans une minute.'
+      : e.message;
+    errorEl.style.display = 'block';
+    successEl.style.display = 'none';
+    return;
   }
 
   successEl.style.display = 'block';
