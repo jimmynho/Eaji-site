@@ -246,6 +246,7 @@ select.field{appearance:none;}
       <input class="field" id="login-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
       <p class="form-error" id="login-error-1">Identifiants invalides.</p>
       <button class="primary-btn" onclick="loginCreator()">Continuer</button>
+      <p class="avatar-edit-label" style="margin-top:18px;">Pas encore de compte ? <a href="#" onclick="showRegisterForm();return false;" style="color:var(--teal);">Cr&eacute;er un compte</a></p>
     </div>
 
     <div id="login-step-2fa" style="display:none;">
@@ -797,6 +798,11 @@ async function registerCreator() {
 }
 
 // ==== Connexion (compte existant) ====
+function showRegisterForm() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('onboarding-screen').style.display = 'flex';
+}
+
 function showLoginForm() {
   document.getElementById('onboarding-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
