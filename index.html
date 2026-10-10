@@ -1260,7 +1260,7 @@ async function loginCreator() {
     document.getElementById('login-step-credentials').style.display = 'none';
     document.getElementById('login-step-2fa').style.display = 'block';
     document.getElementById('login-dev-hint').textContent = data.devCode
-      ? `Mode test — code : ${data.devCode}`
+      ? `Ton code : ${data.devCode} (l'email n'a pas pu être envoyé, le voici directement)`
       : `Code envoyé par email à ${email}. Il arrive en quelques secondes.`;
     setTimeout(() => document.getElementById('login-otp').focus(), 50);
   } catch (e) {
@@ -1551,7 +1551,7 @@ async function requestPhoneChange() {
     const d = await apiCall('/api/auth/change-phone/request', { method: 'POST', body: { newPhone } });
     PHONE_REQUEST_ID = d.requestId;
     document.getElementById('phone-code-step').style.display = 'block';
-    status.textContent = d.devCode ? `${d.message} Code : ${d.devCode}` : d.message;
+    status.textContent = d.devCode ? `${d.message} ${d.devCode}` : d.message;
   } catch (e) { status.textContent = e.message; }
 }
 async function confirmPhoneChange() {
