@@ -214,6 +214,30 @@ select.field{appearance:none;}
   display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:4px 2px;flex:1 1 0;min-width:0;}
 .tab.active{color:var(--gold);}
 .tab-ic{width:20px;height:20px;display:block;}
+/* ---- Argent : paiement, premium, contenus payants, publicité ---- */
+.pay-sheet{position:fixed;inset:0;background:rgba(10,11,16,.88);z-index:70;display:none;align-items:flex-end;justify-content:center;}
+.pay-card{background:var(--surface);border:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));}
+.pay-amount{font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:var(--gold);margin:4px 0 12px;}
+.pay-steps{margin:0 0 14px;padding-left:20px;font-size:13px;line-height:1.6;}
+.pay-ref{font-family:'Sora',sans-serif;font-weight:700;color:var(--teal);letter-spacing:.06em;}
+.pay-numbers{white-space:pre-line;font-weight:600;}
+.pay-state{font-size:11px;padding:3px 8px;border-radius:99px;background:var(--surface2);color:var(--muted);white-space:nowrap;}
+.pay-state.confirme{color:var(--teal);background:rgba(69,199,181,.14);}
+.pay-state.en_attente{color:var(--gold);background:rgba(240,166,60,.14);}
+.pay-state.refuse{color:var(--coral);background:rgba(232,101,79,.14);}
+.premium-badge{display:inline-block;font-size:11px;font-weight:700;color:#1A1206;background:var(--gold);border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:middle;}
+.lock-box{background:var(--surface2);border:1px dashed var(--line);border-radius:12px;padding:14px;margin:8px 0;font-size:13px;}
+.lock-box .mini-btn{margin-right:6px;}
+.ad-card{border-color:rgba(240,166,60,.35);}
+.ad-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);margin-right:4px;}
+.plan-row{display:flex;gap:10px;margin:10px 0;}
+.plan-btn{flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:12px;color:var(--text);cursor:pointer;text-align:left;font-size:12px;}
+.plan-btn b{display:block;font-family:'Sora',sans-serif;font-size:15px;margin-bottom:2px;}
+.plan-btn.best{border-color:var(--gold);}
+.biz-badge{display:inline-block;font-size:11px;font-weight:700;color:#0A2320;background:var(--teal);border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:middle;}
+.biz-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 12px;}
+.biz-stats div{background:var(--surface2);border-radius:12px;padding:10px;text-align:center;font-size:11px;color:var(--muted);}
+.biz-stats b{display:block;font-family:'Sora',sans-serif;font-size:17px;color:var(--text);}
 </style>
 </head>
 <body>
@@ -235,6 +259,7 @@ select.field{appearance:none;}
 
     <label class="field-label">Pays</label>
     <select class="field" id="reg-country"></select>
+    <p class="feed-type" id="reg-country-note" style="margin:-8px 0 14px;font-size:12px;"></p>
 
     <label class="field-label">T&eacute;l&eacute;phone</label>
     <div class="phone-row">
@@ -394,7 +419,12 @@ select.field{appearance:none;}
         <option value="abonnes">Mes abonnés seulement</option>
       </select>
       <label class="field-label" for="up-file" style="margin-top:10px;">Fichier</label>
-      <input class="field" id="up-file" type="file">
+      <input class="field" id="up-file" type="file" onchange="onUploadFileChange()">
+      <p class="feed-type" id="up-duration" style="margin:-6px 0 10px;"></p>
+      <div id="up-price-wrap" style="opacity:.55;">
+        <label class="field-label" for="up-price">Prix de vente en dollars (optionnel, membres premium)</label>
+        <input class="field" id="up-price" inputmode="decimal" placeholder="Laisse vide pour un contenu gratuit">
+      </div>
       <p class="form-error" id="up-error" style="margin-top:8px;"></p>
       <p class="form-success" id="up-success" style="margin-top:8px;">Contenu publié.</p>
       <button class="primary-btn" id="up-btn" onclick="uploadContent()">Publier</button>
@@ -411,15 +441,10 @@ select.field{appearance:none;}
       </div>
 
       <div class="section-title" style="margin-top:4px;">Zone g&eacute;ographique</div>
-      <div class="zone-list" id="zone-list">
-        <div class="zone-item sel"><div><div class="zone-name">Afrique</div><div class="zone-sub">54 pays &eacute;ligibles</div></div><div class="check"></div></div>
-        <div class="zone-item"><div><div class="zone-name">Cara&iuml;bes</div><div class="zone-sub">13 pays &eacute;ligibles</div></div><div class="check"></div></div>
-        <div class="zone-item"><div><div class="zone-name">Asie</div><div class="zone-sub">21 pays &eacute;ligibles</div></div><div class="check"></div></div>
-        <div class="zone-item"><div><div class="zone-name">Europe centrale</div><div class="zone-sub">9 pays &eacute;ligibles</div></div><div class="check"></div></div>
-      </div>
+      <div class="zone-list" id="zone-list"></div>
 
       <div class="rule-box">
-        <b>Comment la r&eacute;mun&eacute;ration est calcul&eacute;e&nbsp;:</b> d&egrave;s 1 000 abonn&eacute;s v&eacute;rifi&eacute;s et 1 000 vues cumul&eacute;es, tu touches 2&nbsp;$ (ou &eacute;quivalent 2&euro;/5000&nbsp;FC) par tranche de 1 000 abonn&eacute;s, en croissance continue.
+        <b>Comment la r&eacute;mun&eacute;ration est calcul&eacute;e&nbsp;:</b> d&egrave;s 1 000 abonn&eacute;s v&eacute;rifi&eacute;s et 1 000 vues cumul&eacute;es, tu touches 2&nbsp;$ (ou &eacute;quivalent 2&euro;/5000&nbsp;FC) par tranche de 1 000 abonn&eacute;s, en croissance continue. Tout le monde peut ouvrir un compte&nbsp;; les gains sont r&eacute;serv&eacute;s aux cr&eacute;ateurs des pays monétis&eacute;s.
       </div>
 
       <div class="section-title" style="margin-top:24px;">Espace publicitaire</div>
@@ -437,26 +462,106 @@ select.field{appearance:none;}
       </div>
       <p class="form-success" id="ad-success">Formule activ&eacute;e.</p>
       <button class="primary-btn" onclick="subscribeAd()">Activer la formule choisie</button>
+
+      <div class="section-title" style="margin-top:24px;">Publicit&eacute; pour entreprises</div>
+      <p class="feed-type" style="margin:-6px 0 14px;">Affiche la banni&egrave;re ou la vid&eacute;o de ton entreprise dans le fil des utilisateurs d'un pays.</p>
+      <label class="field-label" for="bad-company">Nom de l'entreprise</label>
+      <input class="field" id="bad-company" placeholder="Ex : Boutique Mama Ngoy">
+      <label class="field-label" for="bad-message">Message (optionnel)</label>
+      <input class="field" id="bad-message" maxlength="200" placeholder="Ex : -20 % sur tous les pagnes ce mois-ci">
+      <label class="field-label" for="bad-link">Lien (optionnel)</label>
+      <input class="field" id="bad-link" placeholder="https://...">
+      <label class="field-label" for="bad-country">Pays de diffusion</label>
+      <select class="field" id="bad-country"></select>
+      <label class="field-label" for="bad-plan">Dur&eacute;e</label>
+      <select class="field" id="bad-plan">
+        <option value="semaine">7 jours &mdash; 10 $</option>
+        <option value="mois">30 jours &mdash; 30 $</option>
+        <option value="trimestre">90 jours &mdash; 75 $</option>
+      </select>
+      <label class="field-label" for="bad-file">Banni&egrave;re (image) ou vid&eacute;o</label>
+      <input class="field" id="bad-file" type="file" accept="image/*,video/*">
+      <p class="form-error" id="bad-error"></p>
+      <button class="primary-btn" id="bad-btn" onclick="createBusinessAd()">Cr&eacute;er l'annonce et payer</button>
+      <div class="settings-block" id="my-ads" style="margin-top:14px;"></div>
     </section>
 
     <!-- PAIEMENTS -->
     <section class="screen" id="s-paiements">
       <div class="balance-card">
-        <p class="balance-label">Solde disponible</p>
+        <p class="balance-label">Mes gains disponibles</p>
         <p class="balance-num num" id="balance-num">0</p>
+        <p class="balance-label" id="earn-usd"></p>
         <p class="balance-label" id="balance-estimate" style="margin-top:6px;"></p>
         <button class="withdraw-btn" onclick="requestWithdraw()">Retirer</button>
+        <p class="balance-label" id="earn-fee" style="margin-top:8px;">Frais de retrait : 15 %.</p>
         <p class="balance-label" id="withdraw-status" style="margin-top:10px;"></p>
       </div>
 
-      <div class="section-title">Moyen de paiement</div>
-      <div class="pay-methods">
-        <div class="method">Mobile money</div>
-        <div class="method">Virement</div>
-        <div class="method">Carte</div>
+      <div class="settings-block" style="margin-top:14px;">
+        <div class="section-title">Eaji Premium</div>
+        <p class="feed-type" id="premium-state" style="margin:-6px 0 8px;">&ndash;</p>
+        <p class="feed-type" style="margin:0 0 4px;">Regarde toutes les vid&eacute;os payantes, vends tes livres, documents, vid&eacute;os et musiques, badge &laquo;&nbsp;Premium&nbsp;&raquo; et plus de visibilit&eacute; dans le fil.</p>
+        <div class="plan-row">
+          <button class="plan-btn" onclick="buyPremium('premium_mois')"><b>1 mois</b><span id="premium-month-price">10 $</span></button>
+          <button class="plan-btn best" onclick="buyPremium('premium_annee')"><b>1 an</b><span id="premium-year-price">100 $</span><br>2 mois offerts</button>
+        </div>
       </div>
 
-      <div class="section-title">Historique</div>
+      <div class="settings-block">
+        <div class="section-title">Compte Entreprise</div>
+        <p class="feed-type" id="biz-state" style="margin:-6px 0 8px;">Pour les entreprises, boutiques, &eacute;glises, &eacute;coles, artistes&hellip;</p>
+        <div id="biz-offer">
+          <p class="feed-type" style="margin:0 0 4px;">Tout le premium + badge &laquo;&nbsp;Entreprise&nbsp;&raquo;, statistiques d&eacute;taill&eacute;es de ton public, et un message group&eacute; par jour &agrave; tous tes abonn&eacute;s.</p>
+          <div class="plan-row">
+            <button class="plan-btn" onclick="startPayment('entreprise_mois')"><b>1 mois</b><span id="biz-month-price">20 $</span></button>
+            <button class="plan-btn best" onclick="startPayment('entreprise_annee')"><b>1 an</b><span id="biz-year-price">200 $</span><br>2 mois offerts</button>
+          </div>
+        </div>
+        <div id="biz-space" style="display:none;">
+          <div class="biz-stats" id="biz-stats"></div>
+          <div class="feed-type" id="biz-top" style="margin:0 0 12px;"></div>
+          <label class="field-label" for="biz-message">Message &agrave; tous mes abonn&eacute;s (1 par jour)</label>
+          <textarea class="field" id="biz-message" rows="3" maxlength="1000" placeholder="Ex : Nouvelle collection disponible d&egrave;s samedi !"></textarea>
+          <button class="mini-btn" onclick="sendBroadcast()">Envoyer &agrave; tous mes abonn&eacute;s</button>
+          <p class="feed-type" id="biz-status" style="margin-top:8px;"></p>
+        </div>
+      </div>
+
+      <div class="settings-block">
+        <div class="section-title">Soutenir Eaji (don)</div>
+        <p class="feed-type" style="margin:-6px 0 10px;">Ton don aide Eaji &agrave; payer les cr&eacute;ateurs et &agrave; grandir.</p>
+        <div class="phone-row">
+          <input class="field" id="don-amount" inputmode="decimal" placeholder="Montant en dollars (ex : 5)" style="margin:0;">
+          <button class="mini-btn" onclick="donate()">Faire un don</button>
+        </div>
+      </div>
+
+      <div class="settings-block">
+        <div class="section-title">Transfert d'argent</div>
+        <p class="feed-type" id="wallet-off" style="margin:-6px 0 8px;"></p>
+        <div id="wallet-box" style="display:none;">
+          <p class="feed-type" style="margin:-6px 0 6px;">Solde du portefeuille : <b id="wallet-balance">0</b></p>
+          <p class="feed-type" id="wallet-fees" style="margin:0 0 10px;"></p>
+          <input class="field" id="wallet-amount" inputmode="decimal" placeholder="Montant en dollars">
+          <input class="field" id="wallet-to" placeholder="Email ou num&eacute;ro du destinataire (pour envoyer)">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mini-btn" onclick="walletDeposit()">D&eacute;poser</button>
+            <button class="mini-btn" onclick="walletSend()">Envoyer</button>
+            <button class="mini-btn" onclick="walletWithdraw()">Retirer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Mes paiements</div>
+      <div class="settings-block" id="my-payments"><p class="feed-type">Aucun paiement pour le moment.</p></div>
+
+      <div class="section-title">Mes gains et retraits</div>
+      <div class="info-list" id="earn-history" style="background:var(--surface);border-radius:16px;border:1px solid var(--line);padding:4px 16px;margin-bottom:14px;">
+        <p class="feed-empty">Aucun gain pour le moment.</p>
+      </div>
+
+      <div class="section-title">Paiements mensuels (2 $ / 1 000 abonn&eacute;s)</div>
       <div class="info-list" id="tx-list" style="background:var(--surface);border-radius:16px;border:1px solid var(--line);padding:4px 16px;">
         <p class="feed-empty">Aucun paiement pour le moment.</p>
       </div>
@@ -499,6 +604,7 @@ select.field{appearance:none;}
         <select class="field" id="prof-zone"></select>
         <label class="field-label">Pays</label>
         <select class="field" id="prof-country"></select>
+        <p class="feed-type" id="prof-country-note" style="margin:-8px 0 14px;font-size:12px;"></p>
         <label class="field-label">Langue</label>
         <select class="field" id="prof-language"></select>
         <label class="field-label">Devise pour tes gains</label>
@@ -674,8 +780,10 @@ function storeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { try { 
 function storeClear() { ['eaji_creator_token', 'eaji_creator_id'].forEach(k => { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} }); }
 let CREATOR_TOKEN = storeGet('eaji_creator_token'); // vrai jeton une fois connecté
 // ==== Pays, indicatifs, zones et langues ====
-const COUNTRIES = [["DZ", "Algérie", "+213", "afrique"], ["AO", "Angola", "+244", "afrique"], ["BJ", "Bénin", "+229", "afrique"], ["BW", "Botswana", "+267", "afrique"], ["BF", "Burkina Faso", "+226", "afrique"], ["BI", "Burundi", "+257", "afrique"], ["CV", "Cap-Vert", "+238", "afrique"], ["CM", "Cameroun", "+237", "afrique"], ["CF", "Centrafrique", "+236", "afrique"], ["TD", "Tchad", "+235", "afrique"], ["KM", "Comores", "+269", "afrique"], ["CG", "Congo-Brazzaville", "+242", "afrique"], ["CD", "RD Congo", "+243", "afrique"], ["CI", "Côte d'Ivoire", "+225", "afrique"], ["DJ", "Djibouti", "+253", "afrique"], ["EG", "Égypte", "+20", "afrique"], ["GQ", "Guinée équatoriale", "+240", "afrique"], ["ER", "Érythrée", "+291", "afrique"], ["SZ", "Eswatini", "+268", "afrique"], ["ET", "Éthiopie", "+251", "afrique"], ["GA", "Gabon", "+241", "afrique"], ["GM", "Gambie", "+220", "afrique"], ["GH", "Ghana", "+233", "afrique"], ["GN", "Guinée", "+224", "afrique"], ["GW", "Guinée-Bissau", "+245", "afrique"], ["KE", "Kenya", "+254", "afrique"], ["LS", "Lesotho", "+266", "afrique"], ["LR", "Liberia", "+231", "afrique"], ["LY", "Libye", "+218", "afrique"], ["MG", "Madagascar", "+261", "afrique"], ["MW", "Malawi", "+265", "afrique"], ["ML", "Mali", "+223", "afrique"], ["MR", "Mauritanie", "+222", "afrique"], ["MU", "Maurice", "+230", "afrique"], ["MA", "Maroc", "+212", "afrique"], ["MZ", "Mozambique", "+258", "afrique"], ["NA", "Namibie", "+264", "afrique"], ["NE", "Niger", "+227", "afrique"], ["NG", "Nigeria", "+234", "afrique"], ["RW", "Rwanda", "+250", "afrique"], ["ST", "Sao Tomé-et-Principe", "+239", "afrique"], ["SN", "Sénégal", "+221", "afrique"], ["SC", "Seychelles", "+248", "afrique"], ["SL", "Sierra Leone", "+232", "afrique"], ["SO", "Somalie", "+252", "afrique"], ["ZA", "Afrique du Sud", "+27", "afrique"], ["SS", "Soudan du Sud", "+211", "afrique"], ["SD", "Soudan", "+249", "afrique"], ["TZ", "Tanzanie", "+255", "afrique"], ["TG", "Togo", "+228", "afrique"], ["TN", "Tunisie", "+216", "afrique"], ["UG", "Ouganda", "+256", "afrique"], ["ZM", "Zambie", "+260", "afrique"], ["ZW", "Zimbabwe", "+263", "afrique"], ["AG", "Antigua-et-Barbuda", "+1268", "caraibes"], ["BS", "Bahamas", "+1242", "caraibes"], ["BB", "Barbade", "+1246", "caraibes"], ["CU", "Cuba", "+53", "caraibes"], ["DM", "Dominique", "+1767", "caraibes"], ["DO", "République dominicaine", "+1809", "caraibes"], ["GD", "Grenade", "+1473", "caraibes"], ["HT", "Haïti", "+509", "caraibes"], ["JM", "Jamaïque", "+1876", "caraibes"], ["KN", "Saint-Christophe-et-Niévès", "+1869", "caraibes"], ["LC", "Sainte-Lucie", "+1758", "caraibes"], ["VC", "Saint-Vincent-et-les-Grenadines", "+1784", "caraibes"], ["TT", "Trinité-et-Tobago", "+1868", "caraibes"], ["AF", "Afghanistan", "+93", "asie"], ["SA", "Arabie saoudite", "+966", "asie"], ["AM", "Arménie", "+374", "asie"], ["AZ", "Azerbaïdjan", "+994", "asie"], ["BH", "Bahreïn", "+973", "asie"], ["BD", "Bangladesh", "+880", "asie"], ["BT", "Bhoutan", "+975", "asie"], ["MM", "Birmanie (Myanmar)", "+95", "asie"], ["BN", "Brunei", "+673", "asie"], ["KH", "Cambodge", "+855", "asie"], ["CN", "Chine", "+86", "asie"], ["KR", "Corée du Sud", "+82", "asie"], ["AE", "Émirats arabes unis", "+971", "asie"], ["GE", "Géorgie", "+995", "asie"], ["IN", "Inde", "+91", "asie"], ["ID", "Indonésie", "+62", "asie"], ["IQ", "Irak", "+964", "asie"], ["IR", "Iran", "+98", "asie"], ["IL", "Israël", "+972", "asie"], ["JP", "Japon", "+81", "asie"], ["JO", "Jordanie", "+962", "asie"], ["KZ", "Kazakhstan", "+7", "asie"], ["KG", "Kirghizistan", "+996", "asie"], ["KW", "Koweït", "+965", "asie"], ["LA", "Laos", "+856", "asie"], ["LB", "Liban", "+961", "asie"], ["MY", "Malaisie", "+60", "asie"], ["MV", "Maldives", "+960", "asie"], ["MN", "Mongolie", "+976", "asie"], ["NP", "Népal", "+977", "asie"], ["OM", "Oman", "+968", "asie"], ["UZ", "Ouzbékistan", "+998", "asie"], ["PK", "Pakistan", "+92", "asie"], ["PS", "Palestine", "+970", "asie"], ["PH", "Philippines", "+63", "asie"], ["QA", "Qatar", "+974", "asie"], ["SG", "Singapour", "+65", "asie"], ["LK", "Sri Lanka", "+94", "asie"], ["SY", "Syrie", "+963", "asie"], ["TJ", "Tadjikistan", "+992", "asie"], ["TW", "Taïwan", "+886", "asie"], ["TH", "Thaïlande", "+66", "asie"], ["TL", "Timor oriental", "+670", "asie"], ["TM", "Turkménistan", "+993", "asie"], ["TR", "Turquie", "+90", "asie"], ["VN", "Viêt Nam", "+84", "asie"], ["YE", "Yémen", "+967", "asie"], ["DE", "Allemagne", "+49", "europe_centrale"], ["AT", "Autriche", "+43", "europe_centrale"], ["HU", "Hongrie", "+36", "europe_centrale"], ["LI", "Liechtenstein", "+423", "europe_centrale"], ["PL", "Pologne", "+48", "europe_centrale"], ["SK", "Slovaquie", "+421", "europe_centrale"], ["SI", "Slovénie", "+386", "europe_centrale"], ["CH", "Suisse", "+41", "europe_centrale"], ["CZ", "Tchéquie", "+420", "europe_centrale"]]; // [code, nom, indicatif, zone]
-const ZONE_LABELS = { afrique: 'Afrique', caraibes: 'Caraïbes', asie: 'Asie', europe_centrale: 'Europe centrale' };
+const COUNTRIES = [["DZ", "Algérie", "+213", "afrique"], ["AO", "Angola", "+244", "afrique"], ["BJ", "Bénin", "+229", "afrique"], ["BW", "Botswana", "+267", "afrique"], ["BF", "Burkina Faso", "+226", "afrique"], ["BI", "Burundi", "+257", "afrique"], ["CV", "Cap-Vert", "+238", "afrique"], ["CM", "Cameroun", "+237", "afrique"], ["CF", "Centrafrique", "+236", "afrique"], ["TD", "Tchad", "+235", "afrique"], ["KM", "Comores", "+269", "afrique"], ["CG", "Congo-Brazzaville", "+242", "afrique"], ["CD", "RD Congo", "+243", "afrique"], ["CI", "Côte d'Ivoire", "+225", "afrique"], ["DJ", "Djibouti", "+253", "afrique"], ["EG", "Égypte", "+20", "afrique"], ["GQ", "Guinée équatoriale", "+240", "afrique"], ["ER", "Érythrée", "+291", "afrique"], ["SZ", "Eswatini", "+268", "afrique"], ["ET", "Éthiopie", "+251", "afrique"], ["GA", "Gabon", "+241", "afrique"], ["GM", "Gambie", "+220", "afrique"], ["GH", "Ghana", "+233", "afrique"], ["GN", "Guinée", "+224", "afrique"], ["GW", "Guinée-Bissau", "+245", "afrique"], ["KE", "Kenya", "+254", "afrique"], ["LS", "Lesotho", "+266", "afrique"], ["LR", "Liberia", "+231", "afrique"], ["LY", "Libye", "+218", "afrique"], ["MG", "Madagascar", "+261", "afrique"], ["MW", "Malawi", "+265", "afrique"], ["ML", "Mali", "+223", "afrique"], ["MR", "Mauritanie", "+222", "afrique"], ["MU", "Maurice", "+230", "afrique"], ["MA", "Maroc", "+212", "afrique"], ["MZ", "Mozambique", "+258", "afrique"], ["NA", "Namibie", "+264", "afrique"], ["NE", "Niger", "+227", "afrique"], ["NG", "Nigeria", "+234", "afrique"], ["RW", "Rwanda", "+250", "afrique"], ["ST", "Sao Tomé-et-Principe", "+239", "afrique"], ["SN", "Sénégal", "+221", "afrique"], ["SC", "Seychelles", "+248", "afrique"], ["SL", "Sierra Leone", "+232", "afrique"], ["SO", "Somalie", "+252", "afrique"], ["ZA", "Afrique du Sud", "+27", "afrique"], ["SS", "Soudan du Sud", "+211", "afrique"], ["SD", "Soudan", "+249", "afrique"], ["TZ", "Tanzanie", "+255", "afrique"], ["TG", "Togo", "+228", "afrique"], ["TN", "Tunisie", "+216", "afrique"], ["UG", "Ouganda", "+256", "afrique"], ["ZM", "Zambie", "+260", "afrique"], ["ZW", "Zimbabwe", "+263", "afrique"], ["AG", "Antigua-et-Barbuda", "+1268", "caraibes"], ["BS", "Bahamas", "+1242", "caraibes"], ["BB", "Barbade", "+1246", "caraibes"], ["CU", "Cuba", "+53", "caraibes"], ["DM", "Dominique", "+1767", "caraibes"], ["DO", "République dominicaine", "+1809", "caraibes"], ["GD", "Grenade", "+1473", "caraibes"], ["HT", "Haïti", "+509", "caraibes"], ["JM", "Jamaïque", "+1876", "caraibes"], ["KN", "Saint-Christophe-et-Niévès", "+1869", "caraibes"], ["LC", "Sainte-Lucie", "+1758", "caraibes"], ["VC", "Saint-Vincent-et-les-Grenadines", "+1784", "caraibes"], ["TT", "Trinité-et-Tobago", "+1868", "caraibes"], ["AF", "Afghanistan", "+93", "asie"], ["SA", "Arabie saoudite", "+966", "asie"], ["AM", "Arménie", "+374", "asie"], ["AZ", "Azerbaïdjan", "+994", "asie"], ["BH", "Bahreïn", "+973", "asie"], ["BD", "Bangladesh", "+880", "asie"], ["BT", "Bhoutan", "+975", "asie"], ["MM", "Birmanie (Myanmar)", "+95", "asie"], ["BN", "Brunei", "+673", "asie"], ["KH", "Cambodge", "+855", "asie"], ["CN", "Chine", "+86", "asie"], ["KR", "Corée du Sud", "+82", "asie"], ["AE", "Émirats arabes unis", "+971", "asie"], ["GE", "Géorgie", "+995", "asie"], ["IN", "Inde", "+91", "asie"], ["ID", "Indonésie", "+62", "asie"], ["IQ", "Irak", "+964", "asie"], ["IR", "Iran", "+98", "asie"], ["IL", "Israël", "+972", "asie"], ["JP", "Japon", "+81", "asie"], ["JO", "Jordanie", "+962", "asie"], ["KZ", "Kazakhstan", "+7", "asie"], ["KG", "Kirghizistan", "+996", "asie"], ["KW", "Koweït", "+965", "asie"], ["LA", "Laos", "+856", "asie"], ["LB", "Liban", "+961", "asie"], ["MY", "Malaisie", "+60", "asie"], ["MV", "Maldives", "+960", "asie"], ["MN", "Mongolie", "+976", "asie"], ["NP", "Népal", "+977", "asie"], ["OM", "Oman", "+968", "asie"], ["UZ", "Ouzbékistan", "+998", "asie"], ["PK", "Pakistan", "+92", "asie"], ["PS", "Palestine", "+970", "asie"], ["PH", "Philippines", "+63", "asie"], ["QA", "Qatar", "+974", "asie"], ["SG", "Singapour", "+65", "asie"], ["LK", "Sri Lanka", "+94", "asie"], ["SY", "Syrie", "+963", "asie"], ["TJ", "Tadjikistan", "+992", "asie"], ["TW", "Taïwan", "+886", "asie"], ["TH", "Thaïlande", "+66", "asie"], ["TL", "Timor oriental", "+670", "asie"], ["TM", "Turkménistan", "+993", "asie"], ["TR", "Turquie", "+90", "asie"], ["VN", "Viêt Nam", "+84", "asie"], ["YE", "Yémen", "+967", "asie"], ["DE", "Allemagne", "+49", "europe"], ["AT", "Autriche", "+43", "europe"], ["HU", "Hongrie", "+36", "europe"], ["LI", "Liechtenstein", "+423", "europe"], ["PL", "Pologne", "+48", "europe"], ["SK", "Slovaquie", "+421", "europe"], ["SI", "Slovénie", "+386", "europe"], ["CH", "Suisse", "+41", "europe"], ["CZ", "Tchéquie", "+420", "europe"], ["US", "États-Unis", "+1", "amerique"], ["CA", "Canada", "+1", "amerique"], ["MX", "Mexique", "+52", "amerique"], ["GT", "Guatemala", "+502", "amerique"], ["BZ", "Belize", "+501", "amerique"], ["HN", "Honduras", "+504", "amerique"], ["SV", "Salvador", "+503", "amerique"], ["NI", "Nicaragua", "+505", "amerique"], ["CR", "Costa Rica", "+506", "amerique"], ["PA", "Panama", "+507", "amerique"], ["CO", "Colombie", "+57", "amerique"], ["VE", "Venezuela", "+58", "amerique"], ["EC", "Équateur", "+593", "amerique"], ["PE", "Pérou", "+51", "amerique"], ["BO", "Bolivie", "+591", "amerique"], ["BR", "Brésil", "+55", "amerique"], ["PY", "Paraguay", "+595", "amerique"], ["UY", "Uruguay", "+598", "amerique"], ["AR", "Argentine", "+54", "amerique"], ["CL", "Chili", "+56", "amerique"], ["GY", "Guyana", "+592", "amerique"], ["SR", "Suriname", "+597", "amerique"], ["PR", "Porto Rico", "+1787", "amerique"], ["FR", "France", "+33", "europe"], ["BE", "Belgique", "+32", "europe"], ["NL", "Pays-Bas", "+31", "europe"], ["LU", "Luxembourg", "+352", "europe"], ["GB", "Royaume-Uni", "+44", "europe"], ["IE", "Irlande", "+353", "europe"], ["ES", "Espagne", "+34", "europe"], ["PT", "Portugal", "+351", "europe"], ["IT", "Italie", "+39", "europe"], ["MT", "Malte", "+356", "europe"], ["GR", "Grèce", "+30", "europe"], ["CY", "Chypre", "+357", "europe"], ["DK", "Danemark", "+45", "europe"], ["SE", "Suède", "+46", "europe"], ["NO", "Norvège", "+47", "europe"], ["FI", "Finlande", "+358", "europe"], ["IS", "Islande", "+354", "europe"], ["EE", "Estonie", "+372", "europe"], ["LV", "Lettonie", "+371", "europe"], ["LT", "Lituanie", "+370", "europe"], ["RO", "Roumanie", "+40", "europe"], ["BG", "Bulgarie", "+359", "europe"], ["HR", "Croatie", "+385", "europe"], ["RS", "Serbie", "+381", "europe"], ["BA", "Bosnie-Herzégovine", "+387", "europe"], ["ME", "Monténégro", "+382", "europe"], ["MK", "Macédoine du Nord", "+389", "europe"], ["AL", "Albanie", "+355", "europe"], ["XK", "Kosovo", "+383", "europe"], ["MD", "Moldavie", "+373", "europe"], ["UA", "Ukraine", "+380", "europe"], ["BY", "Biélorussie", "+375", "europe"], ["RU", "Russie", "+7", "europe"], ["MC", "Monaco", "+377", "europe"], ["AD", "Andorre", "+376", "europe"], ["SM", "Saint-Marin", "+378", "europe"], ["VA", "Vatican", "+39", "europe"], ["AU", "Australie", "+61", "oceanie"], ["NZ", "Nouvelle-Zélande", "+64", "oceanie"], ["PG", "Papouasie-Nouvelle-Guinée", "+675", "oceanie"], ["FJ", "Fidji", "+679", "oceanie"], ["SB", "Îles Salomon", "+677", "oceanie"], ["VU", "Vanuatu", "+678", "oceanie"], ["WS", "Samoa", "+685", "oceanie"], ["TO", "Tonga", "+676", "oceanie"], ["KI", "Kiribati", "+686", "oceanie"], ["TV", "Tuvalu", "+688", "oceanie"], ["NR", "Nauru", "+674", "oceanie"], ["PW", "Palaos", "+680", "oceanie"], ["FM", "Micronésie", "+691", "oceanie"], ["MH", "Îles Marshall", "+692", "oceanie"], ["HK", "Hong Kong", "+852", "asie"], ["MO", "Macao", "+853", "asie"]]; // [code, nom, indicatif, zone] — tous les pays du monde
+// Pays où les créateurs peuvent gagner de l'argent (même liste que world-countries.js sur le serveur).
+const MONETIZED_COUNTRIES = new Set(["DZ", "AO", "BJ", "BW", "BF", "BI", "CV", "CM", "CF", "TD", "KM", "CG", "CD", "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE", "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "MA", "MZ", "NA", "NE", "NG", "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG", "ZM", "ZW", "AG", "BS", "BB", "CU", "DM", "DO", "GD", "HT", "JM", "KN", "LC", "VC", "TT", "AF", "AM", "AZ", "BD", "BT", "MM", "KH", "CN", "GE", "IN", "ID", "IQ", "IR", "JO", "KZ", "KG", "LA", "LB", "MY", "MV", "MN", "NP", "UZ", "PK", "PS", "PH", "LK", "SY", "TJ", "TH", "TL", "TM", "TR", "VN", "YE", "MX", "GT", "BZ", "HN", "SV", "NI", "CO", "VE", "EC", "PE", "BO", "BR", "PY", "AR", "SR", "RS", "BA", "ME", "MK", "AL", "XK", "MD", "UA", "BY", "PG", "FJ", "SB", "VU", "WS", "TO", "KI", "TV", "FM", "MH"]);
+const ZONE_LABELS = { afrique: 'Afrique', caraibes: 'Caraïbes', amerique: 'Amérique', asie: 'Asie', europe: 'Europe', oceanie: 'Océanie' };
 const COUNTRY_BY_CODE = Object.fromEntries(COUNTRIES.map(c => [c[0], { code: c[0], name: c[1], dial: c[2], zone: c[3] }]));
 
 const LANG_NAMES = {
@@ -692,6 +800,12 @@ const LANG_NAMES = {
   fa: 'Persan', ps: 'Pachto', tr: 'Turc', he: 'Hébreu', kk: 'Kazakh', uz: 'Ouzbek', ky: 'Kirghize', tg: 'Tadjik', mn: 'Mongol',
   ne: 'Népalais', si: 'Cingalais', ka: 'Géorgien', hy: 'Arménien', az: 'Azéri',
   pl: 'Polonais (polski)', cs: 'Tchèque (čeština)', sk: 'Slovaque (slovenčina)', hu: 'Hongrois (magyar)', sl: 'Slovène (slovenščina)',
+  qu: 'Quechua', gn: 'Guarani', ay: 'Aymara', nah: 'Nahuatl', it: 'Italien (italiano)', nl: 'Néerlandais (Nederlands)',
+  sv: 'Suédois (svenska)', da: 'Danois (dansk)', no: 'Norvégien (norsk)', fi: 'Finnois (suomi)', el: 'Grec (ελληνικά)',
+  ro: 'Roumain (română)', bg: 'Bulgare (български)', hr: 'Croate (hrvatski)', sr: 'Serbe (српски)', uk: 'Ukrainien (українська)',
+  lt: 'Lituanien', lv: 'Letton', et: 'Estonien', ga: 'Irlandais', is: 'Islandais', sq: 'Albanais (shqip)', mk: 'Macédonien',
+  bs: 'Bosnien', be: 'Biélorusse', mt: 'Maltais', ca: 'Catalan', eu: 'Basque', mi: 'Maori', tpi: 'Tok Pisin', fj: 'Fidjien',
+  sm: 'Samoan', to: 'Tongien', bi: 'Bichelamar', yue: 'Cantonais',
 };
 const LANGS_INTL = ['fr', 'en', 'es', 'pt', 'ar', 'sw', 'zh', 'hi', 'ru', 'de'];
 const LANGS_BY_ZONE = {
@@ -700,7 +814,9 @@ const LANGS_BY_ZONE = {
   caraibes: ['ht', 'jam', 'pap', 'gcf'],
   asie: ['bn', 'ur', 'pa', 'ta', 'te', 'mr', 'id', 'ms', 'tl', 'vi', 'th', 'my', 'km', 'lo', 'ja', 'ko', 'fa', 'ps', 'tr', 'he',
          'kk', 'uz', 'ky', 'tg', 'mn', 'ne', 'si', 'ka', 'hy', 'az'],
-  europe_centrale: ['pl', 'cs', 'sk', 'hu', 'sl'],
+  amerique: ['qu', 'gn', 'ay', 'nah', 'ht'],
+  europe: ['pl', 'cs', 'sk', 'hu', 'sl', 'it', 'nl', 'sv', 'da', 'no', 'fi', 'el', 'ro', 'bg', 'hr', 'sr', 'uk', 'lt', 'lv', 'et', 'ga', 'is', 'sq', 'mk', 'bs', 'be', 'mt', 'ca', 'eu'],
+  oceanie: ['mi', 'tpi', 'fj', 'sm', 'to', 'bi'],
 };
 const LANGS_BY_COUNTRY = {
   CD: ['ln', 'sw', 'kg', 'lu'], CG: ['ln', 'ktu'], CM: ['ff', 'ewo', 'dua'], NG: ['ha', 'yo', 'ig'], KE: ['sw'], TZ: ['sw'],
@@ -709,6 +825,11 @@ const LANGS_BY_COUNTRY = {
   ZA: ['zu', 'xh', 'af', 'st', 'tn'], ZW: ['sn'], ZM: ['bem', 'ny'], MW: ['ny'], NE: ['ha'], MA: ['ber'], DZ: ['ber'],
   HT: ['ht'], JM: ['jam'], IN: ['hi', 'bn', 'ta', 'te', 'mr', 'pa'], PK: ['ur', 'pa'], BD: ['bn'], ID: ['id'], PH: ['tl'],
   VN: ['vi'], TH: ['th'], PL: ['pl'], CZ: ['cs'], SK: ['sk'], HU: ['hu'], SI: ['sl'],
+  PE: ['qu', 'ay'], BO: ['qu', 'ay', 'gn'], PY: ['gn'], MX: ['nah'], IT: ['it'], NL: ['nl'], BE: ['nl'], SE: ['sv'], DK: ['da'],
+  NO: ['no'], FI: ['fi'], GR: ['el'], CY: ['el'], RO: ['ro'], MD: ['ro'], BG: ['bg'], HR: ['hr'], RS: ['sr'], UA: ['uk'],
+  LT: ['lt'], LV: ['lv'], EE: ['et'], IE: ['ga'], IS: ['is'], AL: ['sq'], XK: ['sq'], MK: ['mk'], BA: ['bs', 'hr', 'sr'],
+  BY: ['be'], MT: ['mt'], ES: ['ca', 'eu'], AD: ['ca'], NZ: ['mi'], PG: ['tpi'], FJ: ['fj'], WS: ['sm'], TO: ['to'], VU: ['bi'],
+  HK: ['yue'], MO: ['yue'],
 };
 
 // Zone et pays devinés à partir du fuseau horaire de l'appareil (aucune autorisation demandée).
@@ -730,6 +851,19 @@ const TZ_COUNTRY = {
   Jerusalem: 'IL', Gaza: 'PS', Kuwait: 'KW', Qatar: 'QA', Bahrain: 'BH', Muscat: 'OM', Aden: 'YE', Thimphu: 'BT',
   Brunei: 'BN', Dili: 'TL', Maldives: 'MV', Taipei: 'TW', Warsaw: 'PL', Prague: 'CZ', Bratislava: 'SK', Budapest: 'HU',
   Ljubljana: 'SI', Vienna: 'AT', Berlin: 'DE', Zurich: 'CH', Vaduz: 'LI',
+  New_York: 'US', Chicago: 'US', Denver: 'US', Los_Angeles: 'US', Phoenix: 'US', Anchorage: 'US', Honolulu: 'US',
+  Toronto: 'CA', Vancouver: 'CA', Montreal: 'CA', Edmonton: 'CA', Winnipeg: 'CA', Halifax: 'CA', Mexico_City: 'MX', Cancun: 'MX',
+  Guatemala: 'GT', Belize: 'BZ', Tegucigalpa: 'HN', El_Salvador: 'SV', Managua: 'NI', Costa_Rica: 'CR', Panama: 'PA',
+  Bogota: 'CO', Caracas: 'VE', Guayaquil: 'EC', Lima: 'PE', La_Paz: 'BO', Sao_Paulo: 'BR', Manaus: 'BR', Fortaleza: 'BR',
+  Recife: 'BR', Bahia: 'BR', Asuncion: 'PY', Montevideo: 'UY', Buenos_Aires: 'AR', Cordoba: 'AR', Santiago: 'CL',
+  Guyana: 'GY', Paramaribo: 'SR', Puerto_Rico: 'PR', Paris: 'FR', Brussels: 'BE', Amsterdam: 'NL', Luxembourg: 'LU',
+  London: 'GB', Dublin: 'IE', Madrid: 'ES', Lisbon: 'PT', Rome: 'IT', Malta: 'MT', Athens: 'GR', Nicosia: 'CY',
+  Copenhagen: 'DK', Stockholm: 'SE', Oslo: 'NO', Helsinki: 'FI', Reykjavik: 'IS', Tallinn: 'EE', Riga: 'LV', Vilnius: 'LT',
+  Bucharest: 'RO', Sofia: 'BG', Zagreb: 'HR', Belgrade: 'RS', Sarajevo: 'BA', Podgorica: 'ME', Skopje: 'MK', Tirane: 'AL',
+  Chisinau: 'MD', Kiev: 'UA', Kyiv: 'UA', Minsk: 'BY', Moscow: 'RU', Monaco: 'MC', Andorra: 'AD', San_Marino: 'SM',
+  Vatican: 'VA', Sydney: 'AU', Melbourne: 'AU', Brisbane: 'AU', Perth: 'AU', Adelaide: 'AU', Auckland: 'NZ',
+  Port_Moresby: 'PG', Fiji: 'FJ', Guadalcanal: 'SB', Efate: 'VU', Apia: 'WS', Tongatapu: 'TO', Tarawa: 'KI', Funafuti: 'TV',
+  Nauru: 'NR', Palau: 'PW', Pohnpei: 'FM', Chuuk: 'FM', Majuro: 'MH', Hong_Kong: 'HK', Macau: 'MO',
 };
 function detectCountry() {
   try {
@@ -824,6 +958,8 @@ function wireCountryPicker(zoneId, countryId, dialId, langId, initialCountry, in
   const refresh = () => {
     const c = COUNTRY_BY_CODE[countrySel.value];
     if (dialEl && c) dialEl.textContent = c.dial;
+    const note = document.getElementById(countryId + '-note');
+    if (note && c) note.innerHTML = monetizationNote(c.code);
     if (langSel && c) fillLanguageSelect(langSel, c.code, langSel.value || initialLang);
   };
   zoneSel.onchange = () => { fillCountrySelect(countrySel, zoneSel.value); refresh(); };
@@ -832,7 +968,15 @@ function wireCountryPicker(zoneId, countryId, dialId, langId, initialCountry, in
   refresh();
 }
 
+// Explique, selon le pays, si le créateur peut gagner de l'argent.
+function monetizationNote(code) {
+  return MONETIZED_COUNTRIES.has(code)
+    ? '✅ Monétisation disponible : tu peux gagner de l\'argent avec tes contenus (avec un numéro de téléphone de ce pays).'
+    : 'ℹ️ Tout est gratuit et ouvert dans ce pays. La monétisation (gains des créateurs) est réservée à l\'Afrique, aux Caraïbes et aux pays en développement d\'Asie, d\'Amérique, d\'Europe et d\'Océanie. Tu peux tout de même publier, suivre, écrire, prendre le Premium ou faire de la publicité.';
+}
+
 let MY_COUNTRY = detectCountry();
+let MY_MONETIZED = true;
 let MY_CURRENCY = 'USD';
 let FEED_SCOPE = 'pays';
 let PENDING_LOGIN_ID = null;
@@ -867,6 +1011,21 @@ async function loadRealData() {
   });
   if (!res.ok) throw new Error('API indisponible');
   const data = await res.json();
+  MY_MONETIZED = data.monetized !== false;
+  if (!MY_MONETIZED) {
+    const why = data.monetizationReason === 'telephone'
+      ? 'Ajoute un numéro de téléphone de ton pays pour activer tes gains.'
+      : 'La monétisation n\'est pas disponible dans ton pays.';
+    document.getElementById('home-estimate').textContent = '—';
+    document.getElementById('balance-estimate').textContent = why;
+    updateDashboard({ subscribers: data.subscribers ?? 0, missingSubscribers: 0, eligible: false });
+    const badge = document.querySelector('.badge');
+    badge.className = 'badge wait';
+    badge.innerHTML = `<span class="badge-dot"></span>${why}`;
+    const up = document.getElementById('up-price-wrap');
+    if (up) up.style.display = 'none';
+    return;
+  }
   const estimate = formatMoney(data.amount || 0, data.currency || 'USD');
   document.getElementById('home-estimate').textContent = estimate;
   document.getElementById('balance-estimate').textContent = data.eligible
@@ -991,6 +1150,11 @@ async function uploadContent() {
 
   if (!CREATOR_TOKEN) { errorEl.textContent = 'Connecte-toi d\'abord.'; errorEl.style.display = 'block'; return; }
   if (!title || !file) { errorEl.textContent = 'Ajoute un titre et choisis un fichier.'; errorEl.style.display = 'block'; return; }
+  const durationSeconds = await readVideoDuration(file);
+  if (durationSeconds > 3600) { errorEl.textContent = 'Une vidéo ne peut pas dépasser 60 minutes.'; errorEl.style.display = 'block'; return; }
+  const priceText = document.getElementById('up-price').value.trim().replace(',', '.');
+  const salePrice = priceText ? parseFloat(priceText) : null;
+  if (priceText && !(salePrice > 0)) { errorEl.textContent = 'Prix de vente invalide.'; errorEl.style.display = 'block'; return; }
 
   const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CREATOR_TOKEN}` };
   btn.disabled = true;
@@ -1007,7 +1171,7 @@ async function uploadContent() {
 
     const r3 = await fetch(`${API_BASE_URL}/api/content`, {
       method: 'POST', headers,
-      body: JSON.stringify({ contentType, title, storageUrl: d1.storageKey, visibilityScope, fileSizeBytes: file.size }),
+      body: JSON.stringify({ contentType, title, storageUrl: d1.storageKey, visibilityScope, fileSizeBytes: file.size, durationSeconds, salePrice }),
     });
     const d3 = await r3.json();
     if (!r3.ok) throw new Error(d3.error || 'Enregistrement impossible.');
@@ -1015,6 +1179,8 @@ async function uploadContent() {
     successEl.style.display = 'block';
     document.getElementById('up-title').value = '';
     document.getElementById('up-file').value = '';
+    document.getElementById('up-price').value = '';
+    document.getElementById('up-duration').textContent = '';
     if (typeof loadFeed === 'function') loadFeed();
     loadMyContent();
   } catch (e) {
@@ -1031,7 +1197,7 @@ async function uploadContent() {
 function renderFeed(items) {
   const list = document.getElementById('feed-list');
   if (!items.length) {
-    list.innerHTML = '<p class="feed-empty">Aucune publication pour le moment. Publie le premier contenu depuis l\'onglet Contenu&nbsp;!</p>';
+    list.innerHTML = '<p class="feed-empty">Aucune publication pour le moment. Publie le premier contenu depuis l\'onglet Contenu&nbsp;!</p>' + FEED_ADS.map(renderAdCard).join('');
     return;
   }
   list.innerHTML = items.map(item => {
@@ -1044,13 +1210,13 @@ function renderFeed(items) {
       <div class="feed-head">
         <div class="feed-avatar" onclick="openCreatorProfile('${cid}')" ${item.creator_photo ? `style="background-image:url('${escapeHtml(item.creator_photo)}');color:transparent;"` : ''}>${escapeHtml((item.creator_name || '?')[0])}</div>
         <div>
-          <div class="feed-creator" onclick="openCreatorProfile('${cid}')">${name}</div>
+          <div class="feed-creator" onclick="openCreatorProfile('${cid}')">${name}${item.creator_business ? '<span class="biz-badge">Entreprise</span>' : (item.creator_premium ? '<span class="premium-badge">✓</span>' : '')}</div>
           <div class="feed-type">${escapeHtml(contentTypeLabel(item.content_type))}${item.creator_country && COUNTRY_BY_CODE[item.creator_country] ? ' · ' + escapeHtml(COUNTRY_BY_CODE[item.creator_country].name) : ''}${item.visibility_scope === 'abonnes' ? ' · réservé aux abonnés' : ''}</div>
         </div>
         ${mine ? '' : `<button class="follow-btn${followingSet.has(item.creator_id) ? ' following' : ''}" onclick="toggleFollow('${cid}', this)">${followingSet.has(item.creator_id) ? 'Suivi' : 'Suivre'}</button>`}
       </div>
       <p class="feed-title">${escapeHtml(item.title)}</p>
-      ${renderMedia(item)}
+      ${renderMedia(item)}${renderLock(item)}
       <div class="feed-actions">
         <button class="feed-action${likedSet.has(item.id) ? ' liked' : ''}" onclick="toggleLike('${id}', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4 6 4c2.2 0 3.6 1.3 6 3.6C14.4 5.3 15.8 4 18 4c4 0 5.5 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
@@ -1073,14 +1239,14 @@ function renderFeed(items) {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22V4h12l-1.5 4L16 12H4"/></svg>
           Signaler
         </button>
-        <button class="feed-action" onclick="openGift('${id}')">
+        <button class="feed-action" onclick="openGift('${id}')" ${item.creator_monetized === false ? 'style="display:none;"' : ''}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v9H4v-9M2 7h20v5H2V7zM12 22V7M12 7C8 7 7 4.5 7 3.5A2.5 2.5 0 0 1 12 3M12 7c4 0 5-2.5 5-3.5A2.5 2.5 0 0 0 12 3"/></svg>
           Cadeau
         </button>`}
       </div>
       <div class="gift-box" id="gift-${id}">
         <div class="chip-row">
-          ${[1, 5, 10, 20].map(a => `<div class="chip" onclick="sendGift(this,'${id}','${cid}',${a})">${a} $</div>`).join('')}
+          ${(PRICING ? PRICING.giftAmounts : [1, 2, 5, 10, 20, 50]).map(a => `<div class="chip" onclick="sendGift(this,'${id}','${cid}',${a})">${escapeHtml(priceLabel(a).split(' (')[0])}</div>`).join('')}
         </div>
         <p class="avatar-edit-label" id="gift-status-${id}" style="margin:-4px 0 4px;"></p>
       </div>
@@ -1092,7 +1258,7 @@ function renderFeed(items) {
         </div>
       </div>
     </div>`;
-  }).join('');
+  }).map((html, i) => (FEED_ADS.length && (i % 3 === 2 || (items.length < 3 && i === items.length - 1))) ? html + renderAdCard(FEED_ADS[Math.floor(i / 3) % FEED_ADS.length]) : html).join('');
 }
 
 function updateScopeLabel() {
@@ -1112,6 +1278,7 @@ async function loadFeed() {
   try {
     const data = await apiCall(FEED_SCOPE === 'pays' ? `/api/feed?country=${MY_COUNTRY}` : '/api/feed');
     (data.following || []).forEach(id => followingSet.add(id));
+    FEED_ADS = data.ads || [];
     if (!(data.items || []).length && FEED_SCOPE === 'pays') {
       list.innerHTML = '<p class="feed-empty">Aucune publication dans ton pays pour le moment. Sois le premier à publier, ou regarde <a href="#" onclick="setFeedScope(\'tout\');return false;" style="color:var(--teal);">partout</a>.</p>';
       return;
@@ -1235,7 +1402,7 @@ async function registerCreator() {
   errorEl.style.display = 'none';
 
   const zoneByCountry = { CD: 'afrique', NG: 'afrique', KE: 'afrique', SN: 'afrique', HT: 'caraibes', JM: 'caraibes',
-    DO: 'caraibes', PH: 'asie', BD: 'asie', IN: 'asie', ID: 'asie', PL: 'europe_centrale', CZ: 'europe_centrale', HU: 'europe_centrale' };
+    DO: 'caraibes', PH: 'asie', BD: 'asie', IN: 'asie', ID: 'asie', PL: 'europe', CZ: 'europe', HU: 'europe' };
 
   try {
     const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
@@ -1464,7 +1631,7 @@ async function loadProfile() {
   if (p.primaryContentType) document.getElementById('prof-content-type').value = p.primaryContentType;
   if (p.phone) document.getElementById('cur-phone').textContent = p.phone;
   document.getElementById('pref-subcount').checked = Boolean(p.subscriberCountPublic);
-  const zones = { afrique: 'Afrique', caraibes: 'Caraïbes', asie: 'Asie', europe_centrale: 'Europe centrale' };
+  const zones = ZONE_LABELS;
   const verifs = { verifie: 'Confirmée', en_attente: 'En attente', rejete: 'Refusée' };
   if (p.zone) { document.getElementById('home-zone').textContent = zones[p.zone] || p.zone; document.getElementById('info-zone').textContent = zones[p.zone] || p.zone; }
   if (p.primaryContentType) {
@@ -1472,7 +1639,7 @@ async function loadProfile() {
     document.getElementById('info-content').textContent = contentTypeLabel(p.primaryContentType);
   }
   if (p.verificationStatus) document.getElementById('info-verif').textContent = verifs[p.verificationStatus] || p.verificationStatus;
-  document.getElementById('balance-num').textContent = formatMoney(p.balance || 0, p.currency || 'USD');
+  // Le solde affiché est celui des gains réels (voir loadMoney).
   if (p.photoUrl) setAvatarImage(p.photoUrl);
   else if (p.name) document.querySelectorAll('.avatar, #avatar-edit').forEach((el) => { el.textContent = p.name[0].toUpperCase(); });
 }
@@ -1490,6 +1657,8 @@ async function afterLogin() {
   loadBlocked();
   loadPayoutAccount();
   startIncomingCallWatch();
+  loadPricing().then(() => { loadMoney(); loadFeed(); });
+  loadMyAds();
 }
 
 // ==== Profil public d'un créateur (point 6) ====
@@ -1509,7 +1678,7 @@ async function openCreatorProfile(creatorId) {
   const photo = document.getElementById('cp-photo');
   photo.style.backgroundImage = p.photoUrl ? `url("${p.photoUrl}")` : '';
   photo.textContent = p.photoUrl ? '' : (p.name || '?')[0].toUpperCase();
-  document.getElementById('cp-name').textContent = p.name;
+  document.getElementById('cp-name').innerHTML = escapeHtml(p.name) + (p.business ? ' <span class="biz-badge">Entreprise</span>' : (p.premium ? ' <span class="premium-badge">✓ Premium</span>' : ''));
   const country = COUNTRY_BY_CODE[p.countryCode]?.name || '';
   document.getElementById('cp-meta').textContent = [country, contentTypeLabel(p.primaryContentType),
     p.subscriberCount !== null && p.subscriberCount !== undefined ? `${p.subscriberCount} abonné(s)` : ''].filter(Boolean).join(' · ');
@@ -1517,7 +1686,7 @@ async function openCreatorProfile(creatorId) {
   document.getElementById('cp-write').style.display = p.isMe ? 'none' : '';
   updateProfileFollowButton();
   document.getElementById('cp-contents').innerHTML = p.contents.map(c =>
-    `<div class="list-row"><div class="grow">${escapeHtml(c.title)}<div class="sub">${escapeHtml(contentTypeLabel(c.content_type))} · ${new Date(c.created_at).toLocaleDateString('fr-FR')}</div></div></div>`).join('')
+    `<div class="list-row"><div class="grow">${escapeHtml(c.title)}<div class="sub">${escapeHtml(contentTypeLabel(c.content_type))} · ${new Date(c.created_at).toLocaleDateString('fr-FR')}${c.price ? ' · ' + escapeHtml(priceLabel(c.price)) : ''}</div></div>${c.locked ? `<button class="mini-btn" onclick="unlockContent('${escapeHtml(c.id)}', ${c.for_sale ? 'true' : 'false'})">${c.for_sale ? 'Acheter' : 'Débloquer'}</button>` : ''}</div>`).join('')
     || '<p class="feed-empty">Aucune publication visible.</p>';
   showScreen('s-creator');
 }
@@ -1545,9 +1714,9 @@ async function loadMyContent() {
   try {
     const { items } = await apiCall('/api/my/content');
     box.innerHTML = items.map(c => `
-      <div class="list-row" data-id="${escapeHtml(c.id)}" data-scope="${escapeHtml(c.visibility_scope)}">
+      <div class="list-row" data-id="${escapeHtml(c.id)}" data-scope="${escapeHtml(c.visibility_scope)}" data-price="${c.sale_price ? Number(c.sale_price) : ''}">
         <div class="grow"><span class="my-title">${escapeHtml(c.title)}</span>
-          <div class="sub">${escapeHtml(contentTypeLabel(c.content_type))} · ${c.visibility_scope === 'abonnes' ? 'abonnés' : 'tout le monde'} · ${Number(c.view_count) || 0} vues · ${Number(c.like_count) || 0} j'aime</div>
+          <div class="sub">${escapeHtml(contentTypeLabel(c.content_type))} · ${c.visibility_scope === 'abonnes' ? 'abonnés' : 'tout le monde'} · ${Number(c.view_count) || 0} vues · ${Number(c.like_count) || 0} j'aime${c.sale_price ? ` · en vente ${escapeHtml(formatMoney(c.sale_price, 'USD'))} · ${Number(c.sales_count) || 0} vente(s)` : (videoPriceFor(c.duration_seconds) ? ` · payante ${escapeHtml(formatMoney(videoPriceFor(c.duration_seconds), 'USD'))}` : '')}</div>
         </div>
         <button class="mini-btn" onclick="editMyContent(this)">Modifier</button>
         <button class="mini-btn danger" onclick="deleteMyContent(this)">Supprimer</button>
@@ -1565,6 +1734,7 @@ function editMyContent(btn) {
         <option value="public" ${isAbonnes ? '' : 'selected'}>Tout le monde</option>
         <option value="abonnes" ${isAbonnes ? 'selected' : ''}>Mes abonnés seulement</option>
       </select>
+      <input class="field edit-price" style="margin:6px 0 0;" inputmode="decimal" placeholder="Prix de vente en $ (vide = gratuit, premium)" value="${escapeHtml(row.dataset.price)}">
     </div>
     <button class="mini-btn" onclick="saveMyContent(this)">OK</button>
     <button class="mini-btn" onclick="loadMyContent()">Annuler</button>`;
@@ -1573,7 +1743,8 @@ async function saveMyContent(btn) {
   const row = btn.closest('.list-row');
   try {
     await apiCall(`/api/my/content/${row.dataset.id}`, { method: 'PATCH',
-      body: { title: row.querySelector('.edit-title').value, visibilityScope: row.querySelector('.edit-scope').value } });
+      body: { title: row.querySelector('.edit-title').value, visibilityScope: row.querySelector('.edit-scope').value,
+              salePrice: row.querySelector('.edit-price').value.trim() ? parseFloat(row.querySelector('.edit-price').value.replace(',', '.')) : null } });
   } catch (e) { return showToast(e.message); }
   showToast('Publication modifiée.');
   loadMyContent(); loadFeed();
@@ -1917,16 +2088,6 @@ async function loadPayments() {
   }
 }
 
-async function requestWithdraw() {
-  const statusEl = document.getElementById('withdraw-status');
-  const balanceText = document.getElementById('balance-num').textContent;
-  const amount = parseFloat(balanceText.replace(/\s/g, '').replace(',', '.')) || 0;
-  if (amount <= 0) { statusEl.textContent = 'Ton solde est de 0 : rien à retirer pour le moment.'; return; }
-  try {
-    const data = await apiCall('/api/payouts/withdraw', { method: 'POST', body: { amount, currency: balanceText.split(' ').pop() } });
-    statusEl.textContent = `Retrait demandé : ${data.netToCreator} (après 1 % de frais).`;
-  } catch (e) { statusEl.textContent = e.message; }
-}
 
 // ==== Live ====
 let currentLiveSessionId = null;
@@ -1994,23 +2155,9 @@ function openGift(contentId) {
   box.classList.toggle('open');
 }
 
+// Le cadeau passe par un paiement : 60 % pour le créateur, 40 % pour Eaji.
 async function sendGift(chip, contentId, toCreatorId, amount) {
-  const statusEl = document.getElementById(`gift-status-${contentId}`);
-  statusEl.textContent = 'Envoi…';
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/gifts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
-      body: JSON.stringify({ toCreatorId, contentId, amount }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(res.status === 401 ? 'Connecte-toi pour envoyer un cadeau.' : (data.error || 'Cadeau impossible.'));
-    statusEl.style.color = 'var(--teal)';
-    statusEl.textContent = `Cadeau de ${amount} envoyé (reçu en ${data.currency}) 🎉`;
-  } catch (e) {
-    statusEl.style.color = 'var(--coral)';
-    statusEl.textContent = e.message === 'Failed to fetch' ? 'Impossible de joindre le serveur.' : e.message;
-  }
+  startPayment('cadeau', { targetId: contentId, amount });
 }
 
 // ==== Espace publicitaire ====
@@ -2108,6 +2255,364 @@ async function sendDm() {
   renderDmThread(true);
 }
 
+// ==== Argent : tarifs, paiement (manuel en attendant l'agrégateur), premium, dons, gains, portefeuille ====
+let PRICING = null;
+let FEED_ADS = [];
+
+async function loadPricing() {
+  try { PRICING = await apiCall('/api/pricing'); } catch (e) { PRICING = null; }
+  renderPricingLabels();
+}
+
+// Montant en dollars affiché dans la devise de l'utilisateur (avec le prix en dollars à côté).
+function priceLabel(usd) {
+  if (!PRICING || PRICING.currency === 'USD') return formatMoney(usd, 'USD');
+  return `${formatMoney(usd * PRICING.usdRate, PRICING.currency)} (${formatMoney(usd, 'USD')})`;
+}
+
+function durationLabel(s) {
+  const m = Math.floor((Number(s) || 0) / 60), sec = Math.round((Number(s) || 0) % 60);
+  return m ? `${m} min${sec ? ' ' + String(sec).padStart(2, '0') : ''}` : `${sec} s`;
+}
+
+// Prix pour regarder une vidéo selon sa durée (mêmes règles que le serveur).
+function videoPriceFor(seconds) {
+  const free = PRICING ? PRICING.freeVideoSeconds : 120;
+  const steps = PRICING ? PRICING.videoPriceSteps : [{ upTo: 600, price: 1 }, { upTo: 1200, price: 5 }, { upTo: 3600, price: 10 }];
+  if (!seconds || seconds <= free) return 0;
+  for (const s of steps) if (seconds <= s.upTo) return s.price;
+  return steps[steps.length - 1].price;
+}
+
+function renderPricingLabels() {
+  const set = (id, usd) => { const el = document.getElementById(id); if (el) el.textContent = priceLabel(usd); };
+  set('premium-month-price', PRICING ? PRICING.premiumPlans.premium_mois.price : 10);
+  set('premium-year-price', PRICING ? PRICING.premiumPlans.premium_annee.price : 100);
+  set('biz-month-price', PRICING && PRICING.businessPlans ? PRICING.businessPlans.entreprise_mois.price : 20);
+  set('biz-year-price', PRICING && PRICING.businessPlans ? PRICING.businessPlans.entreprise_annee.price : 200);
+  const sel = document.getElementById('bad-plan');
+  if (sel && PRICING) {
+    sel.innerHTML = Object.entries(PRICING.businessAdPlans)
+      .map(([k, p]) => `<option value="${k}">${escapeHtml(p.label)} — ${escapeHtml(priceLabel(p.price))}</option>`).join('');
+  }
+  const transfer = document.getElementById('wallet-fees');
+  if (transfer && PRICING) {
+    transfer.textContent = `Frais : ${Math.round(PRICING.walletDepositFee * 100)} % au dépôt, ${Math.round(PRICING.walletWithdrawalFee * 100)} % au retrait. Envoi entre comptes Eaji gratuit.`;
+  }
+  const fee = document.getElementById('earn-fee');
+  if (fee && PRICING) fee.textContent = `Frais de retrait : ${Math.round(PRICING.earningsWithdrawalFee * 100)} %.`;
+}
+
+// ---- Fenêtre de paiement ----
+let CURRENT_PAYMENT = null;
+
+async function startPayment(purpose, extra = {}) {
+  if (!CREATOR_TOKEN) return showToast('Connecte-toi pour payer.');
+  let data;
+  try {
+    data = await apiCall('/api/payments', { method: 'POST', body: { purpose, ...extra } });
+  } catch (e) { return showToast(e.message); }
+  showPaymentSheet(data.payment, data.paymentNumbers);
+}
+
+function showPaymentSheet(p, numbers) {
+  CURRENT_PAYMENT = p;
+  const local = formatMoney(p.amountLocal, p.currency);
+  document.getElementById('pay-desc').textContent = p.description;
+  document.getElementById('pay-amount').textContent = local + (p.currency !== 'USD' ? ` (${formatMoney(p.amountUsd, 'USD')})` : '');
+  document.getElementById('pay-amount-2').textContent = local;
+  document.getElementById('pay-numbers').textContent = numbers || (PRICING && PRICING.paymentNumbers) || '';
+  document.getElementById('pay-ref').textContent = p.reference;
+  document.getElementById('pay-proof').value = p.proof || '';
+  document.getElementById('pay-phone').value = p.payerPhone || '';
+  document.getElementById('pay-status').textContent = p.proof ? 'Preuve déjà envoyée : en attente de vérification.' : '';
+  document.getElementById('pay-sheet').style.display = 'flex';
+}
+
+function closePaymentSheet() {
+  document.getElementById('pay-sheet').style.display = 'none';
+  CURRENT_PAYMENT = null;
+  loadMoney();
+}
+
+async function sendPaymentProof() {
+  if (!CURRENT_PAYMENT) return;
+  const status = document.getElementById('pay-status');
+  try {
+    await apiCall(`/api/payments/${CURRENT_PAYMENT.id}/proof`, { method: 'POST',
+      body: { proof: document.getElementById('pay-proof').value, payerPhone: document.getElementById('pay-phone').value } });
+  } catch (e) { status.style.color = 'var(--coral)'; status.textContent = e.message; return; }
+  status.style.color = 'var(--teal)';
+  status.textContent = "Merci ! Ton paiement sera vérifié et activé très vite. Tu peux suivre son état dans l'onglet Paiements.";
+  setTimeout(closePaymentSheet, 2500);
+}
+
+async function cancelPayment() {
+  if (CURRENT_PAYMENT) await apiCall(`/api/payments/${CURRENT_PAYMENT.id}/cancel`, { method: 'POST' }).catch(() => {});
+  closePaymentSheet();
+}
+
+async function reopenPayment(id) {
+  try {
+    const { payments } = await apiCall('/api/payments/mine');
+    const p = payments.find((x) => x.id === id);
+    if (p) showPaymentSheet(p, PRICING && PRICING.paymentNumbers);
+  } catch (e) { showToast(e.message); }
+}
+
+// ---- Achats depuis le fil ----
+function unlockContent(contentId, forSale) {
+  startPayment(forSale ? 'achat' : 'video', { targetId: contentId });
+}
+
+function buyPremium(plan) { startPayment(plan); }
+
+function donate() {
+  const amount = parseFloat(String(document.getElementById('don-amount').value).replace(',', '.'));
+  if (!(amount >= 1)) return showToast('Le don minimum est de 1 $.');
+  startPayment('don', { amount });
+}
+
+// ---- Onglet Paiements : gains, premium, portefeuille, mes paiements ----
+const PAYMENT_STATUS = { en_attente: 'en attente', confirme: 'confirmé', refuse: 'refusé', annule: 'annulé', paye: 'payé' };
+const EARNING_SOURCES = { video: 'Vidéo payante', vente: 'Vente de contenu', cadeau: 'Cadeau reçu' };
+
+async function loadMoney() {
+  if (!CREATOR_TOKEN) return;
+  // Gains
+  try {
+    const e = await apiCall('/api/earnings');
+    MY_EARNINGS = e;
+    document.getElementById('balance-num').textContent = formatMoney(e.availableLocal.amount, e.availableLocal.currency);
+    document.getElementById('earn-usd').textContent = e.availableLocal.currency !== 'USD' ? `soit ${formatMoney(e.available, 'USD')}` : '';
+    const hist = document.getElementById('earn-history');
+    const rows = [
+      ...e.history.map((h) => ({ date: h.created_at, html: `<div class="tx-row"><div><div class="tx-name">${escapeHtml(EARNING_SOURCES[h.source] || h.source)}</div><div class="tx-date">${new Date(h.created_at).toLocaleDateString('fr-FR')}</div></div><div class="tx-amt">+${escapeHtml(formatMoney(h.amount_usd, 'USD'))}</div></div>` })),
+      ...e.withdrawals.map((w) => ({ date: w.created_at, html: `<div class="tx-row"><div><div class="tx-name">Retrait (${escapeHtml(PAYMENT_STATUS[w.status] || w.status)})</div><div class="tx-date">${new Date(w.created_at).toLocaleDateString('fr-FR')} · ${escapeHtml(w.method)} · reçu : ${escapeHtml(formatMoney(w.net_local, w.currency))}</div></div><div class="tx-amt" style="color:var(--coral);">−${escapeHtml(formatMoney(w.amount_usd, 'USD'))}</div></div>` })),
+    ].sort((a, b) => new Date(b.date) - new Date(a.date));
+    hist.innerHTML = rows.map((r) => r.html).join('') || '<p class="feed-empty">Aucun gain pour le moment. Tu gagnes 60 % des cadeaux, des vidéos payantes et des ventes de tes contenus.</p>';
+  } catch (e) { /* hors ligne */ }
+
+  // Premium
+  try {
+    const s = await apiCall('/api/premium/status');
+    MY_PREMIUM = s.active;
+    document.getElementById('premium-state').innerHTML = s.active
+      ? `<span class="premium-badge">✓ Premium</span> actif jusqu'au ${new Date(s.endsAt).toLocaleDateString('fr-FR')}`
+      : 'Tu n\'es pas encore premium.';
+    document.getElementById('up-price-wrap').style.opacity = s.active ? '1' : '.55';
+  } catch (e) { /* hors ligne */ }
+
+  // Compte Entreprise
+  try {
+    const b = await apiCall('/api/business/status');
+    document.getElementById('biz-offer').style.display = b.active ? 'none' : 'block';
+    document.getElementById('biz-space').style.display = b.active ? 'block' : 'none';
+    document.getElementById('biz-state').innerHTML = b.active
+      ? `<span class="biz-badge">Entreprise</span> actif jusqu'au ${new Date(b.endsAt).toLocaleDateString('fr-FR')}`
+      : 'Pour les entreprises, boutiques, églises, écoles, artistes…';
+    if (b.active) loadBusinessStats();
+  } catch (e) { /* hors ligne */ }
+
+  // Portefeuille
+  try {
+    const w = await apiCall('/api/wallet');
+    document.getElementById('wallet-box').style.display = w.enabled ? 'block' : 'none';
+    document.getElementById('wallet-off').textContent = w.enabled ? '' : w.message;
+    document.getElementById('wallet-balance').textContent = formatMoney(w.balanceLocal.amount, w.balanceLocal.currency);
+  } catch (e) { /* hors ligne */ }
+
+  // Mes paiements
+  try {
+    const { payments } = await apiCall('/api/payments/mine');
+    document.getElementById('my-payments').innerHTML = payments.map((p) => `
+      <div class="list-row"><div class="grow">${escapeHtml(p.description)}
+        <div class="sub">${escapeHtml(p.reference)} · ${escapeHtml(formatMoney(p.amountLocal, p.currency))} · ${new Date(p.createdAt).toLocaleDateString('fr-FR')}${p.adminNote && p.status === 'refuse' ? ' · ' + escapeHtml(p.adminNote) : ''}</div></div>
+        <span class="pay-state ${escapeHtml(p.status)}">${escapeHtml(PAYMENT_STATUS[p.status] || p.status)}</span>
+        ${p.status === 'en_attente' ? `<button class="mini-btn" onclick="reopenPayment('${escapeHtml(p.id)}')">Payer</button>` : ''}
+      </div>`).join('') || '<p class="feed-type">Aucun paiement pour le moment.</p>';
+  } catch (e) { /* hors ligne */ }
+}
+
+let MY_EARNINGS = null, MY_PREMIUM = false;
+
+async function requestWithdraw() {
+  const statusEl = document.getElementById('withdraw-status');
+  const available = MY_EARNINGS ? MY_EARNINGS.available : 0;
+  if (available <= 0) { statusEl.textContent = 'Ton solde est de 0 : rien à retirer pour le moment.'; return; }
+  const asked = window.prompt(`Montant à retirer en dollars (disponible : ${available} $). Frais : ${Math.round((MY_EARNINGS.feeRate || 0.15) * 100)} %.`, String(available));
+  if (asked === null) return;
+  const amount = parseFloat(String(asked).replace(',', '.'));
+  try {
+    const d = await apiCall('/api/earnings/withdraw', { method: 'POST', body: { amount } });
+    statusEl.textContent = `Retrait demandé : tu recevras ${formatMoney(d.netLocal, d.currency)} (frais ${formatMoney(d.feeUsd, 'USD')}).`;
+    loadMoney();
+  } catch (e) { statusEl.textContent = e.message; }
+}
+
+// ---- Compte Entreprise ----
+async function loadBusinessStats() {
+  try {
+    const s = await apiCall('/api/business/stats');
+    const n = (v) => Number(v || 0).toLocaleString('fr-FR');
+    document.getElementById('biz-stats').innerHTML =
+      `<div><b>${n(s.followers)}</b>abonnés</div><div><b>+${n(s.new_followers_30d)}</b>en 30 jours</div><div><b>${n(s.views)}</b>vues</div>` +
+      `<div><b>${n(s.likes)}</b>j'aime</div><div><b>${n(s.comments)}</b>commentaires</div><div><b>${n(s.contents)}</b>publications</div>`;
+    const countries = s.byCountry.map((c) => `${escapeHtml(COUNTRY_BY_CODE[c.country_code]?.name || c.country_code)} (${c.followers})`).join(', ');
+    const best = s.top[0];
+    document.getElementById('biz-top').innerHTML =
+      (best ? `Publication la plus vue : <b>${escapeHtml(best.title)}</b> (${n(best.view_count)} vues)<br>` : '') +
+      (countries ? `Tes abonnés viennent de : ${countries}` : '');
+  } catch (e) { document.getElementById('biz-top').textContent = e.message; }
+}
+async function sendBroadcast() {
+  const status = document.getElementById('biz-status');
+  const text = document.getElementById('biz-message').value.trim();
+  if (!text) return;
+  try {
+    const d = await apiCall('/api/business/broadcast', { method: 'POST', body: { text } });
+    status.style.color = 'var(--teal)';
+    status.textContent = `Message envoyé à ${d.sent} abonné(s).`;
+    document.getElementById('biz-message').value = '';
+  } catch (e) { status.style.color = 'var(--coral)'; status.textContent = e.message; }
+}
+
+// ---- Portefeuille (transfert d'argent) ----
+function walletDeposit() {
+  const amount = parseFloat(String(document.getElementById('wallet-amount').value).replace(',', '.'));
+  if (!(amount >= 1)) return showToast('Indique un montant en dollars (minimum 1 $).');
+  startPayment('depot', { amount });
+}
+async function walletSend() {
+  const amount = parseFloat(String(document.getElementById('wallet-amount').value).replace(',', '.'));
+  const to = document.getElementById('wallet-to').value.trim();
+  if (!to) return showToast('Indique l\'email ou le numéro du destinataire.');
+  try {
+    const d = await apiCall('/api/wallet/send', { method: 'POST', body: { to, amount } });
+    showToast(`${formatMoney(d.amountUsd, 'USD')} envoyés à ${d.to}.`);
+    loadMoney();
+  } catch (e) { showToast(e.message); }
+}
+async function walletWithdraw() {
+  const amount = parseFloat(String(document.getElementById('wallet-amount').value).replace(',', '.'));
+  try {
+    const d = await apiCall('/api/wallet/withdraw', { method: 'POST', body: { amount } });
+    showToast(`Retrait demandé : tu recevras ${formatMoney(d.netLocal, d.currency)}.`);
+    loadMoney();
+  } catch (e) { showToast(e.message); }
+}
+
+// ---- Publicité des entreprises ----
+function fillAdCountries() {
+  const sel = document.getElementById('bad-country');
+  if (!sel || sel.options.length) return;
+  sel.innerHTML = '<option value="ALL">Tous les pays</option>' +
+    [...COUNTRIES].sort((a, b) => a[1].localeCompare(b[1], 'fr')).map((c) => `<option value="${c[0]}">${escapeHtml(c[1])}</option>`).join('');
+  sel.value = COUNTRY_BY_CODE[MY_COUNTRY] ? MY_COUNTRY : 'ALL';
+}
+
+async function createBusinessAd() {
+  const err = document.getElementById('bad-error');
+  const btn = document.getElementById('bad-btn');
+  err.style.display = 'none';
+  const file = document.getElementById('bad-file').files[0];
+  const company = document.getElementById('bad-company').value.trim();
+  if (!CREATOR_TOKEN) { err.textContent = 'Connecte-toi d\'abord.'; err.style.display = 'block'; return; }
+  if (!company || !file) { err.textContent = 'Indique le nom de l\'entreprise et choisis une image ou une vidéo.'; err.style.display = 'block'; return; }
+  const isVideo = (file.type || '').startsWith('video/');
+  btn.disabled = true; btn.textContent = 'Envoi en cours…';
+  try {
+    const up = await apiCall('/api/content/upload-url', { method: 'POST',
+      body: { contentType: isVideo ? 'video_courte' : 'photo', fileName: file.name, mimeType: file.type, fileSizeBytes: file.size } });
+    await sendFileToStorage(up, file);
+    const ad = await apiCall('/api/business-ads', { method: 'POST', body: {
+      company, message: document.getElementById('bad-message').value, linkUrl: document.getElementById('bad-link').value,
+      countryCode: document.getElementById('bad-country').value, plan: document.getElementById('bad-plan').value,
+      mediaKey: up.storageKey, mediaType: isVideo ? 'video' : 'image' } });
+    document.getElementById('bad-file').value = '';
+    loadMyAds();
+    await startPayment('annonce', { targetId: ad.adId });
+  } catch (e) {
+    err.textContent = e.message; err.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Créer l\'annonce et payer';
+  }
+}
+
+async function loadMyAds() {
+  const box = document.getElementById('my-ads');
+  if (!CREATOR_TOKEN || !box) return;
+  const labels = { en_attente: 'en attente de paiement', actif: 'en ligne', refuse: 'refusée', retire: 'retirée' };
+  try {
+    const { ads } = await apiCall('/api/business-ads/mine');
+    box.innerHTML = ads.map((a) => `
+      <div class="list-row"><div class="grow">${escapeHtml(a.company)}
+        <div class="sub">${escapeHtml(labels[a.status] || a.status)}${a.ends_at && a.status === 'actif' ? " jusqu'au " + new Date(a.ends_at).toLocaleDateString('fr-FR') : ''} · ${escapeHtml(a.country_code === 'ALL' ? 'tous les pays' : (COUNTRY_BY_CODE[a.country_code]?.name || a.country_code))} · ${Number(a.impressions)} vues · ${Number(a.clicks)} clics</div></div>
+        ${a.status === 'en_attente' ? `<button class="mini-btn" onclick="startPayment('annonce', { targetId: '${escapeHtml(a.id)}' })">Payer</button>` : ''}
+      </div>`).join('');
+  } catch (e) { /* hors ligne */ }
+}
+
+function renderAdCard(ad) {
+  const media = ad.mediaUrl
+    ? (ad.media_type === 'video'
+      ? `<video controls muted playsinline preload="metadata" style="width:100%;border-radius:12px;margin:8px 0;" src="${escapeHtml(ad.mediaUrl)}"></video>`
+      : `<img loading="lazy" style="width:100%;border-radius:12px;margin:8px 0;" src="${escapeHtml(ad.mediaUrl)}" alt="">`)
+    : '';
+  return `
+    <div class="feed-card ad-card">
+      <div class="feed-type"><span class="ad-tag">Sponsoris&eacute;</span> ${escapeHtml(ad.company)}</div>
+      ${media}
+      ${ad.message ? `<p class="feed-title" style="margin-top:4px;">${escapeHtml(ad.message)}</p>` : ''}
+      ${ad.link_url ? `<a class="follow-btn" style="display:inline-block;margin-left:0;text-decoration:none;" href="${escapeHtml(ad.link_url)}" target="_blank" rel="noopener sponsored" onclick="adClick('${escapeHtml(ad.id)}')">En savoir plus</a>` : ''}
+    </div>`;
+}
+
+function adClick(id) {
+  fetch(`${API_BASE_URL}/api/business-ads/${id}/click`, { method: 'POST' }).catch(() => {});
+}
+
+// Encadré « contenu payant » à la place du fichier.
+function renderLock(item) {
+  if (!item.locked) return '';
+  const what = item.for_sale ? 'Contenu à vendre' : `Vidéo de ${durationLabel(item.duration_seconds)}`;
+  return `
+    <div class="lock-box">
+      <div>🔒 ${escapeHtml(what)} · <b>${escapeHtml(priceLabel(item.price))}</b></div>
+      <div class="feed-type" style="margin:4px 0 8px;">${item.for_sale ? 'Achète-le une fois, garde-le pour toujours.' : 'Gratuit avec Eaji Premium.'}</div>
+      <button class="mini-btn" onclick="unlockContent('${escapeHtml(item.id)}', ${item.for_sale ? 'true' : 'false'})">${item.for_sale ? 'Acheter' : 'Débloquer'}</button>
+      ${item.for_sale ? '' : `<button class="mini-btn" onclick="document.querySelector('.tab[data-target=s-paiements]').click()">Devenir premium</button>`}
+    </div>`;
+}
+
+// ---- Publication : durée de la vidéo lue avant l'envoi ----
+let UPLOAD_DURATION = null;
+function readVideoDuration(file) {
+  return new Promise((resolve) => {
+    if (!file || !(file.type || '').startsWith('video/')) return resolve(null);
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    const url = URL.createObjectURL(file);
+    const done = (d) => { URL.revokeObjectURL(url); resolve(d); };
+    v.onloadedmetadata = () => done(Number.isFinite(v.duration) ? v.duration : null);
+    v.onerror = () => done(null);
+    setTimeout(() => done(null), 8000);
+    v.src = url;
+  });
+}
+async function onUploadFileChange() {
+  const info = document.getElementById('up-duration');
+  const file = document.getElementById('up-file').files[0];
+  UPLOAD_DURATION = await readVideoDuration(file);
+  if (!UPLOAD_DURATION) { info.textContent = ''; return; }
+  if (UPLOAD_DURATION > 3600) { info.style.color = 'var(--coral)'; info.textContent = `Durée : ${durationLabel(UPLOAD_DURATION)}. Une vidéo ne peut pas dépasser 60 minutes.`; return; }
+  const price = MY_MONETIZED ? videoPriceFor(UPLOAD_DURATION) : 0;
+  info.style.color = '';
+  info.textContent = price
+    ? `Durée : ${durationLabel(UPLOAD_DURATION)} → les spectateurs paieront ${priceLabel(price)} pour la regarder (gratuit pour les membres premium). Tu touches 60 %.`
+    : `Durée : ${durationLabel(UPLOAD_DURATION)} → vidéo gratuite (2 minutes ou moins).`;
+}
+
 window.addEventListener('load', async () => {
   updateUploadAccept();
   wireCountryPicker('reg-zone', 'reg-country', 'reg-dial', 'reg-language', MY_COUNTRY, 'fr');
@@ -2118,11 +2623,12 @@ window.addEventListener('load', async () => {
   linkCurrencyToCountry('reg-zone', 'reg-country', 'reg-currency');
   linkCurrencyToCountry('prof-zone', 'prof-country', 'prof-currency');
   updateScopeLabel();
-  document.querySelectorAll('#zone-list .zone-item').forEach((el, i) => {
-    const z = Object.keys(ZONE_LABELS)[i];
-    const sub = el.querySelector('.zone-sub');
-    if (z && sub) sub.textContent = `${COUNTRIES.filter(c => c[3] === z).length} pays éligibles`;
-  });
+  document.getElementById('zone-list').innerHTML = Object.entries(ZONE_LABELS).map(([z, label]) => {
+    const list = COUNTRIES.filter(c => c[3] === z);
+    const paid = list.filter(c => MONETIZED_COUNTRIES.has(c[0])).length;
+    return `<div class="zone-item${COUNTRY_BY_CODE[MY_COUNTRY]?.zone === z ? ' sel' : ''}"><div><div class="zone-name">${label}</div>
+      <div class="zone-sub">${list.length} pays · ${paid ? (paid === list.length ? 'tous monétisés' : paid + ' avec monétisation') : 'compte gratuit, sans monétisation'}</div></div><div class="check"></div></div>`;
+  }).join('');
 
   if (CREATOR_TOKEN) {
     // Session déjà ouverte (rechargement de page) : on saute directement dans l'app.
@@ -2133,7 +2639,10 @@ window.addEventListener('load', async () => {
     await loadProfile().catch(() => {});
     loadMyContent(); loadFollowers(); loadBlocked(); loadPayoutAccount();
     startIncomingCallWatch();
+    loadMoney(); loadMyAds();
   }
+  await loadPricing();
+  fillAdCountries();
   loadFeed();
 
   loadProfile().catch(() => {});
@@ -2149,6 +2658,26 @@ window.addEventListener('load', async () => {
 
 </script>
 <div class="toast" id="toast"></div>
+<div class="pay-sheet" id="pay-sheet" onclick="if (event.target === this) closePaymentSheet()">
+  <div class="pay-card">
+    <div class="section-title" style="margin:0 0 4px;" id="pay-desc">Paiement</div>
+    <div class="pay-amount" id="pay-amount"></div>
+    <ol class="pay-steps">
+      <li>Envoie <b id="pay-amount-2"></b> par mobile money &agrave; :<br><span class="pay-numbers" id="pay-numbers"></span></li>
+      <li>Si possible, &eacute;cris la r&eacute;f&eacute;rence <span class="pay-ref" id="pay-ref"></span> dans le motif.</li>
+      <li>Entre ci-dessous l'identifiant de la transaction re&ccedil;u par SMS.</li>
+    </ol>
+    <input class="field" id="pay-proof" placeholder="Identifiant de la transaction (ex : MP241010.1234.A12345)">
+    <input class="field" id="pay-phone" inputmode="tel" placeholder="Num&eacute;ro qui a envoy&eacute; l'argent">
+    <p class="feed-type" id="pay-status" style="margin:-4px 0 10px;"></p>
+    <button class="primary-btn" onclick="sendPaymentProof()">J'ai pay&eacute;</button>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="mini-btn" style="flex:1;" onclick="closePaymentSheet()">Plus tard</button>
+      <button class="mini-btn danger" style="flex:1;" onclick="cancelPayment()">Annuler ce paiement</button>
+    </div>
+    <p class="feed-type" style="margin-top:12px;font-size:11px;">Ton achat s'active d&egrave;s que le paiement est v&eacute;rifi&eacute; par l'&eacute;quipe Eaji.</p>
+  </div>
+</div>
 <div class="call-overlay" id="call-overlay">
   <div class="call-title" id="call-title"></div>
   <div class="call-status" id="call-status"></div>
