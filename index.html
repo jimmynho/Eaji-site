@@ -634,7 +634,28 @@ function renderMedia(item) {
   return `<a class="follow-btn" style="display:inline-block;margin:8px 0;text-decoration:none;" href="${url}" target="_blank" rel="noopener" onclick="countView('${id}')">Ouvrir le fichier</a>`;
 }
 
-// Envoi réel d'un fichier : 1) adresse temporaire, 2) envoi direct au stockage, 3) enregistrement.
+// Envoie le fichier au stockage : d'abord en direct, sinon automatiquement via le serveur.
+async function sendFileToStorage(uploadInfo, file) {
+  const type = file.type || 'application/octet-stream';
+  try {
+    const direct = await fetch(uploadInfo.uploadUrl, { method: 'PUT', headers: { 'Content-Type': type }, body: file });
+    if (direct.ok) return;
+  } catch (e) { /* envoi direct bloqué (réglage CORS) : on passe par le serveur */ }
+  let relay;
+  try {
+    relay = await fetch(`${API_BASE_URL}/api/content/upload-proxy?key=${encodeURIComponent(uploadInfo.storageKey)}`, {
+      method: 'PUT', headers: { 'Content-Type': type, Authorization: `Bearer ${CREATOR_TOKEN}` }, body: file,
+    });
+  } catch (e) {
+    throw new Error('Envoi interrompu. Vérifie ta connexion internet et réessaie.');
+  }
+  if (!relay.ok) {
+    const data = await relay.json().catch(() => ({}));
+    throw new Error(data.error || 'Le stockage a refusé le fichier.');
+  }
+}
+
+// Envoi réel d'un fichier : 1) adresse temporaire, 2) envoi au stockage, 3) enregistrement.
 function updateUploadAccept() {
   const accept = { video_courte: 'video/*', video_longue: 'video/*', film: 'video/*', photo: 'image/*',
     musique: 'audio/*', podcast: 'audio/*', pdf: '.pdf,application/pdf', livre: '.pdf,.epub', powerpoint: '.ppt,.pptx' };
@@ -667,8 +688,7 @@ async function uploadContent() {
     const d1 = await r1.json();
     if (!r1.ok) throw new Error(d1.error || 'Envoi refusé.');
 
-    const r2 = await fetch(d1.uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type || 'application/octet-stream' }, body: file });
-    if (!r2.ok) throw new Error('Le stockage a refusé le fichier (code ' + r2.status + ').');
+    await sendFileToStorage(d1, file);
 
     const r3 = await fetch(`${API_BASE_URL}/api/content`, {
       method: 'POST', headers,
@@ -683,7 +703,7 @@ async function uploadContent() {
     if (typeof loadFeed === 'function') loadFeed();
   } catch (e) {
     errorEl.textContent = e.message === 'Failed to fetch'
-      ? 'Envoi impossible : le stockage n\'est pas encore autorisé pour ce site (réglage CORS à faire).'
+      ? 'Impossible de joindre le serveur. Vérifie ta connexion internet.'
       : e.message;
     errorEl.style.display = 'block';
   } finally {
@@ -1040,8 +1060,7 @@ async function uploadProfilePhoto(input) {
     const d1 = await r1.json();
     if (!r1.ok) throw new Error(d1.error || 'Envoi refusé.');
 
-    const r2 = await fetch(d1.uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type || 'application/octet-stream' }, body: file });
-    if (!r2.ok) throw new Error('Le stockage a refusé la photo (code ' + r2.status + ').');
+    await sendFileToStorage(d1, file);
 
     const r3 = await fetch(`${API_BASE_URL}/api/creators/me/profile`, {
       method: 'PATCH', headers, body: JSON.stringify({ photoUrl: d1.storageKey }),
@@ -1055,7 +1074,7 @@ async function uploadProfilePhoto(input) {
   } catch (e) {
     statusEl.style.color = 'var(--coral)';
     statusEl.textContent = e.message === 'Failed to fetch'
-      ? 'Envoi impossible : le stockage n\'est pas encore autorisé pour ce site (réglage CORS).'
+      ? 'Impossible de joindre le serveur. Vérifie ta connexion internet.'
       : e.message;
   } finally {
     input.value = '';
