@@ -67,6 +67,13 @@ tr:last-child td{border-bottom:none;}
 .login-hint{font-size:11px;color:var(--muted);margin-top:16px;text-align:center;}
 .logout-btn{background:none;border:1px solid var(--line);color:var(--muted);font-size:12px;padding:6px 12px;
   border-radius:9px;cursor:pointer;font-family:'Inter',sans-serif;}
+.pill-count{display:inline-block;min-width:18px;padding:0 6px;margin-left:6px;border-radius:99px;background:var(--coral);color:#fff;font-size:11px;font-weight:700;text-align:center;}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;}
+.ftab{padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;}
+.ftab.active{background:var(--teal);color:#0A2320;border-color:var(--teal);font-weight:700;}
+.table-wrap{overflow-x:auto;margin-bottom:26px;}
+.small{font-size:11px;color:var(--muted);}
+textarea.field{min-height:70px;resize:vertical;}
 </style>
 </head>
 <body>
@@ -133,6 +140,8 @@ tr:last-child td{border-bottom:none;}
     <div class="tab" data-target="v-creators">Cr&eacute;ateurs</div>
     <div class="tab" data-target="v-moderation">Mod&eacute;ration</div>
     <div class="tab" data-target="v-admins">Administrateurs</div>
+    <div class="tab" data-target="v-payments">Paiements<span class="pill-count" id="pay-count" style="display:none;"></span></div>
+    <div class="tab" data-target="v-revenue">Revenus</div>
     <div class="tab" data-target="v-commissions">Commissions</div>
     <div class="tab" data-target="v-security">S&eacute;curit&eacute;</div>
   </div>
@@ -157,7 +166,7 @@ tr:last-child td{border-bottom:none;}
     <div class="section-title">Comptes cr&eacute;ateurs</div>
     <p class="login-hint" id="creators-msg" style="margin:0 0 12px;">Chargement des comptes&hellip;</p>
     <table id="creators-table">
-      <tr><th>Nom</th><th>Email</th><th>T&eacute;l&eacute;phone</th><th>Pays</th><th>Abonn&eacute;s</th><th>Statut</th><th></th></tr>
+      <tr><th>Nom</th><th>Email</th><th>T&eacute;l&eacute;phone</th><th>Pays</th><th>Mon&eacute;tis&eacute;</th><th>Abonn&eacute;s</th><th>Statut</th><th></th></tr>
     </table>
   </section>
 
@@ -193,6 +202,51 @@ tr:last-child td{border-bottom:none;}
     <table id="admins-table">
       <tr><th>Nom</th><th>R&ocirc;le</th><th>T&eacute;l&eacute;phone(s)</th><th>T&acirc;ches</th><th>Statut</th></tr>
     </table>
+  </section>
+
+  <!-- PAIEMENTS À VÉRIFIER (administrateur principal uniquement) -->
+  <section class="view" id="v-payments">
+    <div class="section-title">Num&eacute;ros o&ugrave; les utilisateurs t'envoient l'argent</div>
+    <div style="max-width:520px;">
+      <textarea class="field" id="pay-numbers" placeholder="Ex :&#10;M-Pesa : +243 82 323 9572 (Jimmy Komba)&#10;Airtel Money : +243 ..."></textarea>
+      <p class="login-error" id="pay-numbers-msg" style="display:block;color:var(--muted);"></p>
+      <button class="btn approve" onclick="savePaymentNumbers()">Enregistrer les num&eacute;ros</button>
+    </div>
+
+    <div class="section-title" style="margin-top:26px;">Paiements re&ccedil;us &agrave; v&eacute;rifier</div>
+    <p class="login-hint" style="margin:0 0 12px;text-align:left;">V&eacute;rifie sur ton t&eacute;l&eacute;phone que l'argent est bien arriv&eacute; (montant + identifiant de transaction), puis clique sur <b>Confirmer</b> : l'achat s'active tout de suite pour l'utilisateur.</p>
+    <div class="filter-row" id="pay-filter">
+      <div class="ftab active" data-status="en_attente">En attente</div>
+      <div class="ftab" data-status="confirme">Confirm&eacute;s</div>
+      <div class="ftab" data-status="refuse">Refus&eacute;s</div>
+      <div class="ftab" data-status="">Tous</div>
+    </div>
+    <p class="login-hint" id="pay-msg" style="margin:0 0 12px;text-align:left;"></p>
+    <div class="table-wrap"><table id="pay-table">
+      <tr><th>R&eacute;f&eacute;rence</th><th>Utilisateur</th><th>Achat</th><th>Montant</th><th>Preuve</th><th>Date</th><th></th></tr>
+    </table></div>
+
+    <div class="section-title">Retraits &agrave; payer aux cr&eacute;ateurs</div>
+    <p class="login-hint" style="margin:0 0 12px;text-align:left;">Envoie le montant net au num&eacute;ro ou au compte indiqu&eacute;, puis clique sur <b>Pay&eacute;</b>. Les frais de retrait restent &agrave; Eaji.</p>
+    <p class="login-hint" id="wd-msg" style="margin:0 0 12px;text-align:left;"></p>
+    <div class="table-wrap"><table id="wd-table">
+      <tr><th>Cr&eacute;ateur</th><th>Type</th><th>&Agrave; envoyer</th><th>Frais Eaji</th><th>Vers</th><th>Date</th><th></th></tr>
+    </table></div>
+  </section>
+
+  <!-- REVENUS (administrateur principal uniquement) -->
+  <section class="view" id="v-revenue">
+    <div class="section-title">Mes revenus Eaji</div>
+    <div class="kpi-grid" id="rev-kpis"></div>
+    <p class="login-hint" id="rev-msg" style="margin:0 0 12px;text-align:left;"></p>
+    <div class="section-title">D&eacute;tail par source</div>
+    <div class="table-wrap"><table id="rev-table">
+      <tr><th>Source</th><th>Nombre</th><th>Total</th></tr>
+    </table></div>
+    <div class="section-title">Publicit&eacute;s des entreprises</div>
+    <div class="table-wrap"><table id="ads-table">
+      <tr><th>Entreprise</th><th>Pays</th><th>Dur&eacute;e</th><th>Statut</th><th>Vues / clics</th><th></th></tr>
+    </table></div>
   </section>
 
   <!-- COMMISSIONS (administrateur principal uniquement) -->
@@ -404,7 +458,7 @@ async function loadCreators(){
     table.innerHTML = header + data.creators.map(c => `
       <tr data-creator-id="${escapeHtml(c.id)}" data-creator-name="${escapeHtml(c.name)}" data-status="${escapeHtml(c.account_status)}">
         <td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.email)}</td><td>${escapeHtml(c.phone)}</td>
-        <td>${escapeHtml(c.country_code)}</td><td>${escapeHtml(c.subscribers)}</td>
+        <td>${escapeHtml(c.country_code)}</td><td>${c.monetized ? '<span class="badge ok">Oui</span>' : '<span class="badge wait">Non</span>'}</td><td>${escapeHtml(c.subscribers)}</td>
         <td><span class="badge ${statusBadge[c.account_status] || 'wait'}">${escapeHtml(c.account_status)}</span></td>
         <td style="white-space:nowrap;">
           <button class="btn pause" onclick="toggleSuspend(this)">${c.account_status === 'suspendu' ? 'Réactiver' : 'Suspendre'}</button>
@@ -468,6 +522,175 @@ async function removeContent(btn){
   loadReports();
 }
 
+// ==== Paiements manuels, retraits, revenus ====
+const PURPOSES = { premium_mois: 'Premium 1 mois', premium_annee: 'Premium 1 an', entreprise_mois: 'Entreprise 1 mois', entreprise_annee: 'Entreprise 1 an', video: 'Vidéo payante', achat: 'Achat de contenu',
+  cadeau: 'Cadeau', don: 'Don à Eaji', annonce: 'Publicité', depot: 'Dépôt portefeuille' };
+const SOURCES = { premium: 'Abonnements premium', entreprise: 'Comptes Entreprise', video: 'Vidéos payantes (40 %)', vente: 'Ventes de contenus (40 %)', cadeau: 'Cadeaux (40 %)',
+  don: 'Dons', publicite: 'Publicité des entreprises', frais_retrait: 'Frais de retrait (15 %)',
+  frais_depot: 'Frais de dépôt (2 %)', frais_retrait_portefeuille: 'Frais de retrait portefeuille (4 %)' };
+const STATES = { en_attente: ['wait', 'En attente'], confirme: ['ok', 'Confirmé'], refuse: ['danger', 'Refusé'], annule: ['danger', 'Annulé'], paye: ['ok', 'Payé'] };
+function money(v, cur) {
+  try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: cur || 'USD' }).format(Number(v) || 0); }
+  catch (e) { return `${Number(v || 0).toLocaleString('fr-FR')} ${cur}`; }
+}
+let PAY_FILTER = 'en_attente';
+
+async function refreshPendingCount() {
+  try {
+    const { payments } = await adminApi('/api/admin/payments?status=en_attente');
+    const { withdrawals } = await adminApi('/api/admin/withdrawals?status=en_attente');
+    const n = payments.length + withdrawals.length;
+    const el = document.getElementById('pay-count');
+    el.textContent = n; el.style.display = n ? 'inline-block' : 'none';
+  } catch (e) { /* ignoré */ }
+}
+
+async function loadPaymentsView() {
+  try {
+    const { paymentNumbers } = await adminApi('/api/admin/settings/payment-numbers');
+    document.getElementById('pay-numbers').value = paymentNumbers || '';
+    document.getElementById('pay-numbers-msg').textContent = paymentNumbers ? '' : '⚠️ Aucun numéro enregistré : les utilisateurs ne peuvent pas encore payer.';
+  } catch (e) { document.getElementById('pay-numbers-msg').textContent = e.message; }
+  loadPaymentRequests();
+  loadWithdrawals();
+  refreshPendingCount();
+}
+
+async function savePaymentNumbers() {
+  const msg = document.getElementById('pay-numbers-msg');
+  try {
+    await adminApi('/api/admin/settings/payment-numbers', { method: 'PUT', body: { paymentNumbers: document.getElementById('pay-numbers').value } });
+    msg.style.color = 'var(--teal)'; msg.textContent = 'Numéros enregistrés : ils s\'affichent maintenant aux utilisateurs.';
+  } catch (e) { msg.style.color = 'var(--coral)'; msg.textContent = e.message; }
+}
+
+async function loadPaymentRequests() {
+  const msg = document.getElementById('pay-msg');
+  try {
+    const { payments } = await adminApi(`/api/admin/payments${PAY_FILTER ? '?status=' + PAY_FILTER : ''}`);
+    const t = document.getElementById('pay-table');
+    t.innerHTML = t.rows[0].outerHTML + payments.map(p => {
+      const st = STATES[p.status] || ['wait', p.status];
+      return `<tr data-id="${escapeHtml(p.id)}">
+        <td><b>${escapeHtml(p.reference)}</b></td>
+        <td>${escapeHtml(p.payerName || '(compte supprimé)')}<div class="small">${escapeHtml(p.payerPhone || '')}</div></td>
+        <td>${escapeHtml(p.description)}<div class="small">${escapeHtml(PURPOSES[p.purpose] || p.purpose)}</div></td>
+        <td><b>${escapeHtml(money(p.amountLocal, p.currency))}</b>${p.currency !== 'USD' ? `<div class="small">${escapeHtml(money(p.amountUsd, 'USD'))}</div>` : ''}</td>
+        <td>${p.proof ? escapeHtml(p.proof) : '<span class="small">pas encore envoyée</span>'}</td>
+        <td>${fmtDate(p.createdAt)}</td>
+        <td style="white-space:nowrap;">${p.status === 'en_attente'
+          ? `<button class="btn approve" onclick="confirmPayment(this)">Confirmer</button> <button class="btn remove" onclick="refusePayment(this)">Refuser</button>`
+          : `<span class="badge ${st[0]}">${st[1]}</span>`}</td></tr>`;
+    }).join('');
+    msg.textContent = payments.length ? `${payments.length} paiement(s).` : 'Aucun paiement dans cette liste.';
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function confirmPayment(btn) {
+  const row = btn.closest('tr');
+  if (!window.confirm('As-tu bien reçu cet argent sur ton téléphone ? L\'achat sera activé tout de suite.')) return;
+  btn.disabled = true;
+  try { await adminApi(`/api/admin/payments/${row.dataset.id}/confirm`, { method: 'POST', body: {} }); }
+  catch (e) { btn.disabled = false; document.getElementById('pay-msg').textContent = e.message; return; }
+  loadPaymentRequests(); refreshPendingCount();
+}
+
+async function refusePayment(btn) {
+  const row = btn.closest('tr');
+  const note = window.prompt('Raison du refus (visible par l\'utilisateur) :', 'Paiement non reçu.');
+  if (note === null) return;
+  btn.disabled = true;
+  try { await adminApi(`/api/admin/payments/${row.dataset.id}/refuse`, { method: 'POST', body: { note } }); }
+  catch (e) { btn.disabled = false; document.getElementById('pay-msg').textContent = e.message; return; }
+  loadPaymentRequests(); refreshPendingCount();
+}
+
+async function loadWithdrawals() {
+  const msg = document.getElementById('wd-msg');
+  try {
+    const { withdrawals } = await adminApi('/api/admin/withdrawals');
+    const t = document.getElementById('wd-table');
+    t.innerHTML = t.rows[0].outerHTML + withdrawals.map(w => {
+      const st = STATES[w.status] || ['wait', w.status];
+      return `<tr data-id="${escapeHtml(w.id)}">
+        <td>${escapeHtml(w.creator_name)}<div class="small">${escapeHtml(w.creator_phone)}</div></td>
+        <td>${w.source === 'portefeuille' ? 'Portefeuille' : 'Gains'}</td>
+        <td><b>${escapeHtml(money(w.net_local, w.currency))}</b>${w.currency !== 'USD' ? `<div class="small">${escapeHtml(money(w.net_usd, 'USD'))}</div>` : ''}</td>
+        <td>${escapeHtml(money(w.fee_usd, 'USD'))}</td>
+        <td>${escapeHtml(w.method)}<div class="small">${escapeHtml(w.account)}</div></td>
+        <td>${fmtDate(w.created_at)}</td>
+        <td style="white-space:nowrap;">${w.status === 'en_attente'
+          ? `<button class="btn approve" onclick="markWithdrawal(this, 'paid')">Payé</button> <button class="btn remove" onclick="markWithdrawal(this, 'refuse')">Refuser</button>`
+          : `<span class="badge ${st[0]}">${st[1]}</span>`}</td></tr>`;
+    }).join('');
+    msg.textContent = withdrawals.some(w => w.status === 'en_attente') ? '' : 'Aucun retrait à payer pour le moment.';
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function markWithdrawal(btn, action) {
+  const row = btn.closest('tr');
+  let note = '';
+  if (action === 'paid' && !window.confirm('As-tu bien envoyé l\'argent à ce créateur ?')) return;
+  if (action === 'refuse') { note = window.prompt('Raison du refus :', 'Numéro de retrait incorrect.'); if (note === null) return; }
+  btn.disabled = true;
+  try { await adminApi(`/api/admin/withdrawals/${row.dataset.id}/${action}`, { method: 'POST', body: { note } }); }
+  catch (e) { btn.disabled = false; document.getElementById('wd-msg').textContent = e.message; return; }
+  loadWithdrawals(); refreshPendingCount();
+}
+
+async function loadRevenue() {
+  const msg = document.getElementById('rev-msg');
+  try {
+    const r = await adminApi('/api/admin/revenue');
+    const kpi = (label, val) => `<div class="kpi"><p class="label">${label}</p><p class="val">${val}</p></div>`;
+    document.getElementById('rev-kpis').innerHTML =
+      kpi('Revenus Eaji (total)', escapeHtml(money(r.eaji_total, 'USD'))) +
+      kpi('Dus aux créateurs (gagnés)', escapeHtml(money(r.creators_earned, 'USD'))) +
+      kpi('Déjà versé aux créateurs', escapeHtml(money(r.paid_out, 'USD'))) +
+      kpi('Retraits à payer', `${escapeHtml(money(r.pending_withdrawals, 'USD'))}<div class="small">${r.pending_withdrawal_count} demande(s)</div>`) +
+      kpi('Paiements à vérifier', r.pending_payments) +
+      kpi('Membres premium', r.premium_members) +
+      kpi('Comptes Entreprise', r.business_members) +
+      kpi('Publicités en ligne', r.active_ads);
+    const t = document.getElementById('rev-table');
+    t.innerHTML = t.rows[0].outerHTML + (r.bySource.map(s =>
+      `<tr><td>${escapeHtml(SOURCES[s.source] || s.source)}</td><td>${s.count}</td><td><b>${escapeHtml(money(s.total, 'USD'))}</b></td></tr>`).join('')
+      || '<tr><td colspan="3">Aucun revenu pour le moment.</td></tr>');
+    msg.textContent = r.transfersEnabled ? '' : "Le transfert d'argent entre utilisateurs est désactivé (il le restera tant que TRANSFERS_ENABLED n'est pas mis à true sur Railway).";
+    const { ads } = await adminApi('/api/admin/business-ads');
+    const at = document.getElementById('ads-table');
+    const adState = { en_attente: ['wait', 'Non payée'], actif: ['ok', 'En ligne'], refuse: ['danger', 'Refusée'], retire: ['danger', 'Retirée'] };
+    at.innerHTML = at.rows[0].outerHTML + (ads.map(a => {
+      const st = adState[a.status] || ['wait', a.status];
+      return `<tr data-id="${escapeHtml(a.id)}"><td>${escapeHtml(a.company)}<div class="small">${escapeHtml(a.owner_name)}${a.message ? ' · ' + escapeHtml(a.message) : ''}</div></td>
+        <td>${escapeHtml(a.country_code === 'ALL' ? 'Tous' : a.country_code)}</td><td>${escapeHtml(a.plan)}${a.ends_at ? `<div class="small">jusqu'au ${fmtDate(a.ends_at)}</div>` : ''}</td>
+        <td><span class="badge ${st[0]}">${st[1]}</span></td><td>${a.impressions} / ${a.clicks}</td>
+        <td>${a.status === 'actif' ? '<button class="btn remove" onclick="removeAd(this)">Retirer</button>' : ''}</td></tr>`;
+    }).join('') || '<tr><td colspan="6">Aucune publicité pour le moment.</td></tr>');
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function removeAd(btn) {
+  if (!window.confirm('Retirer cette publicité du fil ?')) return;
+  try { await adminApi(`/api/admin/business-ads/${btn.closest('tr').dataset.id}/remove`, { method: 'POST', body: {} }); }
+  catch (e) { document.getElementById('rev-msg').textContent = e.message; return; }
+  loadRevenue();
+}
+
+document.querySelectorAll('#pay-filter .ftab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('#pay-filter .ftab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  PAY_FILTER = t.dataset.status;
+  loadPaymentRequests();
+}));
+
+// Le compteur de paiements à vérifier se met à jour tout seul toutes les 30 secondes.
+setInterval(() => {
+  if (ADMIN_ROLE !== 'admin_principal' || document.getElementById('app-shell').style.display === 'none') return;
+  refreshPendingCount();
+  if (document.getElementById('v-payments').classList.contains('active')) { loadPaymentRequests(); loadWithdrawals(); }
+}, 30000);
+
 // ==== Données réelles du panneau ====
 async function adminApi(path, { method = 'GET', body } = {}) {
   let res;
@@ -491,7 +714,9 @@ async function loadMe(){
     document.querySelector('.role-tag').textContent =
       (me.role === 'admin_principal' ? 'Administrateur principal — ' : 'Administrateur — ') + me.name;
     if (me.role !== 'admin_principal') {
-      document.querySelectorAll('.tab[data-target="v-commissions"], .tab[data-target="v-admins"]').forEach(t => t.style.display = 'none');
+      document.querySelectorAll('.tab[data-target="v-commissions"], .tab[data-target="v-admins"], .tab[data-target="v-payments"], .tab[data-target="v-revenue"]').forEach(t => t.style.display = 'none');
+    } else {
+      refreshPendingCount();
     }
   } catch (e) { /* jeton expiré : la prochaine action affichera l'erreur */ }
 }
@@ -566,7 +791,7 @@ async function loadFinances(){
   try {
     const { commissions, adRevenue } = await adminApi('/api/admin/finances');
     const rows = [
-      ...commissions.map(c => ({ type: c.type === 'ouverture' ? 'Ouverture de compte' : 'Retrait (1 %)', amount: Number(c.amount), currency: c.currency, status: c.status, date: c.created_at })),
+      ...commissions.map(c => ({ type: c.type === 'ouverture' ? 'Ouverture de compte' : 'Retrait (15 %)', amount: Number(c.amount), currency: c.currency, status: c.status, date: c.created_at })),
       ...adRevenue.map(a => ({ type: 'Publicité', amount: Number(a.amount), currency: a.currency, status: a.status || 'payé', date: a.created_at })),
     ].sort((x, y) => new Date(y.date) - new Date(x.date));
     const totals = {};
@@ -585,7 +810,8 @@ function loadAdminData(){
   loadMe(); loadOverview();
 }
 
-const VIEW_LOADERS = { 'v-overview': loadOverview, 'v-creators': () => loadCreators(), 'v-moderation': loadReports, 'v-admins': loadAdmins, 'v-commissions': loadFinances };
+const VIEW_LOADERS = { 'v-overview': loadOverview, 'v-creators': () => loadCreators(), 'v-moderation': loadReports, 'v-admins': loadAdmins, 'v-commissions': loadFinances,
+  'v-payments': loadPaymentsView, 'v-revenue': loadRevenue };
 </script>
 </body>
 </html>
