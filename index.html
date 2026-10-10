@@ -132,7 +132,7 @@ select.field{appearance:none;}
   font-weight:700;padding:5px 11px;border-radius:99px;cursor:pointer;font-family:'Inter',sans-serif;}
 .follow-btn.following{background:var(--teal);color:#0A2320;}
 .feed-title{font-size:14px;margin:0 0 12px;}
-.feed-actions{display:flex;gap:18px;border-top:1px solid var(--line);padding-top:10px;}
+.feed-actions{display:flex;flex-wrap:wrap;gap:10px 16px;border-top:1px solid var(--line);padding-top:10px;}
 .feed-action{background:none;border:none;color:var(--muted);font-size:12px;display:flex;align-items:center;gap:5px;
   cursor:pointer;font-family:'Inter',sans-serif;padding:0;}
 .feed-action.liked{color:var(--coral);}
@@ -144,6 +144,12 @@ select.field{appearance:none;}
 .dm-bubble{max-width:75%;padding:10px 13px;border-radius:14px;font-size:13px;}
 .dm-bubble.me{align-self:flex-end;background:var(--gold);color:#1A1206;}
 .dm-bubble.them{align-self:flex-start;background:var(--surface);border:1px solid var(--line);}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--line);
+  color:var(--text);padding:10px 16px;border-radius:12px;font-size:12px;z-index:60;display:none;max-width:88%;text-align:center;}
+.conv-item{display:flex;flex-direction:column;gap:3px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;
+  background:var(--surface);margin-bottom:8px;cursor:pointer;}
+.conv-item b{font-size:13px;} .conv-item span{font-size:12px;color:var(--muted);}
+.feed-empty{color:var(--muted);font-size:13px;text-align:center;padding:30px 10px;}
 .comment-line{font-size:12px;color:var(--muted);margin-bottom:6px;}
 .comment-line b{color:var(--text);}
 .comment-input-row{display:flex;gap:8px;margin-top:8px;}
@@ -163,11 +169,11 @@ select.field{appearance:none;}
   display:flex;justify-content:center;
   background:rgba(18,20,28,.92);backdrop-filter:blur(14px);
   border-top:1px solid var(--line);
-  padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));
+  padding:10px 4px calc(10px + env(safe-area-inset-bottom,0px));
 }
 .tabbar-inner{max-width:480px;width:100%;display:flex;justify-content:space-around;}
 .tab{background:none;border:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;
-  display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:4px 10px;}
+  display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:4px 2px;flex:1 1 0;min-width:0;}
 .tab.active{color:var(--gold);}
 .tab-ic{width:20px;height:20px;display:block;}
 </style>
@@ -272,18 +278,18 @@ select.field{appearance:none;}
       <div class="hero-card">
         <p class="hero-label">Abonn&eacute;s v&eacute;rifi&eacute;s</p>
         <p class="hero-num num" id="sub-count">0</p>
-        <p class="hero-sub">742 sur 1 000 requis pour ce type de contenu</p>
+        <p class="hero-sub" id="sub-sub">0 sur 1 000 requis</p>
         <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
         <div class="progress-meta"><span>0</span><span>1 000</span></div>
-        <div class="badge wait"><span class="badge-dot"></span>258 abonn&eacute;s avant &eacute;ligibilit&eacute;</div>
+        <div class="badge wait"><span class="badge-dot"></span>Chargement&hellip;</div>
       </div>
 
       <div class="section-title">Aper&ccedil;u</div>
       <div class="stat-grid">
-        <div class="stat-card"><p class="label">Zone</p><p class="val">Afrique</p></div>
-        <div class="stat-card"><p class="label">Contenu</p><p class="val">Vid&eacute;o</p></div>
-        <div class="stat-card"><p class="label">Solde en attente</p><p class="val">0 &euro;</p></div>
-        <div class="stat-card"><p class="label">Taux appliqu&eacute;</p><p class="val">&mdash;</p></div>
+        <div class="stat-card"><p class="label">Zone</p><p class="val" id="home-zone">&ndash;</p></div>
+        <div class="stat-card"><p class="label">Contenu</p><p class="val" id="home-content">&ndash;</p></div>
+        <div class="stat-card"><p class="label">Gain estim&eacute; ce mois</p><p class="val" id="home-estimate">0</p></div>
+        <div class="stat-card"><p class="label">Taux appliqu&eacute;</p><p class="val" style="font-size:14px;">2&nbsp;$ / 1&nbsp;000 abonn&eacute;s</p></div>
       </div>
 
       <div class="section-title">Live</div>
@@ -303,7 +309,7 @@ select.field{appearance:none;}
     <section class="screen" id="s-contenu">
       <div class="section-title" style="margin-top:14px;">Publier un contenu</div>
       <label class="field-label" for="up-type">Type</label>
-      <select class="field" id="up-type">
+      <select class="field" id="up-type" onchange="updateUploadAccept()">
         <option value="video_courte">Vidéo courte</option>
         <option value="video_longue">Vidéo longue</option>
         <option value="film">Film</option>
@@ -368,8 +374,10 @@ select.field{appearance:none;}
     <section class="screen" id="s-paiements">
       <div class="balance-card">
         <p class="balance-label">Solde disponible</p>
-        <p class="balance-num num">142,50 &euro;</p>
-        <button class="withdraw-btn">Retirer</button>
+        <p class="balance-num num" id="balance-num">0</p>
+        <p class="balance-label" id="balance-estimate" style="margin-top:6px;"></p>
+        <button class="withdraw-btn" onclick="requestWithdraw()">Retirer</button>
+        <p class="balance-label" id="withdraw-status" style="margin-top:10px;"></p>
       </div>
 
       <div class="section-title">Moyen de paiement</div>
@@ -380,30 +388,39 @@ select.field{appearance:none;}
       </div>
 
       <div class="section-title">Historique</div>
-      <div class="info-list" style="background:var(--surface);border-radius:16px;border:1px solid var(--line);padding:4px 16px;">
-        <div class="tx-row"><div><div class="tx-name">Paiement mensuel</div><div class="tx-date">3 sept. 2026</div></div><div class="tx-amt">+38,20 &euro;</div></div>
-        <div class="tx-row"><div><div class="tx-name">Paiement mensuel</div><div class="tx-date">3 ao&ucirc;t 2026</div></div><div class="tx-amt">+31,90 &euro;</div></div>
-        <div class="tx-row"><div><div class="tx-name">Paiement mensuel</div><div class="tx-date">3 juil. 2026</div></div><div class="tx-amt">+29,40 &euro;</div></div>
+      <div class="info-list" id="tx-list" style="background:var(--surface);border-radius:16px;border:1px solid var(--line);padding:4px 16px;">
+        <p class="feed-empty">Aucun paiement pour le moment.</p>
       </div>
     </section>
 
     <!-- MESSAGES -->
     <section class="screen" id="s-messages">
-      <div class="section-title" style="margin-top:14px;">Conversation avec Jean B.</div>
-      <div id="dm-thread" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
-      <div class="comment-input-row">
-        <input class="field" id="dm-input" placeholder="&Eacute;crire un message priv&eacute;&hellip;">
-        <button class="comment-send" onclick="sendDm()">Envoyer</button>
+      <div id="dm-list-view">
+        <div class="section-title" style="margin-top:14px;">Messages</div>
+        <div id="dm-list"><p class="feed-empty">Aucune conversation. Touche &laquo;&nbsp;&Eacute;crire&nbsp;&raquo; sur une publication du fil pour &eacute;crire &agrave; son cr&eacute;ateur.</p></div>
+      </div>
+      <div id="dm-thread-view" style="display:none;">
+        <div class="section-title" style="margin-top:14px;display:flex;align-items:center;gap:10px;">
+          <button class="follow-btn" style="margin-left:0;" onclick="closeConversation()">&larr; Retour</button>
+          <span id="dm-title">Conversation</span>
+        </div>
+        <div id="dm-thread" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+        <div class="comment-input-row">
+          <input class="field" id="dm-input" placeholder="&Eacute;crire un message priv&eacute;&hellip;">
+          <button class="comment-send" onclick="sendDm()">Envoyer</button>
+        </div>
       </div>
     </section>
 
     <!-- PROFIL -->
     <section class="screen" id="s-profil">
-      <div class="avatar-edit" id="avatar-edit">A</div>
+      <div class="avatar-edit" id="avatar-edit" onclick="document.getElementById('prof-photo-input').click()">A</div>
+      <input type="file" id="prof-photo-input" accept="image/*" style="display:none;" onchange="uploadProfilePhoto(this)" />
       <p class="avatar-edit-label">Touche pour changer ta photo</p>
+      <p class="avatar-edit-label" id="photo-status" style="margin:-10px 0 16px;"></p>
 
       <label class="field-label">Nom complet</label>
-      <input class="field" id="prof-name" value="Amina D." />
+      <input class="field" id="prof-name" value="" />
 
       <label class="field-label">Num&eacute;ro pour les retraits (mobile money)</label>
       <input class="field" id="prof-withdrawal-phone" placeholder="+243900000001" />
@@ -426,20 +443,21 @@ select.field{appearance:none;}
         <option value="HU">Hongrie</option>
       </select>
 
+      <p class="form-error" id="prof-error"></p>
       <p class="form-success" id="prof-success">Profil mis &agrave; jour.</p>
       <button class="primary-btn" onclick="saveProfile()">Enregistrer</button>
 
       <div class="section-title" style="margin-top:24px;">Statistiques</div>
       <div class="stat-grid">
-        <div class="stat-card"><p class="label">Abonn&eacute;s</p><p class="val" id="prof-stat-subs">742</p></div>
+        <div class="stat-card"><p class="label">Abonn&eacute;s</p><p class="val" id="prof-stat-subs">0</p></div>
         <div class="stat-card"><p class="label">J'aime re&ccedil;us</p><p class="val" id="prof-stat-likes">0</p></div>
       </div>
 
       <div class="section-title" style="margin-top:24px;">Informations du compte</div>
       <div class="info-list">
-        <div class="info-row"><span class="k">Zone</span><span>Afrique</span></div>
-        <div class="info-row"><span class="k">Contenu principal</span><span>Vid&eacute;o</span></div>
-        <div class="info-row"><span class="k">V&eacute;rification</span><span class="verif">Confirm&eacute;e</span></div>
+        <div class="info-row"><span class="k">Zone</span><span id="info-zone">&ndash;</span></div>
+        <div class="info-row"><span class="k">Contenu principal</span><span id="info-content">&ndash;</span></div>
+        <div class="info-row"><span class="k">V&eacute;rification</span><span class="verif" id="info-verif">&ndash;</span></div>
       </div>
     </section>
 
@@ -504,10 +522,12 @@ let CREATOR_ID = 'creator_demo'; // en prod : l'id du créateur connecté
 let CREATOR_TOKEN = sessionStorage.getItem('eaji_creator_token'); // vrai jeton une fois connecté
 let PENDING_LOGIN_ID = null;
 
-function updateDashboard({ subscribers, missingSubscribers, eligible, amount, currency }) {
+function updateDashboard({ subscribers, missingSubscribers, missingViews = 0, eligible, amount, currency }) {
   const target = subscribers;
   const pct = Math.min(100, (subscribers / 1000) * 100);
   document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('sub-sub').textContent = `${Number(subscribers).toLocaleString('fr-FR')} sur 1 000 requis`;
+  document.getElementById('prof-stat-subs').textContent = Number(subscribers).toLocaleString('fr-FR');
   const el = document.getElementById('sub-count');
   let n = 0;
   const t = setInterval(() => {
@@ -522,7 +542,7 @@ function updateDashboard({ subscribers, missingSubscribers, eligible, amount, cu
     badge.innerHTML = `<span class="badge-dot"></span>Éligible — ${amount} ${currency} ce mois-ci`;
   } else {
     badge.className = 'badge wait';
-    badge.innerHTML = `<span class="badge-dot"></span>${missingSubscribers} abonnés avant éligibilité`;
+    badge.innerHTML = `<span class="badge-dot"></span>Encore ${missingSubscribers} abonnés${missingViews ? ` et ${missingViews} vues` : ''} avant éligibilité`;
   }
 }
 
@@ -532,9 +552,15 @@ async function loadRealData() {
   });
   if (!res.ok) throw new Error('API indisponible');
   const data = await res.json();
+  const estimate = `${Number(data.amount || 0).toLocaleString('fr-FR')} ${data.currency || 'USD'}`;
+  document.getElementById('home-estimate').textContent = estimate;
+  document.getElementById('balance-estimate').textContent = data.eligible
+    ? `Gain estimé ce mois : ${estimate}`
+    : 'Les gains commencent dès 1 000 abonnés et 1 000 vues.';
   updateDashboard({
     subscribers: data.subscribers ?? 0,
     missingSubscribers: data.missingSubscribers ?? 0,
+    missingViews: data.missingViews ?? 0,
     eligible: data.eligible,
     amount: data.amount,
     currency: data.currency,
@@ -552,23 +578,69 @@ const followingSet = new Set();
 
 function contentTypeLabel(t) {
   const labels = { video_courte: 'Vidéo courte', video_longue: 'Vidéo longue', podcast: 'Podcast', audio: 'Audio',
-    live: 'Live', photo: 'Photo', livre: 'Livre', pdf: 'PDF', powerpoint: 'PowerPoint', publication: 'Publication', telechargement: 'Téléchargement' };
+    live: 'Live', film: 'Film', musique: 'Musique', photo: 'Photo', livre: 'Livre', pdf: 'PDF', powerpoint: 'PowerPoint', publication: 'Publication', telechargement: 'Téléchargement' };
   return labels[t] || t;
+}
+
+function escapeHtml(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+// Appel au serveur : renvoie la réponse, ou lève une erreur avec le vrai message du serveur.
+async function apiCall(path, { method = 'GET', body } = {}) {
+  let res;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (e) {
+    throw new Error('Impossible de joindre le serveur. Vérifie ta connexion.');
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(res.status === 401 ? 'Connecte-toi pour faire cette action.' : (data.error || 'Action impossible.'));
+  return data;
+}
+
+// Une vue est comptée une seule fois par contenu et par visite.
+const viewedSet = new Set();
+function countView(contentId) {
+  if (viewedSet.has(contentId)) return;
+  viewedSet.add(contentId);
+  apiCall(`/api/content/${contentId}/view`, { method: 'POST' }).catch(() => viewedSet.delete(contentId));
 }
 
 function renderMedia(item) {
   if (!item.fileUrl) return '';
   const t = item.content_type;
+  const url = escapeHtml(item.fileUrl);
+  const id = escapeHtml(item.id);
   if (['video_courte','video_longue','film','telechargement'].includes(t))
-    return `<video controls preload="metadata" style="width:100%;border-radius:12px;margin:8px 0;" src="${item.fileUrl}"></video>`;
+    return `<video controls preload="metadata" style="width:100%;border-radius:12px;margin:8px 0;" src="${url}" onplay="countView('${id}')"></video>`;
   if (['musique','audio','podcast'].includes(t))
-    return `<audio controls preload="none" style="width:100%;margin:8px 0;" src="${item.fileUrl}"></audio>`;
+    return `<audio controls preload="none" style="width:100%;margin:8px 0;" src="${url}" onplay="countView('${id}')"></audio>`;
   if (t === 'photo' || t === 'publication')
-    return `<img loading="lazy" style="width:100%;border-radius:12px;margin:8px 0;" src="${item.fileUrl}" alt="">`;
-  return `<a class="follow-btn" style="display:inline-block;margin:8px 0;text-decoration:none;" href="${item.fileUrl}" target="_blank" rel="noopener">Ouvrir le fichier</a>`;
+    return `<img loading="lazy" style="width:100%;border-radius:12px;margin:8px 0;" src="${url}" alt="" onload="countView('${id}')">`;
+  return `<a class="follow-btn" style="display:inline-block;margin:8px 0;text-decoration:none;" href="${url}" target="_blank" rel="noopener" onclick="countView('${id}')">Ouvrir le fichier</a>`;
 }
 
 // Envoi réel d'un fichier : 1) adresse temporaire, 2) envoi direct au stockage, 3) enregistrement.
+function updateUploadAccept() {
+  const accept = { video_courte: 'video/*', video_longue: 'video/*', film: 'video/*', photo: 'image/*',
+    musique: 'audio/*', podcast: 'audio/*', pdf: '.pdf,application/pdf', livre: '.pdf,.epub', powerpoint: '.ppt,.pptx' };
+  document.getElementById('up-file').accept = accept[document.getElementById('up-type').value] || '';
+}
+
 async function uploadContent() {
   const errorEl = document.getElementById('up-error');
   const successEl = document.getElementById('up-success');
@@ -622,119 +694,158 @@ async function uploadContent() {
 
 function renderFeed(items) {
   const list = document.getElementById('feed-list');
-  list.innerHTML = items.map(item => `
-    <div class="feed-card" data-id="${item.id}">
+  if (!items.length) {
+    list.innerHTML = '<p class="feed-empty">Aucune publication pour le moment. Publie le premier contenu depuis l\'onglet Contenu&nbsp;!</p>';
+    return;
+  }
+  list.innerHTML = items.map(item => {
+    const id = escapeHtml(item.id);
+    const cid = escapeHtml(item.creator_id);
+    const name = escapeHtml(item.creator_name);
+    const mine = CREATOR_ID && item.creator_id === CREATOR_ID;
+    return `
+    <div class="feed-card" data-id="${id}">
       <div class="feed-head">
-        <div class="feed-avatar">${item.creator_name[0]}</div>
+        <div class="feed-avatar">${escapeHtml((item.creator_name || '?')[0])}</div>
         <div>
-          <div class="feed-creator">${item.creator_name}</div>
-          <div class="feed-type">${contentTypeLabel(item.content_type)}</div>
+          <div class="feed-creator">${name}</div>
+          <div class="feed-type">${escapeHtml(contentTypeLabel(item.content_type))}</div>
         </div>
-        <button class="follow-btn" onclick="toggleFollow('${item.creator_id || item.id}', this)">Suivre</button>
+        ${mine ? '' : `<button class="follow-btn${followingSet.has(item.creator_id) ? ' following' : ''}" onclick="toggleFollow('${cid}', this)">${followingSet.has(item.creator_id) ? 'Suivi' : 'Suivre'}</button>`}
       </div>
-      <p class="feed-title">${item.title}</p>
+      <p class="feed-title">${escapeHtml(item.title)}</p>
       ${renderMedia(item)}
       <div class="feed-actions">
-        <button class="feed-action" onclick="toggleLike('${item.id}', this)">
+        <button class="feed-action${likedSet.has(item.id) ? ' liked' : ''}" onclick="toggleLike('${id}', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4 6 4c2.2 0 3.6 1.3 6 3.6C14.4 5.3 15.8 4 18 4c4 0 5.5 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
-          <span class="like-count">${item.like_count}</span>
+          <span class="like-count">${Number(item.like_count) || 0}</span>
         </button>
-        <button class="feed-action" onclick="toggleComments('${item.id}', this)">
+        <button class="feed-action" onclick="toggleComments('${id}', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span class="comment-count">${item.comment_count}</span>
+          <span class="comment-count">${Number(item.comment_count) || 0}</span>
         </button>
-        <button class="feed-action" onclick="shareContent('${item.id}', '${item.title.replace(/'/g, "")}')">
+        <button class="feed-action" onclick="shareContent('${id}', this.closest('.feed-card').querySelector('.feed-title').textContent)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v14"/></svg>
           Partager
         </button>
-        <button class="feed-action" onclick="openGift('${item.id}','${item.creator_id || item.id}','${item.creator_name}')">
+        ${mine ? '' : `
+        <button class="feed-action" onclick="openConversation('${cid}', this.closest('.feed-card').querySelector('.feed-creator').textContent)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v12H5.2L4 17.2V4z"/></svg>
+          &Eacute;crire
+        </button>
+        <button class="feed-action" onclick="reportContent('${id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22V4h12l-1.5 4L16 12H4"/></svg>
+          Signaler
+        </button>
+        <button class="feed-action" onclick="openGift('${id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v9H4v-9M2 7h20v5H2V7zM12 22V7M12 7C8 7 7 4.5 7 3.5A2.5 2.5 0 0 1 12 3M12 7c4 0 5-2.5 5-3.5A2.5 2.5 0 0 0 12 3"/></svg>
           Cadeau
-        </button>
+        </button>`}
       </div>
-      <div class="gift-box" id="gift-${item.id}">
+      <div class="gift-box" id="gift-${id}">
         <div class="chip-row">
-          <div class="chip" onclick="sendGift(this,'${item.id}','${item.creator_id || item.id}',1)">1 $</div>
-          <div class="chip" onclick="sendGift(this,'${item.id}','${item.creator_id || item.id}',5)">5 $</div>
-          <div class="chip" onclick="sendGift(this,'${item.id}','${item.creator_id || item.id}',10)">10 $</div>
-          <div class="chip" onclick="sendGift(this,'${item.id}','${item.creator_id || item.id}',20)">20 $</div>
+          ${[1, 5, 10, 20].map(a => `<div class="chip" onclick="sendGift(this,'${id}','${cid}',${a})">${a} $</div>`).join('')}
         </div>
-        <p class="avatar-edit-label" id="gift-status-${item.id}" style="margin:-4px 0 4px;"></p>
+        <p class="avatar-edit-label" id="gift-status-${id}" style="margin:-4px 0 4px;"></p>
       </div>
-      <div class="comments-box" id="comments-${item.id}">
-        <div class="comment-line"><b>Grace K.</b> Super contenu, merci !</div>
+      <div class="comments-box" id="comments-${id}">
+        <div class="comments-list" id="comments-list-${id}"></div>
         <div class="comment-input-row">
-          <input class="field" placeholder="Écrire un commentaire…" id="comment-input-${item.id}">
-          <button class="comment-send" onclick="postComment('${item.id}')">Envoyer</button>
+          <input class="field" placeholder="Écrire un commentaire…" id="comment-input-${id}">
+          <button class="comment-send" onclick="postComment('${id}')">Envoyer</button>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 async function loadFeed() {
+  const list = document.getElementById('feed-list');
   try {
-    const res = await fetch(`${API_BASE_URL}/api/feed`);
-    if (!res.ok) throw new Error('offline');
-    const data = await res.json();
-    renderFeed(data.items.length ? data.items : DEMO_FEED);
+    const data = await apiCall('/api/feed');
+    renderFeed(data.items || []);
   } catch (e) {
-    renderFeed(DEMO_FEED);
+    list.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
   }
 }
 
 async function toggleLike(contentId, btn) {
+  if (!CREATOR_TOKEN) return showToast('Connecte-toi pour aimer un contenu.');
   const isLiked = likedSet.has(contentId);
   const countEl = btn.querySelector('.like-count');
-  const newCount = isLiked ? parseInt(countEl.textContent) - 1 : parseInt(countEl.textContent) + 1;
-  countEl.textContent = newCount;
+  const before = parseInt(countEl.textContent) || 0;
+  countEl.textContent = Math.max(0, isLiked ? before - 1 : before + 1);
   btn.classList.toggle('liked', !isLiked);
   isLiked ? likedSet.delete(contentId) : likedSet.add(contentId);
   try {
-    await fetch(`${API_BASE_URL}/api/content/${contentId}/like`, {
-      method: isLiked ? 'DELETE' : 'POST',
-      headers: CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {},
-    });
-  } catch (e) { /* repli visuel déjà appliqué */ }
+    await apiCall(`/api/content/${contentId}/like`, { method: isLiked ? 'DELETE' : 'POST' });
+  } catch (e) {
+    countEl.textContent = before;
+    btn.classList.toggle('liked', isLiked);
+    isLiked ? likedSet.add(contentId) : likedSet.delete(contentId);
+    showToast(e.message);
+  }
 }
 
-function toggleComments(contentId, btn) {
-  document.getElementById(`comments-${contentId}`).classList.toggle('open');
+async function toggleComments(contentId, btn) {
+  const box = document.getElementById(`comments-${contentId}`);
+  box.classList.toggle('open');
+  if (!box.classList.contains('open')) return;
+  const listEl = document.getElementById(`comments-list-${contentId}`);
+  try {
+    const data = await apiCall(`/api/content/${contentId}/comments`);
+    listEl.innerHTML = (data.comments || []).map(c =>
+      `<div class="comment-line"><b>${escapeHtml(c.creator_name)}</b> ${escapeHtml(c.text)}</div>`).join('')
+      || '<div class="comment-line" style="color:var(--muted);">Aucun commentaire pour le moment.</div>';
+  } catch (e) {
+    listEl.innerHTML = `<div class="comment-line" style="color:var(--coral);">${escapeHtml(e.message)}</div>`;
+  }
 }
 
 async function postComment(contentId) {
+  if (!CREATOR_TOKEN) return showToast('Connecte-toi pour commenter.');
   const input = document.getElementById(`comment-input-${contentId}`);
   const text = input.value.trim();
   if (!text) return;
-  const box = document.getElementById(`comments-${contentId}`);
-  const line = document.createElement('div');
-  line.className = 'comment-line';
-  line.innerHTML = `<b>Toi</b> ${text}`;
-  box.insertBefore(line, box.querySelector('.comment-input-row'));
-  input.value = '';
-  const card = box.closest('.feed-card');
-  const countEl = card.querySelector('.comment-count');
-  countEl.textContent = parseInt(countEl.textContent) + 1;
   try {
-    await fetch(`${API_BASE_URL}/api/content/${contentId}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
-      body: JSON.stringify({ text }),
-    });
-  } catch (e) { /* repli visuel déjà appliqué */ }
+    await apiCall(`/api/content/${contentId}/comments`, { method: 'POST', body: { text } });
+  } catch (e) {
+    return showToast(e.message);
+  }
+  input.value = '';
+  const listEl = document.getElementById(`comments-list-${contentId}`);
+  const myName = document.getElementById('prof-name').value || 'Moi';
+  if (listEl.textContent.includes('Aucun commentaire')) listEl.innerHTML = '';
+  listEl.insertAdjacentHTML('beforeend', `<div class="comment-line"><b>${escapeHtml(myName)}</b> ${escapeHtml(text)}</div>`);
+  const countEl = listEl.closest('.feed-card').querySelector('.comment-count');
+  countEl.textContent = (parseInt(countEl.textContent) || 0) + 1;
+}
+
+async function reportContent(contentId) {
+  if (!CREATOR_TOKEN) return showToast('Connecte-toi pour signaler un contenu.');
+  const reason = window.prompt('Pourquoi signales-tu ce contenu ? (ex : violence, arnaque, contenu choquant)');
+  if (reason === null) return;
+  try {
+    await apiCall(`/api/content/${contentId}/report`, { method: 'POST', body: { reason } });
+    showToast('Merci, le contenu a été signalé à l\'équipe de modération.');
+  } catch (e) { showToast(e.message); }
 }
 
 async function toggleFollow(creatorId, btn) {
+  if (!CREATOR_TOKEN) return showToast('Connecte-toi pour suivre un créateur.');
   const isFollowing = followingSet.has(creatorId);
-  btn.textContent = isFollowing ? 'Suivre' : 'Suivi';
-  btn.classList.toggle('following', !isFollowing);
-  isFollowing ? followingSet.delete(creatorId) : followingSet.add(creatorId);
   try {
-    await fetch(`${API_BASE_URL}/api/creators/${creatorId}/follow`, {
-      method: isFollowing ? 'DELETE' : 'POST',
-      headers: CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {},
-    });
-  } catch (e) { /* repli visuel déjà appliqué */ }
+    await apiCall(`/api/creators/${creatorId}/follow`, { method: isFollowing ? 'DELETE' : 'POST' });
+  } catch (e) {
+    return showToast(e.message);
+  }
+  isFollowing ? followingSet.delete(creatorId) : followingSet.add(creatorId);
+  document.querySelectorAll('.follow-btn').forEach(b => {
+    if (b.getAttribute('onclick') === btn.getAttribute('onclick')) {
+      b.textContent = isFollowing ? 'Suivre' : 'Suivi';
+      b.classList.toggle('following', !isFollowing);
+    }
+  });
 }
 
 function shareContent(contentId, title) {
@@ -864,7 +975,12 @@ async function verifyLoginCode() {
     errorEl.style.display = 'none';
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-shell').style.display = 'flex';
-    loadRealData(); // recharge le vrai solde/éligibilité maintenant qu'on a une vraie session
+    loadRealData().catch(() => {}); // recharge le vrai solde/éligibilité maintenant qu'on a une vraie session
+    loadProfile().catch(() => {});
+    checkLiveEligibility();
+    loadConversations();
+    loadFeed();
+    loadPayments();
   } catch (e) {
     errorEl.style.display = 'block';
   }
@@ -876,6 +992,7 @@ async function saveProfile() {
   const withdrawalPhone = document.getElementById('prof-withdrawal-phone').value.trim();
   const countryCode = document.getElementById('prof-country').value;
   const successEl = document.getElementById('prof-success');
+  const errorEl = document.getElementById('prof-error');
 
   try {
     const res = await fetch(`${API_BASE_URL}/api/creators/me/profile`, {
@@ -883,11 +1000,116 @@ async function saveProfile() {
       headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
       body: JSON.stringify({ name, withdrawalPhone, countryCode }),
     });
-    if (!res.ok) throw new Error('échec API');
-  } catch (e) { /* repli visuel — la mise à jour reste affichée côté écran */ }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Enregistrement impossible.');
+  } catch (e) {
+    errorEl.textContent = e.message === 'Failed to fetch' ? 'Impossible de joindre le serveur.' : e.message;
+    errorEl.style.display = 'block';
+    return;
+  }
 
+  errorEl.style.display = 'none';
   successEl.style.display = 'block';
   setTimeout(() => { successEl.style.display = 'none'; }, 2500);
+}
+
+// Affiche une photo dans les cercles de profil (en-tête + écran Profil).
+function setAvatarImage(url) {
+  document.querySelectorAll('.avatar, #avatar-edit').forEach((el) => {
+    el.textContent = '';
+    el.style.backgroundImage = `url("${url}")`;
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+  });
+}
+
+// Changement de photo de profil : envoi direct au stockage, puis enregistrement sur le compte.
+async function uploadProfilePhoto(input) {
+  const file = input.files[0];
+  const statusEl = document.getElementById('photo-status');
+  if (!file) return;
+  if (!CREATOR_TOKEN) { statusEl.textContent = 'Connecte-toi d\'abord.'; return; }
+  const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CREATOR_TOKEN}` };
+  statusEl.style.color = 'var(--muted)';
+  statusEl.textContent = 'Envoi de la photo…';
+  try {
+    const r1 = await fetch(`${API_BASE_URL}/api/content/upload-url`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ contentType: 'photo', fileName: file.name, mimeType: file.type, fileSizeBytes: file.size }),
+    });
+    const d1 = await r1.json();
+    if (!r1.ok) throw new Error(d1.error || 'Envoi refusé.');
+
+    const r2 = await fetch(d1.uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type || 'application/octet-stream' }, body: file });
+    if (!r2.ok) throw new Error('Le stockage a refusé la photo (code ' + r2.status + ').');
+
+    const r3 = await fetch(`${API_BASE_URL}/api/creators/me/profile`, {
+      method: 'PATCH', headers, body: JSON.stringify({ photoUrl: d1.storageKey }),
+    });
+    const d3 = await r3.json().catch(() => ({}));
+    if (!r3.ok) throw new Error(d3.error || 'Enregistrement impossible.');
+
+    setAvatarImage(URL.createObjectURL(file));
+    statusEl.style.color = 'var(--teal)';
+    statusEl.textContent = 'Photo mise à jour.';
+  } catch (e) {
+    statusEl.style.color = 'var(--coral)';
+    statusEl.textContent = e.message === 'Failed to fetch'
+      ? 'Envoi impossible : le stockage n\'est pas encore autorisé pour ce site (réglage CORS).'
+      : e.message;
+  } finally {
+    input.value = '';
+  }
+}
+
+// Recharge le profil réel (nom, photo, numéro de retrait, pays) après connexion.
+async function loadProfile() {
+  if (!CREATOR_TOKEN || !CREATOR_ID) return;
+  const res = await fetch(`${API_BASE_URL}/api/creators/${CREATOR_ID}`, { headers: { Authorization: `Bearer ${CREATOR_TOKEN}` } });
+  if (!res.ok) return;
+  const p = await res.json();
+  if (p.name) document.getElementById('prof-name').value = p.name;
+  if (p.withdrawalPhone) document.getElementById('prof-withdrawal-phone').value = p.withdrawalPhone;
+  if (p.countryCode) document.getElementById('prof-country').value = p.countryCode;
+  const zones = { afrique: 'Afrique', caraibes: 'Caraïbes', asie: 'Asie', europe_centrale: 'Europe centrale' };
+  const verifs = { verifie: 'Confirmée', en_attente: 'En attente', rejete: 'Refusée' };
+  if (p.zone) { document.getElementById('home-zone').textContent = zones[p.zone] || p.zone; document.getElementById('info-zone').textContent = zones[p.zone] || p.zone; }
+  if (p.primaryContentType) {
+    document.getElementById('home-content').textContent = contentTypeLabel(p.primaryContentType);
+    document.getElementById('info-content').textContent = contentTypeLabel(p.primaryContentType);
+  }
+  if (p.verificationStatus) document.getElementById('info-verif').textContent = verifs[p.verificationStatus] || p.verificationStatus;
+  document.getElementById('balance-num').textContent = `${Number(p.balance || 0).toLocaleString('fr-FR')} ${p.currency || 'USD'}`;
+  if (p.photoUrl) setAvatarImage(p.photoUrl);
+  else if (p.name) document.querySelectorAll('.avatar, #avatar-edit').forEach((el) => { el.textContent = p.name[0].toUpperCase(); });
+}
+
+// ==== Paiements : historique réel et demande de retrait ====
+async function loadPayments() {
+  if (!CREATOR_TOKEN) return;
+  const listEl = document.getElementById('tx-list');
+  try {
+    const { transactions } = await apiCall('/api/creators/me/transactions');
+    if (!transactions.length) return;
+    const labels = { pending: 'en attente', paid: 'versé', failed: 'échoué' };
+    listEl.innerHTML = transactions.map(t => `
+      <div class="tx-row"><div><div class="tx-name">Paiement mensuel (${escapeHtml(labels[t.status] || t.status)})</div>
+      <div class="tx-date">${new Date(t.created_at).toLocaleDateString('fr-FR')}</div></div>
+      <div class="tx-amt">+${Number(t.amount).toLocaleString('fr-FR')} ${escapeHtml(t.currency)}</div></div>`).join('');
+  } catch (e) {
+    listEl.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
+  }
+}
+
+async function requestWithdraw() {
+  const statusEl = document.getElementById('withdraw-status');
+  const balanceText = document.getElementById('balance-num').textContent;
+  const amount = parseFloat(balanceText.replace(/\s/g, '').replace(',', '.')) || 0;
+  if (amount <= 0) { statusEl.textContent = 'Ton solde est de 0 : rien à retirer pour le moment.'; return; }
+  try {
+    const data = await apiCall('/api/payouts/withdraw', { method: 'POST', body: { amount, currency: balanceText.split(' ').pop() } });
+    statusEl.textContent = `Retrait demandé : ${data.netToCreator} (après 1 % de frais).`;
+  } catch (e) { statusEl.textContent = e.message; }
 }
 
 // ==== Live ====
@@ -913,8 +1135,8 @@ async function checkLiveEligibility() {
     }
   } catch (e) {
     statusEl.textContent = 'Live réservé à partir de 500 abonnés.';
-    btn.textContent = 'Démarrer le live';
-    btn.disabled = false; // repli démo : on laisse essayer, l'API tranchera
+    btn.textContent = CREATOR_TOKEN ? 'Réessayer' : 'Connecte-toi';
+    btn.disabled = !CREATOR_TOKEN;
   }
 }
 
@@ -928,11 +1150,12 @@ async function toggleLive() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Impossible de démarrer le live.');
       currentLiveSessionId = data.liveSessionId;
     } catch (e) {
-      currentLiveSessionId = 'demo-live'; // repli visuel
+      statusEl.textContent = e.message === 'Failed to fetch' ? 'Impossible de joindre le serveur.' : e.message;
+      return;
     }
     statusEl.textContent = '🔴 En direct maintenant.';
     btn.textContent = 'Terminer le live';
@@ -950,7 +1173,7 @@ async function toggleLive() {
 }
 
 // ==== Cadeaux en argent ====
-function openGift(contentId, toCreatorId, creatorName) {
+function openGift(contentId) {
   const box = document.getElementById(`gift-${contentId}`);
   box.classList.toggle('open');
 }
@@ -964,11 +1187,13 @@ async function sendGift(chip, contentId, toCreatorId, amount) {
       headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
       body: JSON.stringify({ toCreatorId, contentId, amount }),
     });
-    if (!res.ok) throw new Error('échec');
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(res.status === 401 ? 'Connecte-toi pour envoyer un cadeau.' : (data.error || 'Cadeau impossible.'));
+    statusEl.style.color = 'var(--teal)';
     statusEl.textContent = `Cadeau de ${amount} envoyé (reçu en ${data.currency}) 🎉`;
   } catch (e) {
-    statusEl.textContent = `Cadeau de ${amount}$ envoyé 🎉`; // repli visuel
+    statusEl.style.color = 'var(--coral)';
+    statusEl.textContent = e.message === 'Failed to fetch' ? 'Impossible de joindre le serveur.' : e.message;
   }
 }
 
@@ -982,66 +1207,108 @@ function selectAdTier(el, tier) {
 
 async function subscribeAd() {
   const successEl = document.getElementById('ad-success');
-  if (!selectedAdTier) return;
+  if (!selectedAdTier) return showToast('Choisis d\'abord une formule.');
   try {
     const res = await fetch(`${API_BASE_URL}/api/ads/subscribe`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
       body: JSON.stringify({ tier: selectedAdTier, contentIds: [] }),
     });
-    if (!res.ok) throw new Error('échec');
-  } catch (e) { /* repli visuel */ }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(res.status === 401 ? 'Connecte-toi d\'abord.' : (data.error || 'Activation impossible.'));
+  } catch (e) {
+    return showToast(e.message === 'Failed to fetch' ? 'Impossible de joindre le serveur.' : e.message);
+  }
   successEl.style.display = 'block';
   setTimeout(() => { successEl.style.display = 'none'; }, 2500);
 }
 
-// ==== Messagerie privée (démo avec un contact fixe) ====
-const DM_DEMO_CONTACT_ID = 'creator_demo_jean';
-let dmHistory = [{ fromMe: false, text: 'Salut, merci d\'avoir aimé ma vidéo !' }];
+// ==== Messagerie privée (vraies conversations) ====
+let dmContactId = null;
 
-function renderDmThread() {
+async function loadConversations() {
+  const listEl = document.getElementById('dm-list');
+  if (!CREATOR_TOKEN) return;
+  try {
+    const data = await apiCall('/api/conversations');
+    if (!data.conversations.length) return;
+    listEl.innerHTML = data.conversations.map(c => `
+      <div class="conv-item" onclick="openConversation('${escapeHtml(c.other_id)}', this.querySelector('b').textContent)">
+        <b>${escapeHtml(c.other_name)}</b><span>${escapeHtml(c.last_text)}</span>
+      </div>`).join('');
+  } catch (e) {
+    listEl.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
+  }
+}
+
+function openConversation(creatorId, name) {
+  if (!CREATOR_TOKEN) return showToast('Connecte-toi pour envoyer un message.');
+  dmContactId = creatorId;
+  document.getElementById('dm-title').textContent = name;
+  document.getElementById('dm-list-view').style.display = 'none';
+  document.getElementById('dm-thread-view').style.display = 'block';
+  const tab = document.querySelector('.tab[data-target="s-messages"]');
+  if (tab && !tab.classList.contains('active')) tab.click();
+  renderDmThread();
+}
+
+function closeConversation() {
+  dmContactId = null;
+  document.getElementById('dm-thread-view').style.display = 'none';
+  document.getElementById('dm-list-view').style.display = 'block';
+  loadConversations();
+}
+
+async function renderDmThread() {
   const thread = document.getElementById('dm-thread');
-  thread.innerHTML = dmHistory.map(m =>
-    `<div class="dm-bubble ${m.fromMe ? 'me' : 'them'}">${m.text}</div>`
-  ).join('');
+  if (!dmContactId) { thread.innerHTML = ''; return; }
+  try {
+    const data = await apiCall(`/api/messages/${dmContactId}`);
+    thread.innerHTML = (data.messages || []).map(m =>
+      `<div class="dm-bubble ${m.sender_id === CREATOR_ID ? 'me' : 'them'}">${escapeHtml(m.text)}</div>`).join('')
+      || '<p class="feed-empty">Écris le premier message.</p>';
+  } catch (e) {
+    thread.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
+  }
 }
 
 async function sendDm() {
   const input = document.getElementById('dm-input');
   const text = input.value.trim();
-  if (!text) return;
-  dmHistory.push({ fromMe: true, text });
-  renderDmThread();
-  input.value = '';
+  if (!text || !dmContactId) return;
   try {
-    await fetch(`${API_BASE_URL}/api/messages/${DM_DEMO_CONTACT_ID}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
-      body: JSON.stringify({ text }),
-    });
-  } catch (e) { /* repli visuel déjà appliqué */ }
+    await apiCall(`/api/messages/${dmContactId}`, { method: 'POST', body: { text } });
+  } catch (e) {
+    return showToast(e.message);
+  }
+  input.value = '';
+  renderDmThread();
 }
 
 window.addEventListener('load', async () => {
-  loadFeed();
-  checkLiveEligibility();
-  renderDmThread();
+  updateUploadAccept();
 
   if (CREATOR_TOKEN) {
     // Session déjà ouverte (rechargement de page) : on saute directement dans l'app.
     CREATOR_ID = sessionStorage.getItem('eaji_creator_id') || CREATOR_ID;
     document.getElementById('onboarding-screen').style.display = 'none';
     document.getElementById('app-shell').style.display = 'flex';
+    checkLiveEligibility();
   }
+  loadFeed();
 
+  loadProfile().catch(() => {});
+  loadConversations();
+  loadPayments();
   try {
     await loadRealData(); // vraie donnée si l'API est en ligne et la session valide
   } catch (e) {
-    // Repli démo tant que le backend n'est pas encore déployé, ou pas encore connecté
-    updateDashboard({ subscribers: 742, missingSubscribers: 258, eligible: false });
+    // Pas encore connecté ou serveur injoignable : on affiche zéro, jamais de faux chiffres.
+    updateDashboard({ subscribers: 0, missingSubscribers: 1000, missingViews: 1000, eligible: false });
   }
 });
 
 </script>
+<div class="toast" id="toast"></div>
 </body>
 </html>
