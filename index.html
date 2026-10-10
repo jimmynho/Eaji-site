@@ -251,6 +251,7 @@ select.field{appearance:none;}
       <option value="EUR">Euro (&euro;)</option>
       <option value="CDF">Franc congolais (FC)</option>
     </select>
+    <p class="feed-type" style="margin:-8px 0 14px;font-size:11px;">Conversion au taux du jour &mdash; <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener" style="color:var(--muted);">Rates By Exchange Rate API</a></p>
 
     <label class="field-label">Mot de passe (8 caract&egrave;res minimum)</label>
     <input class="field" id="reg-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
@@ -506,6 +507,7 @@ select.field{appearance:none;}
           <option value="EUR">Euro (&euro;)</option>
           <option value="CDF">Franc congolais (FC)</option>
         </select>
+        <p class="feed-type" style="margin:-8px 0 14px;font-size:11px;">Conversion au taux du jour &mdash; <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener" style="color:var(--muted);">Rates By Exchange Rate API</a></p>
         <label class="field-label">Type de contenu principal</label>
         <select class="field" id="prof-content-type">
           <option value="video_courte">Vid&eacute;o courte</option>
@@ -769,6 +771,50 @@ function composePhone(dial, local) {
   return dial + raw.replace(/^0+/, '');
 }
 // Relie un trio zone / pays / indicatif (+ langue) : changer la zone recharge les pays, etc.
+// ==== Devises locales et internationales ====
+let CURRENCY_CATALOG = { byCountry: { CD: ['CDF', 'USD'] }, international: ['USD', 'EUR', 'CDF'] };
+async function loadCurrencies() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/currencies`);
+    if (res.ok) CURRENCY_CATALOG = await res.json();
+  } catch (e) { /* hors ligne : on garde USD / EUR / CDF */ }
+}
+function currencyName(code) {
+  try { return new Intl.DisplayNames(['fr'], { type: 'currency' }).of(code); } catch (e) { return code; }
+}
+const LOCAL_SYMBOLS = { CDF: 'FC' };
+function currencySymbol(code) {
+  if (LOCAL_SYMBOLS[code]) return LOCAL_SYMBOLS[code];
+  try {
+    const part = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: code }).formatToParts(0).find(x => x.type === 'currency');
+    return part && part.value !== code ? part.value : code;
+  } catch (e) { return code; }
+}
+function formatMoney(amount, code) {
+  if (LOCAL_SYMBOLS[code]) return `${Math.round(Number(amount) || 0).toLocaleString('fr-FR')} ${LOCAL_SYMBOLS[code]}`;
+  try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: code || 'USD' }).format(Number(amount) || 0); }
+  catch (e) { return `${Number(amount || 0).toLocaleString('fr-FR')} ${code}`; }
+}
+function fillCurrencySelect(sel, countryCode, selected) {
+  const local = (CURRENCY_CATALOG.byCountry || {})[countryCode] || [];
+  const intl = (CURRENCY_CATALOG.international || ['USD', 'EUR']).filter(c => !local.includes(c));
+  const opt = c => `<option value="${c}">${currencyName(c)} (${currencySymbol(c)})</option>`;
+  sel.innerHTML = (local.length ? `<optgroup label="Devises de ton pays">${local.map(opt).join('')}</optgroup>` : '') +
+    `<optgroup label="Devises internationales">${intl.map(opt).join('')}</optgroup>`;
+  const all = [...local, ...intl];
+  sel.value = selected && all.includes(selected) ? selected : (local[0] || 'USD');
+}
+// Quand le pays (ou la zone) change, la liste des devises suit.
+function linkCurrencyToCountry(zoneId, countryId, currencyId) {
+  const update = () => setTimeout(() => {
+    const sel = document.getElementById(currencyId);
+    fillCurrencySelect(sel, document.getElementById(countryId).value, sel.dataset.keep === '1' ? sel.value : null);
+  }, 0);
+  document.getElementById(countryId).addEventListener('change', update);
+  document.getElementById(zoneId).addEventListener('change', update);
+  document.getElementById(currencyId).addEventListener('change', e => { e.target.dataset.keep = '1'; });
+}
+
 function wireCountryPicker(zoneId, countryId, dialId, langId, initialCountry, initialLang) {
   const zoneSel = document.getElementById(zoneId), countrySel = document.getElementById(countryId);
   const dialEl = dialId ? document.getElementById(dialId) : null, langSel = langId ? document.getElementById(langId) : null;
@@ -821,7 +867,7 @@ async function loadRealData() {
   });
   if (!res.ok) throw new Error('API indisponible');
   const data = await res.json();
-  const estimate = `${Number(data.amount || 0).toLocaleString('fr-FR')} ${data.currency || 'USD'}`;
+  const estimate = formatMoney(data.amount || 0, data.currency || 'USD');
   document.getElementById('home-estimate').textContent = estimate;
   document.getElementById('balance-estimate').textContent = data.eligible
     ? `Gain estimé ce mois : ${estimate}`
@@ -1413,7 +1459,8 @@ async function loadProfile() {
     document.getElementById('phone-dial').textContent = COUNTRY_BY_CODE[p.countryCode]?.dial || '+';
     updateScopeLabel();
   }
-  if (p.giftCurrency) { MY_CURRENCY = p.giftCurrency; document.getElementById('prof-currency').value = p.giftCurrency; }
+  if (p.giftCurrency) MY_CURRENCY = p.giftCurrency;
+  fillCurrencySelect(document.getElementById('prof-currency'), p.countryCode || MY_COUNTRY, MY_CURRENCY);
   if (p.primaryContentType) document.getElementById('prof-content-type').value = p.primaryContentType;
   if (p.phone) document.getElementById('cur-phone').textContent = p.phone;
   document.getElementById('pref-subcount').checked = Boolean(p.subscriberCountPublic);
@@ -1425,7 +1472,7 @@ async function loadProfile() {
     document.getElementById('info-content').textContent = contentTypeLabel(p.primaryContentType);
   }
   if (p.verificationStatus) document.getElementById('info-verif').textContent = verifs[p.verificationStatus] || p.verificationStatus;
-  document.getElementById('balance-num').textContent = `${Number(p.balance || 0).toLocaleString('fr-FR')} ${p.currency || 'USD'}`;
+  document.getElementById('balance-num').textContent = formatMoney(p.balance || 0, p.currency || 'USD');
   if (p.photoUrl) setAvatarImage(p.photoUrl);
   else if (p.name) document.querySelectorAll('.avatar, #avatar-edit').forEach((el) => { el.textContent = p.name[0].toUpperCase(); });
 }
@@ -1864,7 +1911,7 @@ async function loadPayments() {
     listEl.innerHTML = transactions.map(t => `
       <div class="tx-row"><div><div class="tx-name">Paiement mensuel (${escapeHtml(labels[t.status] || t.status)})</div>
       <div class="tx-date">${new Date(t.created_at).toLocaleDateString('fr-FR')}</div></div>
-      <div class="tx-amt">+${Number(t.amount).toLocaleString('fr-FR')} ${escapeHtml(t.currency)}</div></div>`).join('');
+      <div class="tx-amt">+${escapeHtml(formatMoney(t.amount, t.currency))}</div></div>`).join('');
   } catch (e) {
     listEl.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
   }
@@ -2065,6 +2112,11 @@ window.addEventListener('load', async () => {
   updateUploadAccept();
   wireCountryPicker('reg-zone', 'reg-country', 'reg-dial', 'reg-language', MY_COUNTRY, 'fr');
   wireCountryPicker('prof-zone', 'prof-country', null, 'prof-language', MY_COUNTRY, 'fr');
+  await loadCurrencies();
+  fillCurrencySelect(document.getElementById('reg-currency'), document.getElementById('reg-country').value);
+  fillCurrencySelect(document.getElementById('prof-currency'), MY_COUNTRY, MY_CURRENCY);
+  linkCurrencyToCountry('reg-zone', 'reg-country', 'reg-currency');
+  linkCurrencyToCountry('prof-zone', 'prof-country', 'prof-currency');
   updateScopeLabel();
   document.querySelectorAll('#zone-list .zone-item').forEach((el, i) => {
     const z = Object.keys(ZONE_LABELS)[i];
