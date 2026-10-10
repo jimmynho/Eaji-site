@@ -149,6 +149,44 @@ select.field{appearance:none;}
 .conv-item{display:flex;flex-direction:column;gap:3px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;
   background:var(--surface);margin-bottom:8px;cursor:pointer;}
 .conv-item b{font-size:13px;} .conv-item span{font-size:12px;color:var(--muted);}
+.phone-row{display:flex;gap:8px;align-items:stretch;}
+.phone-row .dial{display:flex;align-items:center;padding:0 12px;border-radius:12px;border:1px solid var(--line);
+  background:var(--surface2);color:var(--muted);font-size:14px;margin-bottom:14px;white-space:nowrap;}
+.phone-row input{flex:1;}
+.scope-row{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap;}
+.scope-btn{padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--muted);
+  font-size:13px;cursor:pointer;}
+.scope-btn.sel{background:var(--gold);color:#1A1206;border-color:var(--gold);font-weight:600;}
+.settings-block{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:0 0 14px;}
+.settings-block .section-title{margin:0 0 12px;}
+.mini-btn{background:none;border:1px solid var(--line);color:var(--text);border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer;}
+.mini-btn.danger{border-color:var(--coral);color:var(--coral);}
+.list-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;}
+.list-row:last-child{border-bottom:none;}
+.list-row .grow{flex:1;min-width:0;}
+.list-row .sub{color:var(--muted);font-size:11px;}
+.feed-creator,.feed-avatar{cursor:pointer;}
+.feed-avatar{background-size:cover;background-position:center;}
+.creator-head{display:flex;flex-direction:column;align-items:center;gap:8px;margin:18px 0;}
+.creator-photo{width:84px;height:84px;border-radius:50%;background:var(--surface2) center/cover;display:flex;align-items:center;
+  justify-content:center;font-size:30px;font-weight:700;color:var(--gold);border:1px solid var(--line);}
+.logout-top{background:none;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:6px 10px;font-size:11px;cursor:pointer;margin-right:8px;}
+.call-btn{background:none;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:6px 10px;font-size:14px;cursor:pointer;}
+.voice-btn{background:var(--surface2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:0 12px;font-size:15px;cursor:pointer;white-space:nowrap;}
+.voice-btn.rec{background:var(--coral);color:#2A0D07;border-color:var(--coral);font-size:12px;font-weight:700;}
+.dm-bubble audio{display:block;max-width:220px;margin-top:4px;}
+.call-overlay{position:fixed;inset:0;background:rgba(10,11,16,.96);z-index:80;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;}
+.call-title{font-family:'Sora',sans-serif;font-size:22px;font-weight:700;}
+.call-status{color:var(--muted);font-size:14px;}
+.call-videos{position:relative;width:100%;max-width:420px;}
+.call-videos #remote-video{width:100%;border-radius:16px;background:#000;min-height:220px;}
+.call-videos #local-video{position:absolute;right:10px;bottom:10px;width:30%;border-radius:10px;border:2px solid var(--surface2);background:#000;}
+.call-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.call-actions button{border:none;border-radius:99px;padding:13px 20px;font-weight:700;font-size:14px;cursor:pointer;}
+#call-accept{background:var(--teal);color:#0A2320;}
+#call-reject,#call-hangup{background:var(--coral);color:#2A0D07;}
+#call-mute{background:var(--surface2);color:var(--text);}
 .feed-empty{color:var(--muted);font-size:13px;text-align:center;padding:30px 10px;}
 .comment-line{font-size:12px;color:var(--muted);margin-bottom:6px;}
 .comment-line b{color:var(--text);}
@@ -192,34 +230,37 @@ select.field{appearance:none;}
     <label class="field-label">Email</label>
     <input class="field" id="reg-email" type="email" placeholder="toi@exemple.com" />
 
+    <label class="field-label">Zone</label>
+    <select class="field" id="reg-zone"></select>
+
+    <label class="field-label">Pays</label>
+    <select class="field" id="reg-country"></select>
+
     <label class="field-label">T&eacute;l&eacute;phone</label>
-    <input class="field" id="reg-phone" placeholder="+243900000001" />
+    <div class="phone-row">
+      <span class="dial" id="reg-dial">+243</span>
+      <input class="field" id="reg-phone" inputmode="tel" placeholder="812 345 678" />
+    </div>
 
-    <label class="field-label">Mot de passe</label>
-    <input class="field" id="reg-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+    <label class="field-label">Langue</label>
+    <select class="field" id="reg-language"></select>
 
-    <label class="field-label">Pays d'origine</label>
-    <select class="field" id="reg-country">
-      <option value="CD">R&eacute;publique d&eacute;mocratique du Congo</option>
-      <option value="NG">Nig&eacute;ria</option>
-      <option value="KE">Kenya</option>
-      <option value="SN">S&eacute;n&eacute;gal</option>
-      <option value="HT">Ha&iuml;ti</option>
-      <option value="JM">Jama&iuml;que</option>
-      <option value="DO">R&eacute;publique dominicaine</option>
-      <option value="PH">Philippines</option>
-      <option value="BD">Bangladesh</option>
-      <option value="IN">Inde</option>
-      <option value="ID">Indon&eacute;sie</option>
-      <option value="PL">Pologne</option>
-      <option value="CZ">Tch&eacute;quie</option>
-      <option value="HU">Hongrie</option>
+    <label class="field-label">Devise pour tes gains</label>
+    <select class="field" id="reg-currency">
+      <option value="USD">Dollar am&eacute;ricain ($)</option>
+      <option value="EUR">Euro (&euro;)</option>
+      <option value="CDF">Franc congolais (FC)</option>
     </select>
+
+    <label class="field-label">Mot de passe (8 caract&egrave;res minimum)</label>
+    <input class="field" id="reg-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
 
     <label class="field-label">Type de contenu principal</label>
     <select class="field" id="reg-content-type">
       <option value="video_courte">Vid&eacute;o courte</option>
       <option value="video_longue">Vid&eacute;o longue</option>
+      <option value="film">Film</option>
+      <option value="musique">Musique</option>
       <option value="podcast">Podcast</option>
       <option value="audio">Audio</option>
       <option value="live">Live</option>
@@ -251,7 +292,7 @@ select.field{appearance:none;}
       <label class="field-label">Mot de passe</label>
       <input class="field" id="login-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
       <p class="form-error" id="login-error-1">Identifiants invalides.</p>
-      <button class="primary-btn" onclick="loginCreator()">Continuer</button>
+      <button class="primary-btn" id="login-btn" onclick="loginCreator()">Continuer</button>
       <p class="avatar-edit-label" style="margin-top:18px;">Pas encore de compte ? <a href="#" onclick="showRegisterForm();return false;" style="color:var(--teal);">Cr&eacute;er un compte</a></p>
     </div>
 
@@ -260,7 +301,8 @@ select.field{appearance:none;}
       <input class="field" id="login-otp" placeholder="123456" />
       <p class="avatar-edit-label" id="login-dev-hint" style="margin:-8px 0 14px;"></p>
       <p class="form-error" id="login-error-2">Code invalide.</p>
-      <button class="primary-btn" onclick="verifyLoginCode()">Valider et entrer</button>
+      <button class="primary-btn" id="otp-btn" onclick="verifyLoginCode()">Valider et entrer</button>
+      <p class="avatar-edit-label" style="margin-top:14px;">Pas re&ccedil;u ? Regarde aussi dans les spams, ou <a href="#" onclick="resendLoginCode();return false;" style="color:var(--teal);">renvoyer le code</a></p>
     </div>
   </div>
 </div>
@@ -268,7 +310,10 @@ select.field{appearance:none;}
 <div class="app" id="app-shell" style="display:none;">
   <div class="topbar">
     <div class="brand">Ea<span>ji</span></div>
-    <div class="avatar">A</div>
+    <div style="display:flex;align-items:center;">
+      <button class="logout-top" onclick="logoutCreator()">D&eacute;connexion</button>
+      <div class="avatar" onclick="document.querySelector('.tab[data-target=\'s-profil\']').click()" style="cursor:pointer;">A</div>
+    </div>
   </div>
 
   <div class="screens">
@@ -302,7 +347,27 @@ select.field{appearance:none;}
     <!-- DÉCOUVRIR -->
     <section class="screen" id="s-decouvrir">
       <div class="section-title" style="margin-top:14px;">Contenus de la communaut&eacute;</div>
+      <div class="scope-row">
+        <button class="scope-btn sel" id="scope-country" onclick="setFeedScope('pays')">Mon pays</button>
+        <button class="scope-btn" id="scope-all" onclick="setFeedScope('tout')">Partout</button>
+      </div>
       <div id="feed-list"></div>
+    </section>
+
+    <!-- PROFIL PUBLIC D'UN CRÉATEUR (point 6) -->
+    <section class="screen" id="s-creator">
+      <button class="mini-btn" style="margin-top:14px;" onclick="closeCreatorProfile()">&larr; Retour</button>
+      <div class="creator-head">
+        <div class="creator-photo" id="cp-photo"></div>
+        <div class="section-title" style="margin:0;" id="cp-name"></div>
+        <div class="feed-type" id="cp-meta"></div>
+        <div style="display:flex;gap:8px;">
+          <button class="primary-btn" style="width:auto;padding:10px 18px;" id="cp-follow" onclick="toggleFollowFromProfile()">S'abonner</button>
+          <button class="mini-btn" id="cp-write" onclick="writeFromProfile()">&Eacute;crire</button>
+        </div>
+      </div>
+      <div class="section-title">Publications</div>
+      <div id="cp-contents"></div>
     </section>
 
     <!-- CONTENU -->
@@ -332,6 +397,9 @@ select.field{appearance:none;}
       <p class="form-error" id="up-error" style="margin-top:8px;"></p>
       <p class="form-success" id="up-success" style="margin-top:8px;">Contenu publié.</p>
       <button class="primary-btn" id="up-btn" onclick="uploadContent()">Publier</button>
+
+      <div class="section-title" style="margin-top:24px;">Mes publications</div>
+      <div class="settings-block" id="my-content"><p class="feed-empty" style="padding:8px;">Aucune publication pour le moment.</p></div>
 
       <div class="section-title" style="margin-top:24px;">Type de contenu</div>
       <div class="chip-row" id="chip-row">
@@ -402,11 +470,14 @@ select.field{appearance:none;}
       <div id="dm-thread-view" style="display:none;">
         <div class="section-title" style="margin-top:14px;display:flex;align-items:center;gap:10px;">
           <button class="follow-btn" style="margin-left:0;" onclick="closeConversation()">&larr; Retour</button>
-          <span id="dm-title">Conversation</span>
+          <span id="dm-title" style="flex:1;">Conversation</span>
+          <button class="call-btn" title="Appel audio" onclick="startCall('audio')">📞</button>
+          <button class="call-btn" title="Appel vidéo" onclick="startCall('video')">🎥</button>
         </div>
         <div id="dm-thread" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
         <div class="comment-input-row">
           <input class="field" id="dm-input" placeholder="&Eacute;crire un message priv&eacute;&hellip;">
+          <button class="voice-btn" id="voice-btn" title="Message vocal" onclick="toggleVoiceRecording()">🎤</button>
           <button class="comment-send" onclick="sendDm()">Envoyer</button>
         </div>
       </div>
@@ -419,33 +490,108 @@ select.field{appearance:none;}
       <p class="avatar-edit-label">Touche pour changer ta photo</p>
       <p class="avatar-edit-label" id="photo-status" style="margin:-10px 0 16px;"></p>
 
-      <label class="field-label">Nom complet</label>
-      <input class="field" id="prof-name" value="" />
+      <div class="settings-block">
+        <div class="section-title">Mon profil</div>
+        <label class="field-label">Nom complet</label>
+        <input class="field" id="prof-name" value="" />
+        <label class="field-label">Zone</label>
+        <select class="field" id="prof-zone"></select>
+        <label class="field-label">Pays</label>
+        <select class="field" id="prof-country"></select>
+        <label class="field-label">Langue</label>
+        <select class="field" id="prof-language"></select>
+        <label class="field-label">Devise pour tes gains</label>
+        <select class="field" id="prof-currency">
+          <option value="USD">Dollar am&eacute;ricain ($)</option>
+          <option value="EUR">Euro (&euro;)</option>
+          <option value="CDF">Franc congolais (FC)</option>
+        </select>
+        <label class="field-label">Type de contenu principal</label>
+        <select class="field" id="prof-content-type">
+          <option value="video_courte">Vid&eacute;o courte</option>
+          <option value="video_longue">Vid&eacute;o longue</option>
+          <option value="film">Film</option>
+          <option value="musique">Musique</option>
+          <option value="podcast">Podcast</option>
+          <option value="photo">Photo</option>
+          <option value="livre">Livre</option>
+          <option value="pdf">PDF</option>
+          <option value="powerpoint">PowerPoint</option>
+          <option value="publication">Publication</option>
+        </select>
+        <p class="form-error" id="prof-error"></p>
+        <p class="form-success" id="prof-success">Profil mis &agrave; jour.</p>
+        <button class="primary-btn" onclick="saveProfile()">Enregistrer</button>
+      </div>
 
-      <label class="field-label">Num&eacute;ro pour les retraits (mobile money)</label>
-      <input class="field" id="prof-withdrawal-phone" placeholder="+243900000001" />
+      <div class="settings-block">
+        <div class="section-title">Num&eacute;ro de t&eacute;l&eacute;phone</div>
+        <p class="feed-type" style="margin:-6px 0 12px;">Num&eacute;ro actuel : <b id="cur-phone">&ndash;</b></p>
+        <div class="phone-row">
+          <span class="dial" id="phone-dial">+243</span>
+          <input class="field" id="new-phone" inputmode="tel" placeholder="Nouveau num&eacute;ro" />
+        </div>
+        <button class="mini-btn" onclick="requestPhoneChange()">Recevoir un code</button>
+        <div id="phone-code-step" style="display:none;margin-top:12px;">
+          <input class="field" id="phone-code" placeholder="Code re&ccedil;u" />
+          <button class="mini-btn" onclick="confirmPhoneChange()">Confirmer le nouveau num&eacute;ro</button>
+        </div>
+        <p class="feed-type" id="phone-status" style="margin-top:10px;"></p>
+      </div>
 
-      <label class="field-label">Pays d'origine</label>
-      <select class="field" id="prof-country">
-        <option value="CD" selected>R&eacute;publique d&eacute;mocratique du Congo</option>
-        <option value="NG">Nig&eacute;ria</option>
-        <option value="KE">Kenya</option>
-        <option value="SN">S&eacute;n&eacute;gal</option>
-        <option value="HT">Ha&iuml;ti</option>
-        <option value="JM">Jama&iuml;que</option>
-        <option value="DO">R&eacute;publique dominicaine</option>
-        <option value="PH">Philippines</option>
-        <option value="BD">Bangladesh</option>
-        <option value="IN">Inde</option>
-        <option value="ID">Indon&eacute;sie</option>
-        <option value="PL">Pologne</option>
-        <option value="CZ">Tch&eacute;quie</option>
-        <option value="HU">Hongrie</option>
-      </select>
+      <div class="settings-block">
+        <div class="section-title">Mode de retrait de tes gains</div>
+        <label class="field-label">Moyen</label>
+        <select class="field" id="payout-method" onchange="updatePayoutFields()">
+          <option value="mobile_money">Mobile money</option>
+          <option value="virement">Virement bancaire</option>
+        </select>
+        <div id="payout-operator-wrap">
+          <label class="field-label">Op&eacute;rateur</label>
+          <select class="field" id="payout-operator">
+            <option value="mpesa">M-Pesa (Vodacom)</option>
+            <option value="orange_money">Orange Money</option>
+            <option value="airtel_money">Airtel Money</option>
+            <option value="afrimoney">AfriMoney (Africell)</option>
+            <option value="mtn_momo">MTN Mobile Money</option>
+            <option value="wave">Wave</option>
+            <option value="moov_money">Moov Money</option>
+            <option value="moncash">MonCash (Digicel)</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <label class="field-label" id="payout-number-label">Num&eacute;ro mobile money</label>
+        <input class="field" id="prof-withdrawal-phone" placeholder="+243..." />
+        <p class="feed-type" id="payout-status" style="margin:-6px 0 10px;"></p>
+        <button class="mini-btn" onclick="savePayoutAccount()">Enregistrer le mode de retrait</button>
+      </div>
 
-      <p class="form-error" id="prof-error"></p>
-      <p class="form-success" id="prof-success">Profil mis &agrave; jour.</p>
-      <button class="primary-btn" onclick="saveProfile()">Enregistrer</button>
+      <div class="settings-block">
+        <div class="section-title">Confidentialit&eacute;</div>
+        <label style="display:flex;gap:10px;align-items:center;font-size:13px;">
+          <input type="checkbox" id="pref-subcount" onchange="saveVisibility()"> Afficher publiquement mon nombre d'abonn&eacute;s
+        </label>
+        <p class="feed-type" style="margin-top:8px;">Ton profil et tes publications publiques sont visibles par tout le monde, abonn&eacute; ou non, pour qu'on puisse s'abonner. Ton solde reste toujours priv&eacute;.</p>
+      </div>
+
+      <div class="settings-block">
+        <div class="section-title">Mes abonn&eacute;s</div>
+        <div id="followers-list"><p class="feed-type">Aucun abonn&eacute; pour le moment.</p></div>
+      </div>
+
+      <div class="settings-block">
+        <div class="section-title">Comptes bloqu&eacute;s</div>
+        <div id="blocked-list"><p class="feed-type">Aucun compte bloqu&eacute;.</p></div>
+      </div>
+
+      <div class="settings-block">
+        <div class="section-title">Mot de passe</div>
+        <input class="field" id="pwd-current" type="password" placeholder="Mot de passe actuel" />
+        <input class="field" id="pwd-new" type="password" placeholder="Nouveau mot de passe (8 caract&egrave;res min.)" />
+        <input class="field" id="pwd-confirm" type="password" placeholder="Confirmer le nouveau mot de passe" />
+        <p class="feed-type" id="pwd-status" style="margin:-6px 0 10px;"></p>
+        <button class="mini-btn" onclick="changeMyPassword()">Changer le mot de passe</button>
+      </div>
 
       <div class="section-title" style="margin-top:24px;">Statistiques</div>
       <div class="stat-grid">
@@ -459,6 +605,7 @@ select.field{appearance:none;}
         <div class="info-row"><span class="k">Contenu principal</span><span id="info-content">&ndash;</span></div>
         <div class="info-row"><span class="k">V&eacute;rification</span><span class="verif" id="info-verif">&ndash;</span></div>
       </div>
+      <button class="primary-btn" style="margin-top:20px;background:var(--surface2);color:var(--text);border:1px solid var(--line);" onclick="logoutCreator()">Se d&eacute;connecter</button>
     </section>
 
   </div>
@@ -519,7 +666,129 @@ document.querySelectorAll('.zone-item').forEach(z=>{
 // Une fois le backend déployé (Railway), remplace cette URL par la vraie.
 const API_BASE_URL = 'https://eajimmy-production.up.railway.app';
 let CREATOR_ID = 'creator_demo'; // en prod : l'id du créateur connecté
-let CREATOR_TOKEN = sessionStorage.getItem('eaji_creator_token'); // vrai jeton une fois connecté
+// La session est gardée sur l'appareil (30 jours) : plus besoin de se reconnecter à chaque visite.
+function storeGet(k) { try { return localStorage.getItem(k) || sessionStorage.getItem(k); } catch (e) { return null; } }
+function storeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { try { sessionStorage.setItem(k, v); } catch (e2) {} } }
+function storeClear() { ['eaji_creator_token', 'eaji_creator_id'].forEach(k => { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} }); }
+let CREATOR_TOKEN = storeGet('eaji_creator_token'); // vrai jeton une fois connecté
+// ==== Pays, indicatifs, zones et langues ====
+const COUNTRIES = [["DZ", "Algérie", "+213", "afrique"], ["AO", "Angola", "+244", "afrique"], ["BJ", "Bénin", "+229", "afrique"], ["BW", "Botswana", "+267", "afrique"], ["BF", "Burkina Faso", "+226", "afrique"], ["BI", "Burundi", "+257", "afrique"], ["CV", "Cap-Vert", "+238", "afrique"], ["CM", "Cameroun", "+237", "afrique"], ["CF", "Centrafrique", "+236", "afrique"], ["TD", "Tchad", "+235", "afrique"], ["KM", "Comores", "+269", "afrique"], ["CG", "Congo-Brazzaville", "+242", "afrique"], ["CD", "RD Congo", "+243", "afrique"], ["CI", "Côte d'Ivoire", "+225", "afrique"], ["DJ", "Djibouti", "+253", "afrique"], ["EG", "Égypte", "+20", "afrique"], ["GQ", "Guinée équatoriale", "+240", "afrique"], ["ER", "Érythrée", "+291", "afrique"], ["SZ", "Eswatini", "+268", "afrique"], ["ET", "Éthiopie", "+251", "afrique"], ["GA", "Gabon", "+241", "afrique"], ["GM", "Gambie", "+220", "afrique"], ["GH", "Ghana", "+233", "afrique"], ["GN", "Guinée", "+224", "afrique"], ["GW", "Guinée-Bissau", "+245", "afrique"], ["KE", "Kenya", "+254", "afrique"], ["LS", "Lesotho", "+266", "afrique"], ["LR", "Liberia", "+231", "afrique"], ["LY", "Libye", "+218", "afrique"], ["MG", "Madagascar", "+261", "afrique"], ["MW", "Malawi", "+265", "afrique"], ["ML", "Mali", "+223", "afrique"], ["MR", "Mauritanie", "+222", "afrique"], ["MU", "Maurice", "+230", "afrique"], ["MA", "Maroc", "+212", "afrique"], ["MZ", "Mozambique", "+258", "afrique"], ["NA", "Namibie", "+264", "afrique"], ["NE", "Niger", "+227", "afrique"], ["NG", "Nigeria", "+234", "afrique"], ["RW", "Rwanda", "+250", "afrique"], ["ST", "Sao Tomé-et-Principe", "+239", "afrique"], ["SN", "Sénégal", "+221", "afrique"], ["SC", "Seychelles", "+248", "afrique"], ["SL", "Sierra Leone", "+232", "afrique"], ["SO", "Somalie", "+252", "afrique"], ["ZA", "Afrique du Sud", "+27", "afrique"], ["SS", "Soudan du Sud", "+211", "afrique"], ["SD", "Soudan", "+249", "afrique"], ["TZ", "Tanzanie", "+255", "afrique"], ["TG", "Togo", "+228", "afrique"], ["TN", "Tunisie", "+216", "afrique"], ["UG", "Ouganda", "+256", "afrique"], ["ZM", "Zambie", "+260", "afrique"], ["ZW", "Zimbabwe", "+263", "afrique"], ["AG", "Antigua-et-Barbuda", "+1268", "caraibes"], ["BS", "Bahamas", "+1242", "caraibes"], ["BB", "Barbade", "+1246", "caraibes"], ["CU", "Cuba", "+53", "caraibes"], ["DM", "Dominique", "+1767", "caraibes"], ["DO", "République dominicaine", "+1809", "caraibes"], ["GD", "Grenade", "+1473", "caraibes"], ["HT", "Haïti", "+509", "caraibes"], ["JM", "Jamaïque", "+1876", "caraibes"], ["KN", "Saint-Christophe-et-Niévès", "+1869", "caraibes"], ["LC", "Sainte-Lucie", "+1758", "caraibes"], ["VC", "Saint-Vincent-et-les-Grenadines", "+1784", "caraibes"], ["TT", "Trinité-et-Tobago", "+1868", "caraibes"], ["AF", "Afghanistan", "+93", "asie"], ["SA", "Arabie saoudite", "+966", "asie"], ["AM", "Arménie", "+374", "asie"], ["AZ", "Azerbaïdjan", "+994", "asie"], ["BH", "Bahreïn", "+973", "asie"], ["BD", "Bangladesh", "+880", "asie"], ["BT", "Bhoutan", "+975", "asie"], ["MM", "Birmanie (Myanmar)", "+95", "asie"], ["BN", "Brunei", "+673", "asie"], ["KH", "Cambodge", "+855", "asie"], ["CN", "Chine", "+86", "asie"], ["KR", "Corée du Sud", "+82", "asie"], ["AE", "Émirats arabes unis", "+971", "asie"], ["GE", "Géorgie", "+995", "asie"], ["IN", "Inde", "+91", "asie"], ["ID", "Indonésie", "+62", "asie"], ["IQ", "Irak", "+964", "asie"], ["IR", "Iran", "+98", "asie"], ["IL", "Israël", "+972", "asie"], ["JP", "Japon", "+81", "asie"], ["JO", "Jordanie", "+962", "asie"], ["KZ", "Kazakhstan", "+7", "asie"], ["KG", "Kirghizistan", "+996", "asie"], ["KW", "Koweït", "+965", "asie"], ["LA", "Laos", "+856", "asie"], ["LB", "Liban", "+961", "asie"], ["MY", "Malaisie", "+60", "asie"], ["MV", "Maldives", "+960", "asie"], ["MN", "Mongolie", "+976", "asie"], ["NP", "Népal", "+977", "asie"], ["OM", "Oman", "+968", "asie"], ["UZ", "Ouzbékistan", "+998", "asie"], ["PK", "Pakistan", "+92", "asie"], ["PS", "Palestine", "+970", "asie"], ["PH", "Philippines", "+63", "asie"], ["QA", "Qatar", "+974", "asie"], ["SG", "Singapour", "+65", "asie"], ["LK", "Sri Lanka", "+94", "asie"], ["SY", "Syrie", "+963", "asie"], ["TJ", "Tadjikistan", "+992", "asie"], ["TW", "Taïwan", "+886", "asie"], ["TH", "Thaïlande", "+66", "asie"], ["TL", "Timor oriental", "+670", "asie"], ["TM", "Turkménistan", "+993", "asie"], ["TR", "Turquie", "+90", "asie"], ["VN", "Viêt Nam", "+84", "asie"], ["YE", "Yémen", "+967", "asie"], ["DE", "Allemagne", "+49", "europe_centrale"], ["AT", "Autriche", "+43", "europe_centrale"], ["HU", "Hongrie", "+36", "europe_centrale"], ["LI", "Liechtenstein", "+423", "europe_centrale"], ["PL", "Pologne", "+48", "europe_centrale"], ["SK", "Slovaquie", "+421", "europe_centrale"], ["SI", "Slovénie", "+386", "europe_centrale"], ["CH", "Suisse", "+41", "europe_centrale"], ["CZ", "Tchéquie", "+420", "europe_centrale"]]; // [code, nom, indicatif, zone]
+const ZONE_LABELS = { afrique: 'Afrique', caraibes: 'Caraïbes', asie: 'Asie', europe_centrale: 'Europe centrale' };
+const COUNTRY_BY_CODE = Object.fromEntries(COUNTRIES.map(c => [c[0], { code: c[0], name: c[1], dial: c[2], zone: c[3] }]));
+
+const LANG_NAMES = {
+  fr: 'Français', en: 'Anglais (English)', es: 'Espagnol (Español)', pt: 'Portugais (Português)', ar: 'Arabe (العربية)',
+  sw: 'Kiswahili', zh: 'Chinois (中文)', hi: 'Hindi (हिन्दी)', ru: 'Russe (Русский)', de: 'Allemand (Deutsch)',
+  ln: 'Lingala', kg: 'Kikongo', lu: 'Tshiluba', ktu: 'Kituba', ha: 'Haoussa', yo: 'Yoruba', ig: 'Igbo', am: 'Amharique',
+  om: 'Oromo', ti: 'Tigrinya', so: 'Somali', wo: 'Wolof', ff: 'Peul (Fulfulde)', bm: 'Bambara', mos: 'Mooré', dyu: 'Dioula',
+  bci: 'Baoulé', ak: 'Twi (Akan)', ee: 'Ewe', fon: 'Fon', sg: 'Sango', rw: 'Kinyarwanda', rn: 'Kirundi', lg: 'Luganda',
+  mg: 'Malgache', sn: 'Shona', zu: 'Zoulou', xh: 'Xhosa', af: 'Afrikaans', st: 'Sesotho', tn: 'Setswana', ny: 'Chichewa',
+  bem: 'Bemba', ewo: 'Ewondo', dua: 'Douala', ber: 'Tamazight (berbère)',
+  ht: 'Créole haïtien (Kreyòl)', jam: 'Créole jamaïcain (Patwa)', pap: 'Papiamento', gcf: 'Créole antillais',
+  bn: 'Bengali', ur: 'Ourdou', pa: 'Pendjabi', ta: 'Tamoul', te: 'Télougou', mr: 'Marathi', id: 'Indonésien', ms: 'Malais',
+  tl: 'Filipino (tagalog)', vi: 'Vietnamien', th: 'Thaï', my: 'Birman', km: 'Khmer', lo: 'Lao', ja: 'Japonais', ko: 'Coréen',
+  fa: 'Persan', ps: 'Pachto', tr: 'Turc', he: 'Hébreu', kk: 'Kazakh', uz: 'Ouzbek', ky: 'Kirghize', tg: 'Tadjik', mn: 'Mongol',
+  ne: 'Népalais', si: 'Cingalais', ka: 'Géorgien', hy: 'Arménien', az: 'Azéri',
+  pl: 'Polonais (polski)', cs: 'Tchèque (čeština)', sk: 'Slovaque (slovenčina)', hu: 'Hongrois (magyar)', sl: 'Slovène (slovenščina)',
+};
+const LANGS_INTL = ['fr', 'en', 'es', 'pt', 'ar', 'sw', 'zh', 'hi', 'ru', 'de'];
+const LANGS_BY_ZONE = {
+  afrique: ['ln', 'sw', 'kg', 'lu', 'ha', 'yo', 'ig', 'am', 'om', 'ti', 'so', 'wo', 'ff', 'bm', 'mos', 'dyu', 'ak', 'ee', 'fon',
+            'sg', 'rw', 'rn', 'lg', 'mg', 'sn', 'zu', 'xh', 'af', 'st', 'tn', 'ny', 'ber'],
+  caraibes: ['ht', 'jam', 'pap', 'gcf'],
+  asie: ['bn', 'ur', 'pa', 'ta', 'te', 'mr', 'id', 'ms', 'tl', 'vi', 'th', 'my', 'km', 'lo', 'ja', 'ko', 'fa', 'ps', 'tr', 'he',
+         'kk', 'uz', 'ky', 'tg', 'mn', 'ne', 'si', 'ka', 'hy', 'az'],
+  europe_centrale: ['pl', 'cs', 'sk', 'hu', 'sl'],
+};
+const LANGS_BY_COUNTRY = {
+  CD: ['ln', 'sw', 'kg', 'lu'], CG: ['ln', 'ktu'], CM: ['ff', 'ewo', 'dua'], NG: ['ha', 'yo', 'ig'], KE: ['sw'], TZ: ['sw'],
+  UG: ['lg', 'sw'], RW: ['rw', 'sw'], BI: ['rn', 'sw'], SN: ['wo', 'ff'], ML: ['bm', 'ff'], CI: ['dyu', 'bci'], BF: ['mos', 'dyu'],
+  GH: ['ak', 'ee'], TG: ['ee'], BJ: ['fon', 'yo'], ET: ['am', 'om', 'ti'], ER: ['ti'], SO: ['so'], CF: ['sg'], MG: ['mg'],
+  ZA: ['zu', 'xh', 'af', 'st', 'tn'], ZW: ['sn'], ZM: ['bem', 'ny'], MW: ['ny'], NE: ['ha'], MA: ['ber'], DZ: ['ber'],
+  HT: ['ht'], JM: ['jam'], IN: ['hi', 'bn', 'ta', 'te', 'mr', 'pa'], PK: ['ur', 'pa'], BD: ['bn'], ID: ['id'], PH: ['tl'],
+  VN: ['vi'], TH: ['th'], PL: ['pl'], CZ: ['cs'], SK: ['sk'], HU: ['hu'], SI: ['sl'],
+};
+
+// Zone et pays devinés à partir du fuseau horaire de l'appareil (aucune autorisation demandée).
+const TZ_COUNTRY = {
+  Kinshasa: 'CD', Lubumbashi: 'CD', Brazzaville: 'CG', Lagos: 'NG', Nairobi: 'KE', Dakar: 'SN', Abidjan: 'CI', Douala: 'CM',
+  Johannesburg: 'ZA', Cairo: 'EG', Casablanca: 'MA', Algiers: 'DZ', Tunis: 'TN', Accra: 'GH', Addis_Ababa: 'ET',
+  Dar_es_Salaam: 'TZ', Kampala: 'UG', Kigali: 'RW', Bujumbura: 'BI', Luanda: 'AO', Lusaka: 'ZM', Harare: 'ZW', Maputo: 'MZ',
+  Bamako: 'ML', Ouagadougou: 'BF', Niamey: 'NE', Ndjamena: 'TD', Libreville: 'GA', Lome: 'TG', 'Porto-Novo': 'BJ',
+  Conakry: 'GN', Freetown: 'SL', Monrovia: 'LR', Khartoum: 'SD', Mogadishu: 'SO', Djibouti: 'DJ', Asmara: 'ER',
+  Windhoek: 'NA', Gaborone: 'BW', Maseru: 'LS', Mbabane: 'SZ', Blantyre: 'MW', Juba: 'SS', Tripoli: 'LY', Nouakchott: 'MR',
+  Banjul: 'GM', Bissau: 'GW', Malabo: 'GQ', Sao_Tome: 'ST', Bangui: 'CF', Antananarivo: 'MG', Mauritius: 'MU', Mahe: 'SC',
+  Comoro: 'KM', Cape_Verde: 'CV', 'Port-au-Prince': 'HT', Jamaica: 'JM', Santo_Domingo: 'DO', Havana: 'CU', Nassau: 'BS',
+  Barbados: 'BB', Port_of_Spain: 'TT', Antigua: 'AG', Dominica: 'DM', Grenada: 'GD', St_Kitts: 'KN', St_Lucia: 'LC',
+  St_Vincent: 'VC', Kolkata: 'IN', Calcutta: 'IN', Dhaka: 'BD', Karachi: 'PK', Jakarta: 'ID', Manila: 'PH', Bangkok: 'TH',
+  Ho_Chi_Minh: 'VN', Saigon: 'VN', Shanghai: 'CN', Tokyo: 'JP', Seoul: 'KR', Kathmandu: 'NP', Colombo: 'LK', Kabul: 'AF',
+  Tehran: 'IR', Baghdad: 'IQ', Riyadh: 'SA', Dubai: 'AE', Istanbul: 'TR', Kuala_Lumpur: 'MY', Singapore: 'SG',
+  Yangon: 'MM', Phnom_Penh: 'KH', Vientiane: 'LA', Almaty: 'KZ', Tashkent: 'UZ', Bishkek: 'KG', Dushanbe: 'TJ',
+  Ashgabat: 'TM', Ulaanbaatar: 'MN', Tbilisi: 'GE', Yerevan: 'AM', Baku: 'AZ', Amman: 'JO', Beirut: 'LB', Damascus: 'SY',
+  Jerusalem: 'IL', Gaza: 'PS', Kuwait: 'KW', Qatar: 'QA', Bahrain: 'BH', Muscat: 'OM', Aden: 'YE', Thimphu: 'BT',
+  Brunei: 'BN', Dili: 'TL', Maldives: 'MV', Taipei: 'TW', Warsaw: 'PL', Prague: 'CZ', Bratislava: 'SK', Budapest: 'HU',
+  Ljubljana: 'SI', Vienna: 'AT', Berlin: 'DE', Zurich: 'CH', Vaduz: 'LI',
+};
+function detectCountry() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    const code = TZ_COUNTRY[tz.split('/').pop()];
+    if (code && COUNTRY_BY_CODE[code]) return code;
+    if (tz.startsWith('Asia/')) return 'IN';
+  } catch (e) { /* appareil sans fuseau : on prend le pays pilote */ }
+  return 'CD';
+}
+
+function fillZoneSelect(sel, zone) {
+  sel.innerHTML = Object.entries(ZONE_LABELS).map(([z, label]) =>
+    `<option value="${z}">${label} (${COUNTRIES.filter(c => c[3] === z).length} pays)</option>`).join('');
+  sel.value = zone;
+}
+function fillCountrySelect(sel, zone, selected) {
+  const list = COUNTRIES.filter(c => c[3] === zone).sort((a, b) => a[1].localeCompare(b[1], 'fr'));
+  sel.innerHTML = list.map(c => `<option value="${c[0]}">${c[1]} (${c[2]})</option>`).join('');
+  if (selected && list.some(c => c[0] === selected)) sel.value = selected;
+}
+function fillLanguageSelect(sel, countryCode, selected) {
+  const zone = COUNTRY_BY_CODE[countryCode]?.zone || 'afrique';
+  const local = LANGS_BY_COUNTRY[countryCode] || [];
+  const zoneLangs = (LANGS_BY_ZONE[zone] || []).filter(l => !local.includes(l));
+  const intl = LANGS_INTL.filter(l => !local.includes(l));
+  const opt = l => `<option value="${l}">${LANG_NAMES[l] || l}</option>`;
+  sel.innerHTML =
+    (local.length ? `<optgroup label="Langues de ton pays">${local.map(opt).join('')}</optgroup>` : '') +
+    `<optgroup label="Langues internationales">${intl.map(opt).join('')}</optgroup>` +
+    `<optgroup label="Autres langues de la zone ${ZONE_LABELS[zone]}">${zoneLangs.filter(l => !intl.includes(l)).map(opt).join('')}</optgroup>`;
+  sel.value = selected && [...sel.options].some(o => o.value === selected) ? selected : 'fr';
+}
+// Assemble l'indicatif du pays et le numéro local (le 0 du début est retiré).
+function composePhone(dial, local) {
+  const raw = String(local || '').replace(/[\s.()-]/g, '');
+  if (raw.startsWith('+')) return raw;
+  if (raw.startsWith('00')) return '+' + raw.slice(2);
+  return dial + raw.replace(/^0+/, '');
+}
+// Relie un trio zone / pays / indicatif (+ langue) : changer la zone recharge les pays, etc.
+function wireCountryPicker(zoneId, countryId, dialId, langId, initialCountry, initialLang) {
+  const zoneSel = document.getElementById(zoneId), countrySel = document.getElementById(countryId);
+  const dialEl = dialId ? document.getElementById(dialId) : null, langSel = langId ? document.getElementById(langId) : null;
+  const c0 = COUNTRY_BY_CODE[initialCountry] || COUNTRY_BY_CODE.CD;
+  fillZoneSelect(zoneSel, c0.zone);
+  fillCountrySelect(countrySel, c0.zone, c0.code);
+  const refresh = () => {
+    const c = COUNTRY_BY_CODE[countrySel.value];
+    if (dialEl && c) dialEl.textContent = c.dial;
+    if (langSel && c) fillLanguageSelect(langSel, c.code, langSel.value || initialLang);
+  };
+  zoneSel.onchange = () => { fillCountrySelect(countrySel, zoneSel.value); refresh(); };
+  countrySel.onchange = refresh;
+  if (langSel) fillLanguageSelect(langSel, c0.code, initialLang);
+  refresh();
+}
+
+let MY_COUNTRY = detectCountry();
+let MY_CURRENCY = 'USD';
+let FEED_SCOPE = 'pays';
 let PENDING_LOGIN_ID = null;
 
 function updateDashboard({ subscribers, missingSubscribers, missingViews = 0, eligible, amount, currency }) {
@@ -547,7 +816,7 @@ function updateDashboard({ subscribers, missingSubscribers, missingViews = 0, el
 }
 
 async function loadRealData() {
-  const res = await fetch(`${API_BASE_URL}/api/creators/${CREATOR_ID}/payout-preview?currency=USD`, {
+  const res = await fetch(`${API_BASE_URL}/api/creators/${CREATOR_ID}/payout-preview?currency=${MY_CURRENCY}`, {
     headers: CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {},
   });
   if (!res.ok) throw new Error('API indisponible');
@@ -701,6 +970,7 @@ async function uploadContent() {
     document.getElementById('up-title').value = '';
     document.getElementById('up-file').value = '';
     if (typeof loadFeed === 'function') loadFeed();
+    loadMyContent();
   } catch (e) {
     errorEl.textContent = e.message === 'Failed to fetch'
       ? 'Impossible de joindre le serveur. Vérifie ta connexion internet.'
@@ -726,10 +996,10 @@ function renderFeed(items) {
     return `
     <div class="feed-card" data-id="${id}">
       <div class="feed-head">
-        <div class="feed-avatar">${escapeHtml((item.creator_name || '?')[0])}</div>
+        <div class="feed-avatar" onclick="openCreatorProfile('${cid}')" ${item.creator_photo ? `style="background-image:url('${escapeHtml(item.creator_photo)}');color:transparent;"` : ''}>${escapeHtml((item.creator_name || '?')[0])}</div>
         <div>
-          <div class="feed-creator">${name}</div>
-          <div class="feed-type">${escapeHtml(contentTypeLabel(item.content_type))}</div>
+          <div class="feed-creator" onclick="openCreatorProfile('${cid}')">${name}</div>
+          <div class="feed-type">${escapeHtml(contentTypeLabel(item.content_type))}${item.creator_country && COUNTRY_BY_CODE[item.creator_country] ? ' · ' + escapeHtml(COUNTRY_BY_CODE[item.creator_country].name) : ''}${item.visibility_scope === 'abonnes' ? ' · réservé aux abonnés' : ''}</div>
         </div>
         ${mine ? '' : `<button class="follow-btn${followingSet.has(item.creator_id) ? ' following' : ''}" onclick="toggleFollow('${cid}', this)">${followingSet.has(item.creator_id) ? 'Suivi' : 'Suivre'}</button>`}
       </div>
@@ -779,10 +1049,27 @@ function renderFeed(items) {
   }).join('');
 }
 
+function updateScopeLabel() {
+  const c = COUNTRY_BY_CODE[MY_COUNTRY];
+  document.getElementById('scope-country').textContent = c ? `Mon pays (${c.name})` : 'Mon pays';
+}
+
+function setFeedScope(scope) {
+  FEED_SCOPE = scope;
+  document.getElementById('scope-country').classList.toggle('sel', scope === 'pays');
+  document.getElementById('scope-all').classList.toggle('sel', scope === 'tout');
+  loadFeed();
+}
+
 async function loadFeed() {
   const list = document.getElementById('feed-list');
   try {
-    const data = await apiCall('/api/feed');
+    const data = await apiCall(FEED_SCOPE === 'pays' ? `/api/feed?country=${MY_COUNTRY}` : '/api/feed');
+    (data.following || []).forEach(id => followingSet.add(id));
+    if (!(data.items || []).length && FEED_SCOPE === 'pays') {
+      list.innerHTML = '<p class="feed-empty">Aucune publication dans ton pays pour le moment. Sois le premier à publier, ou regarde <a href="#" onclick="setFeedScope(\'tout\');return false;" style="color:var(--teal);">partout</a>.</p>';
+      return;
+    }
     renderFeed(data.items || []);
   } catch (e) {
     list.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
@@ -882,7 +1169,11 @@ function shareContent(contentId, title) {
 async function registerCreator() {
   const name = document.getElementById('reg-name').value.trim();
   const email = document.getElementById('reg-email').value.trim();
-  const phone = document.getElementById('reg-phone').value.trim();
+  const phoneLocal = document.getElementById('reg-phone').value.trim();
+  const phone = phoneLocal ? composePhone(document.getElementById('reg-dial').textContent, phoneLocal) : '';
+  const language = document.getElementById('reg-language').value;
+  const currency = document.getElementById('reg-currency').value;
+  const zone = document.getElementById('reg-zone').value;
   const password = document.getElementById('reg-password').value;
   const countryCode = document.getElementById('reg-country').value;
   const primaryContentType = document.getElementById('reg-content-type').value;
@@ -904,7 +1195,7 @@ async function registerCreator() {
     const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, phone, password, countryCode, zone: zoneByCountry[countryCode], primaryContentType }),
+      body: JSON.stringify({ name, email, phone, password, countryCode, zone: COUNTRY_BY_CODE[countryCode]?.zone || zone, primaryContentType, language, currency }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'Inscription impossible pour le moment.');
@@ -952,6 +1243,9 @@ async function loginCreator() {
   const errorEl = document.getElementById('login-error-1');
 
   document.getElementById('login-screen').style.display = 'flex';
+  const loginBtn = document.getElementById('login-btn');
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Connexion…';
 
   try {
     const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
@@ -967,11 +1261,30 @@ async function loginCreator() {
     document.getElementById('login-step-2fa').style.display = 'block';
     document.getElementById('login-dev-hint').textContent = data.devCode
       ? `Mode test — code : ${data.devCode}`
-      : 'Un code a été envoyé par SMS.';
+      : `Code envoyé par email à ${email}. Il arrive en quelques secondes.`;
+    setTimeout(() => document.getElementById('login-otp').focus(), 50);
   } catch (e) {
-    errorEl.textContent = e.message || 'Connexion impossible — vérifie que le backend est bien en ligne.';
+    errorEl.textContent = e.message === 'Failed to fetch'
+      ? 'Impossible de joindre le serveur. Vérifie ta connexion internet.'
+      : (e.message || 'Connexion impossible.');
     errorEl.style.display = 'block';
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Continuer';
   }
+}
+
+async function resendLoginCode() {
+  document.getElementById('login-step-2fa').style.display = 'none';
+  document.getElementById('login-step-credentials').style.display = 'block';
+  await loginCreator();
+}
+
+function logoutCreator() {
+  storeClear();
+  CREATOR_TOKEN = null;
+  CREATOR_ID = 'creator_demo';
+  location.reload();
 }
 
 async function verifyLoginCode() {
@@ -989,19 +1302,15 @@ async function verifyLoginCode() {
 
     CREATOR_TOKEN = data.token;
     CREATOR_ID = PENDING_LOGIN_ID;
-    sessionStorage.setItem('eaji_creator_token', CREATOR_TOKEN);
-    sessionStorage.setItem('eaji_creator_id', CREATOR_ID);
+    storeSet('eaji_creator_token', CREATOR_TOKEN);
+    storeSet('eaji_creator_id', CREATOR_ID);
 
     errorEl.style.display = 'none';
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-shell').style.display = 'flex';
-    loadRealData().catch(() => {}); // recharge le vrai solde/éligibilité maintenant qu'on a une vraie session
-    loadProfile().catch(() => {});
-    checkLiveEligibility();
-    loadConversations();
-    loadFeed();
-    loadPayments();
+    afterLogin();
   } catch (e) {
+    errorEl.textContent = e.message === 'Failed to fetch' ? 'Impossible de joindre le serveur.' : e.message;
     errorEl.style.display = 'block';
   }
 }
@@ -1011,6 +1320,10 @@ async function saveProfile() {
   const name = document.getElementById('prof-name').value.trim();
   const withdrawalPhone = document.getElementById('prof-withdrawal-phone').value.trim();
   const countryCode = document.getElementById('prof-country').value;
+  const zone = COUNTRY_BY_CODE[countryCode]?.zone;
+  const language = document.getElementById('prof-language').value;
+  const giftCurrency = document.getElementById('prof-currency').value;
+  const primaryContentType = document.getElementById('prof-content-type').value;
   const successEl = document.getElementById('prof-success');
   const errorEl = document.getElementById('prof-error');
 
@@ -1018,7 +1331,7 @@ async function saveProfile() {
     const res = await fetch(`${API_BASE_URL}/api/creators/me/profile`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
-      body: JSON.stringify({ name, withdrawalPhone, countryCode }),
+      body: JSON.stringify({ name, countryCode, zone, language, giftCurrency, primaryContentType }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'Enregistrement impossible.');
@@ -1031,6 +1344,11 @@ async function saveProfile() {
   errorEl.style.display = 'none';
   successEl.style.display = 'block';
   setTimeout(() => { successEl.style.display = 'none'; }, 2500);
+  MY_COUNTRY = countryCode;
+  MY_CURRENCY = giftCurrency;
+  loadProfile().catch(() => {});
+  loadRealData().catch(() => {});
+  loadFeed();
 }
 
 // Affiche une photo dans les cercles de profil (en-tête + écran Profil).
@@ -1089,7 +1407,16 @@ async function loadProfile() {
   const p = await res.json();
   if (p.name) document.getElementById('prof-name').value = p.name;
   if (p.withdrawalPhone) document.getElementById('prof-withdrawal-phone').value = p.withdrawalPhone;
-  if (p.countryCode) document.getElementById('prof-country').value = p.countryCode;
+  if (p.countryCode) {
+    MY_COUNTRY = p.countryCode;
+    wireCountryPicker('prof-zone', 'prof-country', null, 'prof-language', p.countryCode, p.language);
+    document.getElementById('phone-dial').textContent = COUNTRY_BY_CODE[p.countryCode]?.dial || '+';
+    updateScopeLabel();
+  }
+  if (p.giftCurrency) { MY_CURRENCY = p.giftCurrency; document.getElementById('prof-currency').value = p.giftCurrency; }
+  if (p.primaryContentType) document.getElementById('prof-content-type').value = p.primaryContentType;
+  if (p.phone) document.getElementById('cur-phone').textContent = p.phone;
+  document.getElementById('pref-subcount').checked = Boolean(p.subscriberCountPublic);
   const zones = { afrique: 'Afrique', caraibes: 'Caraïbes', asie: 'Asie', europe_centrale: 'Europe centrale' };
   const verifs = { verifie: 'Confirmée', en_attente: 'En attente', rejete: 'Refusée' };
   if (p.zone) { document.getElementById('home-zone').textContent = zones[p.zone] || p.zone; document.getElementById('info-zone').textContent = zones[p.zone] || p.zone; }
@@ -1101,6 +1428,429 @@ async function loadProfile() {
   document.getElementById('balance-num').textContent = `${Number(p.balance || 0).toLocaleString('fr-FR')} ${p.currency || 'USD'}`;
   if (p.photoUrl) setAvatarImage(p.photoUrl);
   else if (p.name) document.querySelectorAll('.avatar, #avatar-edit').forEach((el) => { el.textContent = p.name[0].toUpperCase(); });
+}
+
+// ==== Après connexion : tout charger dans le bon ordre ====
+async function afterLogin() {
+  await loadProfile().catch(() => {});
+  loadRealData().catch(() => {});
+  checkLiveEligibility();
+  loadConversations();
+  loadFeed();
+  loadPayments();
+  loadMyContent();
+  loadFollowers();
+  loadBlocked();
+  loadPayoutAccount();
+  startIncomingCallWatch();
+}
+
+// ==== Profil public d'un créateur (point 6) ====
+let CP_ID = null, CP_NAME = '', CP_FOLLOWING = false, CP_BACK = 's-decouvrir';
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector('.screens').scrollTop = 0;
+}
+async function openCreatorProfile(creatorId) {
+  const current = document.querySelector('.screen.active')?.id;
+  if (current && current !== 's-creator') CP_BACK = current;
+  let p;
+  try { p = await apiCall(`/api/creators/${creatorId}/public`); }
+  catch (e) { return showToast(e.message); }
+  CP_ID = p.id; CP_NAME = p.name; CP_FOLLOWING = p.isFollowing;
+  const photo = document.getElementById('cp-photo');
+  photo.style.backgroundImage = p.photoUrl ? `url("${p.photoUrl}")` : '';
+  photo.textContent = p.photoUrl ? '' : (p.name || '?')[0].toUpperCase();
+  document.getElementById('cp-name').textContent = p.name;
+  const country = COUNTRY_BY_CODE[p.countryCode]?.name || '';
+  document.getElementById('cp-meta').textContent = [country, contentTypeLabel(p.primaryContentType),
+    p.subscriberCount !== null && p.subscriberCount !== undefined ? `${p.subscriberCount} abonné(s)` : ''].filter(Boolean).join(' · ');
+  document.getElementById('cp-follow').style.display = p.isMe ? 'none' : '';
+  document.getElementById('cp-write').style.display = p.isMe ? 'none' : '';
+  updateProfileFollowButton();
+  document.getElementById('cp-contents').innerHTML = p.contents.map(c =>
+    `<div class="list-row"><div class="grow">${escapeHtml(c.title)}<div class="sub">${escapeHtml(contentTypeLabel(c.content_type))} · ${new Date(c.created_at).toLocaleDateString('fr-FR')}</div></div></div>`).join('')
+    || '<p class="feed-empty">Aucune publication visible.</p>';
+  showScreen('s-creator');
+}
+function updateProfileFollowButton() {
+  document.getElementById('cp-follow').textContent = CP_FOLLOWING ? 'Abonné ✓' : "S'abonner";
+}
+async function toggleFollowFromProfile() {
+  if (!CREATOR_TOKEN) return showToast('Connecte-toi pour t\'abonner.');
+  try {
+    await apiCall(`/api/creators/${CP_ID}/follow`, { method: CP_FOLLOWING ? 'DELETE' : 'POST' });
+  } catch (e) { return showToast(e.message); }
+  CP_FOLLOWING ? followingSet.delete(CP_ID) : followingSet.add(CP_ID);
+  openCreatorProfile(CP_ID);
+}
+function writeFromProfile() { openConversation(CP_ID, CP_NAME); }
+function closeCreatorProfile() {
+  showScreen(CP_BACK || 's-decouvrir');
+  loadFeed();
+}
+
+// ==== Mes publications : modifier / supprimer (point 8) ====
+async function loadMyContent() {
+  const box = document.getElementById('my-content');
+  if (!CREATOR_TOKEN) return;
+  try {
+    const { items } = await apiCall('/api/my/content');
+    box.innerHTML = items.map(c => `
+      <div class="list-row" data-id="${escapeHtml(c.id)}" data-scope="${escapeHtml(c.visibility_scope)}">
+        <div class="grow"><span class="my-title">${escapeHtml(c.title)}</span>
+          <div class="sub">${escapeHtml(contentTypeLabel(c.content_type))} · ${c.visibility_scope === 'abonnes' ? 'abonnés' : 'tout le monde'} · ${Number(c.view_count) || 0} vues · ${Number(c.like_count) || 0} j'aime</div>
+        </div>
+        <button class="mini-btn" onclick="editMyContent(this)">Modifier</button>
+        <button class="mini-btn danger" onclick="deleteMyContent(this)">Supprimer</button>
+      </div>`).join('') || '<p class="feed-empty" style="padding:8px;">Aucune publication pour le moment.</p>';
+  } catch (e) { box.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`; }
+}
+function editMyContent(btn) {
+  const row = btn.closest('.list-row');
+  const title = row.querySelector('.my-title').textContent;
+  const isAbonnes = row.dataset.scope === 'abonnes';
+  row.innerHTML = `
+    <div class="grow">
+      <input class="field edit-title" style="margin-bottom:6px;" value="${escapeHtml(title)}">
+      <select class="field edit-scope" style="margin-bottom:0;">
+        <option value="public" ${isAbonnes ? '' : 'selected'}>Tout le monde</option>
+        <option value="abonnes" ${isAbonnes ? 'selected' : ''}>Mes abonnés seulement</option>
+      </select>
+    </div>
+    <button class="mini-btn" onclick="saveMyContent(this)">OK</button>
+    <button class="mini-btn" onclick="loadMyContent()">Annuler</button>`;
+}
+async function saveMyContent(btn) {
+  const row = btn.closest('.list-row');
+  try {
+    await apiCall(`/api/my/content/${row.dataset.id}`, { method: 'PATCH',
+      body: { title: row.querySelector('.edit-title').value, visibilityScope: row.querySelector('.edit-scope').value } });
+  } catch (e) { return showToast(e.message); }
+  showToast('Publication modifiée.');
+  loadMyContent(); loadFeed();
+}
+async function deleteMyContent(btn) {
+  const row = btn.closest('.list-row');
+  if (!window.confirm('Supprimer cette publication ? Elle ne sera plus visible.')) return;
+  try { await apiCall(`/api/my/content/${row.dataset.id}`, { method: 'DELETE' }); }
+  catch (e) { return showToast(e.message); }
+  showToast('Publication supprimée.');
+  loadMyContent(); loadFeed();
+}
+
+// ==== Paramètres : numéro, retrait, confidentialité, abonnés, blocages, mot de passe (point 9) ====
+let PHONE_REQUEST_ID = null;
+async function requestPhoneChange() {
+  const status = document.getElementById('phone-status');
+  const local = document.getElementById('new-phone').value.trim();
+  if (!local) { status.textContent = 'Écris le nouveau numéro.'; return; }
+  const newPhone = composePhone(document.getElementById('phone-dial').textContent, local);
+  try {
+    const d = await apiCall('/api/auth/change-phone/request', { method: 'POST', body: { newPhone } });
+    PHONE_REQUEST_ID = d.requestId;
+    document.getElementById('phone-code-step').style.display = 'block';
+    status.textContent = d.devCode ? `${d.message} Code : ${d.devCode}` : d.message;
+  } catch (e) { status.textContent = e.message; }
+}
+async function confirmPhoneChange() {
+  const status = document.getElementById('phone-status');
+  try {
+    await apiCall('/api/auth/change-phone/confirm', { method: 'POST',
+      body: { requestId: PHONE_REQUEST_ID, code: document.getElementById('phone-code').value.trim() } });
+  } catch (e) { status.textContent = e.message; return; }
+  status.textContent = 'Numéro mis à jour.';
+  document.getElementById('phone-code-step').style.display = 'none';
+  document.getElementById('new-phone').value = '';
+  loadProfile().catch(() => {});
+}
+
+function updatePayoutFields() {
+  const mm = document.getElementById('payout-method').value === 'mobile_money';
+  document.getElementById('payout-operator-wrap').style.display = mm ? '' : 'none';
+  document.getElementById('payout-number-label').textContent = mm ? 'Numéro mobile money' : 'IBAN ou numéro de compte bancaire';
+}
+async function loadPayoutAccount() {
+  if (!CREATOR_TOKEN) return;
+  try {
+    const { account } = await apiCall('/api/creators/me/payout-account');
+    if (!account) return;
+    document.getElementById('payout-method').value = account.provider === 'mobile_money' ? 'mobile_money' : 'virement';
+    if (account.provider === 'mobile_money' && account.aggregator) document.getElementById('payout-operator').value = account.aggregator;
+    document.getElementById('prof-withdrawal-phone').value = account.external_account_id || '';
+    updatePayoutFields();
+  } catch (e) { /* pas encore de mode de retrait */ }
+}
+async function savePayoutAccount() {
+  const status = document.getElementById('payout-status');
+  try {
+    await apiCall('/api/creators/me/payout-account', { method: 'PUT', body: {
+      method: document.getElementById('payout-method').value,
+      operator: document.getElementById('payout-operator').value,
+      accountNumber: document.getElementById('prof-withdrawal-phone').value,
+    } });
+    status.textContent = 'Mode de retrait enregistré.';
+  } catch (e) { status.textContent = e.message; }
+}
+
+async function saveVisibility() {
+  try {
+    await apiCall('/api/creators/me/visibility', { method: 'PATCH',
+      body: { subscriberCountPublic: document.getElementById('pref-subcount').checked } });
+    showToast('Préférence enregistrée.');
+  } catch (e) { showToast(e.message); }
+}
+
+async function loadFollowers() {
+  if (!CREATOR_TOKEN) return;
+  const box = document.getElementById('followers-list');
+  try {
+    const { followers } = await apiCall('/api/creators/me/followers');
+    box.innerHTML = followers.map(f => `
+      <div class="list-row" data-id="${escapeHtml(f.id)}">
+        <div class="grow">${escapeHtml(f.name)}<div class="sub">${escapeHtml(COUNTRY_BY_CODE[f.country_code]?.name || '')}</div></div>
+        <button class="mini-btn" onclick="removeFollower(this)">Retirer</button>
+        <button class="mini-btn danger" onclick="blockUser(this)">Bloquer</button>
+      </div>`).join('') || '<p class="feed-type">Aucun abonné pour le moment.</p>';
+  } catch (e) { box.innerHTML = `<p class="feed-type">${escapeHtml(e.message)}</p>`; }
+}
+async function removeFollower(btn) {
+  try { await apiCall(`/api/creators/me/followers/${btn.closest('.list-row').dataset.id}`, { method: 'DELETE' }); }
+  catch (e) { return showToast(e.message); }
+  showToast('Abonné retiré.'); loadFollowers(); loadRealData().catch(() => {});
+}
+async function blockUser(btn) {
+  if (!window.confirm('Bloquer ce compte ? Il ne pourra plus te suivre, t\'écrire ni commenter tes publications.')) return;
+  try { await apiCall(`/api/creators/me/blocks/${btn.closest('.list-row').dataset.id}`, { method: 'POST' }); }
+  catch (e) { return showToast(e.message); }
+  showToast('Compte bloqué.'); loadFollowers(); loadBlocked(); loadRealData().catch(() => {});
+}
+async function loadBlocked() {
+  if (!CREATOR_TOKEN) return;
+  const box = document.getElementById('blocked-list');
+  try {
+    const { blocked } = await apiCall('/api/creators/me/blocks');
+    box.innerHTML = blocked.map(b => `
+      <div class="list-row" data-id="${escapeHtml(b.id)}">
+        <div class="grow">${escapeHtml(b.name)}</div>
+        <button class="mini-btn" onclick="unblockUser(this)">Débloquer</button>
+      </div>`).join('') || '<p class="feed-type">Aucun compte bloqué.</p>';
+  } catch (e) { box.innerHTML = `<p class="feed-type">${escapeHtml(e.message)}</p>`; }
+}
+async function unblockUser(btn) {
+  try { await apiCall(`/api/creators/me/blocks/${btn.closest('.list-row').dataset.id}`, { method: 'DELETE' }); }
+  catch (e) { return showToast(e.message); }
+  showToast('Compte débloqué.'); loadBlocked();
+}
+
+async function changeMyPassword() {
+  const status = document.getElementById('pwd-status');
+  const current = document.getElementById('pwd-current').value;
+  const next = document.getElementById('pwd-new').value;
+  if (next !== document.getElementById('pwd-confirm').value) { status.textContent = 'Les deux nouveaux mots de passe ne correspondent pas.'; return; }
+  try { await apiCall('/api/auth/change-password', { method: 'POST', body: { currentPassword: current, newPassword: next } }); }
+  catch (e) { status.textContent = e.message; return; }
+  status.textContent = 'Mot de passe changé.';
+  ['pwd-current', 'pwd-new', 'pwd-confirm'].forEach(id => { document.getElementById(id).value = ''; });
+}
+
+// ==== Messages vocaux (accès au micro) ====
+let voiceRecorder = null, voiceChunks = [], voiceTimer = null, voiceStart = 0;
+async function toggleVoiceRecording() {
+  const btn = document.getElementById('voice-btn');
+  if (voiceRecorder && voiceRecorder.state === 'recording') { voiceRecorder.stop(); return; }
+  if (!dmContactId) return;
+  if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+    return showToast('Ton navigateur ne permet pas l\'enregistrement vocal.');
+  }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { return showToast('Autorise l\'accès au micro pour envoyer un vocal.'); }
+  voiceChunks = [];
+  voiceRecorder = new MediaRecorder(stream);
+  voiceRecorder.ondataavailable = (e) => { if (e.data.size) voiceChunks.push(e.data); };
+  voiceRecorder.onstop = async () => {
+    clearInterval(voiceTimer);
+    stream.getTracks().forEach(t => t.stop());
+    btn.classList.remove('rec'); btn.textContent = '🎤';
+    const type = voiceRecorder.mimeType || 'audio/webm';
+    const blob = new Blob(voiceChunks, { type });
+    if ((Date.now() - voiceStart) < 700 || !blob.size) return showToast('Vocal trop court.');
+    await sendVoiceMessage(blob, type);
+  };
+  voiceRecorder.start();
+  voiceStart = Date.now();
+  btn.classList.add('rec');
+  const tick = () => {
+    const s = Math.floor((Date.now() - voiceStart) / 1000);
+    btn.textContent = `⏹ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    if (s >= 120) voiceRecorder.stop(); // 2 minutes maximum
+  };
+  tick(); voiceTimer = setInterval(tick, 500);
+}
+
+async function sendVoiceMessage(blob, type) {
+  const ext = type.includes('ogg') ? '.ogg' : type.includes('mp4') ? '.m4a' : '.webm';
+  const file = new File([blob], 'vocal' + ext, { type });
+  showToast('Envoi du vocal…');
+  try {
+    const up = await apiCall('/api/content/upload-url', { method: 'POST',
+      body: { contentType: 'audio', fileName: file.name, mimeType: type, fileSizeBytes: file.size } });
+    await sendFileToStorage(up, file);
+    await apiCall(`/api/messages/${dmContactId}`, { method: 'POST', body: { audioKey: up.storageKey } });
+  } catch (e) { return showToast(e.message); }
+  showToast('Vocal envoyé.');
+  renderDmThread(true);
+}
+
+// La conversation ouverte se met à jour toute seule quand l'autre écrit.
+let dmPollTimer = null, dmLastCount = -1;
+function startDmPolling() {
+  clearInterval(dmPollTimer);
+  dmPollTimer = setInterval(() => { if (dmContactId && document.visibilityState === 'visible') renderDmThread(); }, 4000);
+}
+
+// ==== Appels audio et vidéo ====
+let callPc = null, callStream = null, callId = null, callKind = 'audio', callRole = null, callPollTimer = null, incomingCall = null;
+
+async function iceConfig() {
+  try { return await apiCall('/api/calls/ice-config'); }
+  catch (e) { return { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }; }
+}
+function waitIceGathering(pc) {
+  return new Promise(resolve => {
+    if (pc.iceGatheringState === 'complete') return resolve();
+    const done = () => { if (pc.iceGatheringState === 'complete') { pc.removeEventListener('icegatheringstatechange', done); resolve(); } };
+    pc.addEventListener('icegatheringstatechange', done);
+    setTimeout(resolve, 3000); // on n'attend pas plus de 3 secondes
+  });
+}
+function showCallOverlay(title, status, kind) {
+  document.getElementById('call-title').textContent = title;
+  document.getElementById('call-status').textContent = status;
+  document.getElementById('call-overlay').style.display = 'flex';
+  document.getElementById('call-videos').style.display = kind === 'video' ? 'block' : 'none';
+}
+function setCallButtons(mode) {
+  document.getElementById('call-accept').style.display = mode === 'incoming' ? '' : 'none';
+  document.getElementById('call-reject').style.display = mode === 'incoming' ? '' : 'none';
+  document.getElementById('call-hangup').style.display = mode === 'incoming' ? 'none' : '';
+  document.getElementById('call-mute').style.display = mode === 'active' ? '' : 'none';
+}
+async function openMedia(kind) {
+  try { return await navigator.mediaDevices.getUserMedia({ audio: true, video: kind === 'video' }); }
+  catch (e) { throw new Error(kind === 'video' ? 'Autorise l\'accès au micro et à la caméra pour appeler.' : 'Autorise l\'accès au micro pour appeler.'); }
+}
+async function buildPeer(kind) {
+  const pc = new RTCPeerConnection(await iceConfig());
+  callStream.getTracks().forEach(t => pc.addTrack(t, callStream));
+  pc.ontrack = (e) => {
+    const remote = document.getElementById('remote-video');
+    if (remote.srcObject !== e.streams[0]) remote.srcObject = e.streams[0];
+  };
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState === 'connected') document.getElementById('call-status').textContent = 'En communication';
+    if (pc.connectionState === 'failed') {
+      document.getElementById('call-status').textContent = 'Connexion impossible sur ce réseau.';
+      setTimeout(() => hangUp(), 2500);
+    }
+  };
+  if (kind === 'video') document.getElementById('local-video').srcObject = callStream;
+  return pc;
+}
+
+async function startCall(kind) {
+  if (!dmContactId || callPc) return;
+  const name = document.getElementById('dm-title').textContent;
+  callKind = kind; callRole = 'caller';
+  showCallOverlay(name, 'Préparation de l\'appel…', kind); setCallButtons('calling');
+  try {
+    callStream = await openMedia(kind);
+    callPc = await buildPeer(kind);
+    await callPc.setLocalDescription(await callPc.createOffer());
+    await waitIceGathering(callPc);
+    const d = await apiCall('/api/calls', { method: 'POST', body: { calleeId: dmContactId, kind, offer: callPc.localDescription.sdp } });
+    callId = d.callId;
+  } catch (e) { showToast(e.message); return cleanupCall(); }
+  document.getElementById('call-status').textContent = 'Ça sonne…';
+  callPollTimer = setInterval(async () => {
+    let c;
+    try { c = (await apiCall(`/api/calls/${callId}`)).call; } catch (e) { return; }
+    if (c.status === 'accepted' && c.answer_sdp && !callPc.currentRemoteDescription) {
+      await callPc.setRemoteDescription({ type: 'answer', sdp: c.answer_sdp });
+      document.getElementById('call-status').textContent = 'Connexion…';
+      setCallButtons('active');
+    } else if (['rejected', 'missed', 'ended'].includes(c.status)) {
+      const msg = { rejected: 'Appel refusé.', missed: 'Pas de réponse.', ended: 'Appel terminé.' }[c.status];
+      document.getElementById('call-status').textContent = msg;
+      setTimeout(cleanupCall, 1500); clearInterval(callPollTimer);
+    }
+  }, 1500);
+}
+
+// Vérifie régulièrement les appels entrants (quand l'app est ouverte).
+let incomingTimer = null;
+function startIncomingCallWatch() {
+  clearInterval(incomingTimer);
+  incomingTimer = setInterval(async () => {
+    if (!CREATOR_TOKEN || callPc || incomingCall || document.visibilityState !== 'visible') return;
+    try {
+      const { call } = await apiCall('/api/calls/incoming');
+      if (!call) return;
+      incomingCall = call; callId = call.id; callKind = call.kind; callRole = 'callee';
+      showCallOverlay(call.caller_name, call.kind === 'video' ? 'Appel vidéo entrant…' : 'Appel audio entrant…', call.kind);
+      setCallButtons('incoming');
+      try { navigator.vibrate?.([400, 200, 400]); } catch (e) {}
+      // l'appelant a peut-être raccroché entre-temps
+      callPollTimer = setInterval(async () => {
+        try {
+          const c = (await apiCall(`/api/calls/${callId}`)).call;
+          if (['missed', 'ended'].includes(c.status) && !callPc) { document.getElementById('call-status').textContent = 'Appel manqué.'; setTimeout(cleanupCall, 1200); }
+          if (c.status === 'ended' && callPc) { document.getElementById('call-status').textContent = 'Appel terminé.'; setTimeout(cleanupCall, 1200); }
+        } catch (e) {}
+      }, 2000);
+    } catch (e) { /* réseau momentanément indisponible */ }
+  }, 3000);
+}
+
+async function acceptCall() {
+  if (!incomingCall) return;
+  setCallButtons('active');
+  document.getElementById('call-status').textContent = 'Connexion…';
+  try {
+    callStream = await openMedia(callKind);
+    callPc = await buildPeer(callKind);
+    await callPc.setRemoteDescription({ type: 'offer', sdp: incomingCall.offer_sdp });
+    await callPc.setLocalDescription(await callPc.createAnswer());
+    await waitIceGathering(callPc);
+    await apiCall(`/api/calls/${callId}/answer`, { method: 'POST', body: { answer: callPc.localDescription.sdp } });
+  } catch (e) { showToast(e.message); hangUp(); }
+}
+async function rejectCall() {
+  if (callId) apiCall(`/api/calls/${callId}/reject`, { method: 'POST' }).catch(() => {});
+  cleanupCall();
+}
+async function hangUp() {
+  if (callId) apiCall(`/api/calls/${callId}/end`, { method: 'POST' }).catch(() => {});
+  cleanupCall();
+}
+function toggleMute() {
+  if (!callStream) return;
+  const track = callStream.getAudioTracks()[0];
+  if (!track) return;
+  track.enabled = !track.enabled;
+  document.getElementById('call-mute').textContent = track.enabled ? '🎙️ Micro' : '🔇 Muet';
+}
+function cleanupCall() {
+  clearInterval(callPollTimer);
+  try { callPc?.close(); } catch (e) {}
+  callStream?.getTracks().forEach(t => t.stop());
+  callPc = null; callStream = null; callId = null; incomingCall = null; callRole = null;
+  document.getElementById('remote-video').srcObject = null;
+  document.getElementById('local-video').srcObject = null;
+  document.getElementById('call-mute').textContent = '🎙️ Micro';
+  document.getElementById('call-overlay').style.display = 'none';
 }
 
 // ==== Paiements : historique réel et demande de retrait ====
@@ -1263,6 +2013,8 @@ async function loadConversations() {
 function openConversation(creatorId, name) {
   if (!CREATOR_TOKEN) return showToast('Connecte-toi pour envoyer un message.');
   dmContactId = creatorId;
+  dmLastCount = -1;
+  startDmPolling();
   document.getElementById('dm-title').textContent = name;
   document.getElementById('dm-list-view').style.display = 'none';
   document.getElementById('dm-thread-view').style.display = 'block';
@@ -1278,13 +2030,18 @@ function closeConversation() {
   loadConversations();
 }
 
-async function renderDmThread() {
+async function renderDmThread(force) {
   const thread = document.getElementById('dm-thread');
   if (!dmContactId) { thread.innerHTML = ''; return; }
   try {
     const data = await apiCall(`/api/messages/${dmContactId}`);
-    thread.innerHTML = (data.messages || []).map(m =>
-      `<div class="dm-bubble ${m.sender_id === CREATOR_ID ? 'me' : 'them'}">${escapeHtml(m.text)}</div>`).join('')
+    const msgs = data.messages || [];
+    if (force !== true && msgs.length === dmLastCount && thread.children.length) return; // rien de nouveau
+    dmLastCount = msgs.length;
+    thread.innerHTML = msgs.map(m =>
+      `<div class="dm-bubble ${m.sender_id === CREATOR_ID ? 'me' : 'them'}">${m.audioUrl
+        ? `🎤 Message vocal<audio controls preload="none" src="${escapeHtml(m.audioUrl)}"></audio>`
+        : escapeHtml(m.text)}</div>`).join('')
       || '<p class="feed-empty">Écris le premier message.</p>';
   } catch (e) {
     thread.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
@@ -1301,18 +2058,29 @@ async function sendDm() {
     return showToast(e.message);
   }
   input.value = '';
-  renderDmThread();
+  renderDmThread(true);
 }
 
 window.addEventListener('load', async () => {
   updateUploadAccept();
+  wireCountryPicker('reg-zone', 'reg-country', 'reg-dial', 'reg-language', MY_COUNTRY, 'fr');
+  wireCountryPicker('prof-zone', 'prof-country', null, 'prof-language', MY_COUNTRY, 'fr');
+  updateScopeLabel();
+  document.querySelectorAll('#zone-list .zone-item').forEach((el, i) => {
+    const z = Object.keys(ZONE_LABELS)[i];
+    const sub = el.querySelector('.zone-sub');
+    if (z && sub) sub.textContent = `${COUNTRIES.filter(c => c[3] === z).length} pays éligibles`;
+  });
 
   if (CREATOR_TOKEN) {
     // Session déjà ouverte (rechargement de page) : on saute directement dans l'app.
-    CREATOR_ID = sessionStorage.getItem('eaji_creator_id') || CREATOR_ID;
+    CREATOR_ID = storeGet('eaji_creator_id') || CREATOR_ID;
     document.getElementById('onboarding-screen').style.display = 'none';
     document.getElementById('app-shell').style.display = 'flex';
     checkLiveEligibility();
+    await loadProfile().catch(() => {});
+    loadMyContent(); loadFollowers(); loadBlocked(); loadPayoutAccount();
+    startIncomingCallWatch();
   }
   loadFeed();
 
@@ -1329,5 +2097,19 @@ window.addEventListener('load', async () => {
 
 </script>
 <div class="toast" id="toast"></div>
+<div class="call-overlay" id="call-overlay">
+  <div class="call-title" id="call-title"></div>
+  <div class="call-status" id="call-status"></div>
+  <div class="call-videos" id="call-videos">
+    <video id="remote-video" autoplay playsinline></video>
+    <video id="local-video" autoplay playsinline muted></video>
+  </div>
+  <div class="call-actions">
+    <button id="call-accept" onclick="acceptCall()">Décrocher</button>
+    <button id="call-reject" onclick="rejectCall()">Refuser</button>
+    <button id="call-mute" onclick="toggleMute()">🎙️ Micro</button>
+    <button id="call-hangup" onclick="hangUp()">Raccrocher</button>
+  </div>
+</div>
 </body>
 </html>
