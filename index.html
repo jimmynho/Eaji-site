@@ -494,7 +494,10 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
         <div class="stat-card"><p class="label">Zone</p><p class="val" id="home-zone">&ndash;</p></div>
         <div class="stat-card"><p class="label">Contenu</p><p class="val" id="home-content">&ndash;</p></div>
         <div class="stat-card"><p class="label">Gain estim&eacute; ce mois</p><p class="val" id="home-estimate">0</p></div>
-        <div class="stat-card"><p class="label">Taux appliqu&eacute;</p><p class="val" style="font-size:14px;">2&nbsp;$ / 1&nbsp;000 abonn&eacute;s</p></div>
+        <div class="stat-card"><p class="label">Taux appliqu&eacute;</p><p class="val" style="font-size:14px;">2&nbsp;$ / 1&nbsp;000 abonn&eacute;s</p>
+          <p class="feed-type" style="font-size:11px;margin:4px 0 0;">au-del&agrave; de 100&nbsp;000 : 1&nbsp;$ ; au-del&agrave; d'1 million : 0,50&nbsp;$</p></div>
+        <div class="stat-card" style="grid-column:1 / -1;"><p class="label">Vues ce mois</p><p class="val" id="home-month-views">0</p>
+          <p class="feed-type" id="home-month-views-note" style="font-size:12px;margin:4px 0 0;">Il faut des vues &eacute;gales &agrave; 70&nbsp;% de tes abonn&eacute;s chaque mois pour &ecirc;tre pay&eacute; sur tous tes abonn&eacute;s.</p></div>
       </div>
 
       <div class="section-title">Live</div>
@@ -1219,12 +1222,26 @@ function updateDashboard({ subscribers, missingSubscribers, missingViews = 0, el
   }
 }
 
+// Règle des 70 % : vues du mois comparées au nombre d'abonnés.
+function showMonthViews(d) {
+  const el = document.getElementById('home-month-views'), note = document.getElementById('home-month-views-note');
+  if (!el || d.monthlyViews === undefined) return;
+  const fmt = (n) => Number(n || 0).toLocaleString('fr-FR');
+  el.textContent = `${fmt(d.monthlyViews)} / ${fmt(d.requiredMonthlyViews)}`;
+  if (!d.subscribers) { note.textContent = 'Il faut des vues égales à 70 % de tes abonnés chaque mois pour être payé sur tous tes abonnés.'; return; }
+  const paid = d.paidSubscribers !== undefined ? d.paidSubscribers : Math.min(d.subscribers, Math.floor((d.monthlyViews || 0) / 0.7));
+  note.textContent = d.monthlyViews >= d.requiredMonthlyViews
+    ? '✅ Objectif atteint : tous tes abonnés comptent pour ta rémunération de ce mois.'
+    : `Objectif : 70 % de tes abonnés (${fmt(d.requiredMonthlyViews)} vues). Pour l'instant, ta rémunération serait calculée sur ${fmt(paid)} abonnés au lieu de ${fmt(d.subscribers)}.`;
+}
+
 async function loadRealData() {
   const res = await fetch(`${API_BASE_URL}/api/creators/${CREATOR_ID}/payout-preview?currency=${MY_CURRENCY}`, {
     headers: CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {},
   });
   if (!res.ok) throw new Error('API indisponible');
   const data = await res.json();
+  showMonthViews(data);
   MY_MONETIZED = data.monetized !== false || data.monetizationReason === 'premium';
   if (data.monetizationReason === 'premium') {
     // Pays éligible mais compte gratuit : les vidéos restent payantes pour les spectateurs,
