@@ -251,9 +251,16 @@ textarea.field{min-height:70px;resize:vertical;}
 
   <!-- RÉMUNÉRATION MENSUELLE (administrateur principal uniquement) -->
   <section class="view" id="v-payouts">
-    <div class="section-title">R&eacute;mun&eacute;ration mensuelle des cr&eacute;ateurs (2 $ / 1 000 abonn&eacute;s)</div>
+    <div class="section-title">R&eacute;mun&eacute;ration mensuelle des cr&eacute;ateurs</div>
+    <p class="login-hint" style="margin:0 0 8px;text-align:left;"><b>Taux</b> : 2 $ / 1 000 abonn&eacute;s jusqu'&agrave; 100 000, puis 1 $ / 1 000 jusqu'&agrave; 1 million, puis 0,50 $ / 1 000 au-del&agrave;.
+      <b>Vues du mois</b> : elles doivent atteindre 70 % des abonn&eacute;s, sinon seuls (vues &divide; 0,7) abonn&eacute;s sont pay&eacute;s.
+      <b>Budget</b> : le total ne d&eacute;passe jamais le pourcentage choisi des revenus d'Eaji du mois.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+      <label class="login-hint" style="margin:0;">Budget : <input class="field" id="po-budget" type="number" min="0" max="100" step="1" style="width:80px;margin:0 4px;display:inline-block;"> % des revenus d'Eaji</label>
+      <button class="btn approve" onclick="saveBudget()">Enregistrer</button>
+    </div>
     <p class="login-hint" style="margin:0 0 12px;text-align:left;">Chaque d&eacute;but de mois, Eaji pr&eacute;pare tout seul la liste des cr&eacute;ateurs &eacute;ligibles
-      (pays mon&eacute;tis&eacute;, 1 000 abonn&eacute;s et 1 000 vues) pour le mois &eacute;coul&eacute;. V&eacute;rifie-la, retire si besoin un compte douteux,
+      (pays mon&eacute;tis&eacute;, Premium, 1 000 abonn&eacute;s et 1 000 vues) pour le mois &eacute;coul&eacute;. V&eacute;rifie-la, retire si besoin un compte douteux,
       puis clique sur <b>Cr&eacute;diter</b> : les montants s'ajoutent aux gains des cr&eacute;ateurs, qui peuvent ensuite les retirer.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
       <select class="field" id="po-period" style="width:auto;margin:0;" onchange="loadPayouts(this.value)"></select>
@@ -263,7 +270,7 @@ textarea.field{min-height:70px;resize:vertical;}
     <div class="kpi-grid" id="po-kpis"></div>
     <p class="login-hint" id="po-msg" style="margin:0 0 12px;text-align:left;"></p>
     <div class="table-wrap"><table id="po-table">
-      <tr><th>Cr&eacute;ateur</th><th>Pays</th><th>Abonn&eacute;s</th><th>Vues</th><th>Montant</th><th>Statut</th><th></th></tr>
+      <tr><th>Cr&eacute;ateur</th><th>Pays</th><th>Abonn&eacute;s</th><th>Vues du mois</th><th>Abonn&eacute;s pay&eacute;s</th><th>Calcul&eacute;</th><th>Vers&eacute;</th><th>Statut</th><th></th></tr>
     </table></div>
   </section>
 
@@ -552,16 +559,29 @@ async function loadPayouts(period){
     const periods = [...new Set([d.period, ...d.periods])].sort().reverse();
     document.getElementById('po-period').innerHTML = periods.map(p => `<option value="${p}" ${p === d.period ? 'selected' : ''}>${periodLabel(p)}</option>`).join('');
     const k = (l, v) => `<div class="kpi"><p class="label">${l}</p><p class="val">${v}</p></div>`;
-    document.getElementById('po-kpis').innerHTML = k('À créditer ce mois', money(d.toCredit, 'USD')) + k('Déjà crédité ce mois', money(d.credited, 'USD')) + k('Total versé depuis le début', money(d.creditedAllTime, 'USD'));
+    const b = d.budget || { percent: 30, revenue: 0, budget: 0, used: 0 };
+    document.getElementById('po-budget').value = b.percent;
+    document.getElementById('po-kpis').innerHTML = k('Revenus Eaji du mois', money(b.revenue, 'USD')) + k(`Budget (${b.percent} %)`, money(b.budget, 'USD'))
+      + k('À créditer ce mois', money(d.toCredit, 'USD')) + k('Déjà crédité ce mois', money(d.credited, 'USD')) + k('Total versé depuis le début', money(d.creditedAllTime, 'USD'));
     const st = { propose: ['wait', 'À créditer'], credite: ['ok', 'Crédité'], annule: ['danger', 'Retiré'] };
     const t = document.getElementById('po-table');
     t.innerHTML = t.rows[0].outerHTML + (d.items.map(i => `<tr data-id="${escapeHtml(i.id)}"><td>${escapeHtml(i.name)}</td><td>${escapeHtml(i.country_code)}</td>
-      <td>${Number(i.subscribers).toLocaleString('fr-FR')}</td><td>${Number(i.views).toLocaleString('fr-FR')}</td><td><b>${escapeHtml(money(i.amount_usd, 'USD'))}</b></td>
+      <td>${Number(i.subscribers).toLocaleString('fr-FR')}</td>
+      <td>${i.monthly_views == null ? '–' : Number(i.monthly_views).toLocaleString('fr-FR')}</td>
+      <td>${i.paid_subscribers == null ? '–' : Number(i.paid_subscribers).toLocaleString('fr-FR') + (Number(i.paid_subscribers) < Number(i.subscribers) ? ' <span class="small">(vues &lt; 70 %)</span>' : '')}</td>
+      <td>${i.base_amount_usd == null ? '–' : escapeHtml(money(i.base_amount_usd, 'USD'))}</td>
+      <td><b>${escapeHtml(money(i.amount_usd, 'USD'))}</b>${i.budget_factor != null && Number(i.budget_factor) < 1 ? `<div class="small">budget : ${Math.round(Number(i.budget_factor) * 100)} %</div>` : ''}</td>
       <td><span class="badge ${st[i.status][0]}">${st[i.status][1]}</span></td>
       <td>${i.status === 'propose' ? '<button class="btn remove" onclick="cancelPayout(this)">Retirer</button>' : ''}</td></tr>`).join('')
-      || '<tr><td colspan="7">Aucun créateur éligible pour ce mois.</td></tr>');
+      || '<tr><td colspan="9">Aucun créateur éligible pour ce mois.</td></tr>');
     msg.textContent = '';
   } catch (e) { msg.textContent = e.message; }
+}
+async function saveBudget(){
+  const percent = Number(document.getElementById('po-budget').value);
+  try { await adminApi('/api/admin/payouts/budget', { method: 'PUT', body: { percent } }); await loadPayouts(PO_PERIOD);
+    document.getElementById('po-msg').textContent = `Budget enregistré : ${percent} % des revenus d'Eaji. Il s'applique aux prochains calculs.`; }
+  catch (e) { document.getElementById('po-msg').textContent = e.message; }
 }
 async function preparePayouts(){
   try { const r = await adminApi('/api/admin/payouts/prepare', { method: 'POST', body: { period: PO_PERIOD } }); await loadPayouts(PO_PERIOD);
