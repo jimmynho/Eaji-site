@@ -115,6 +115,7 @@ h1,h2,h3,.num{font-family:'Sora',sans-serif;}
   color:var(--text);font-size:14px;font-family:'Inter',sans-serif;margin-bottom:14px;}
 .field:focus{outline:none;border-color:var(--teal);}
 select.field{appearance:none;}
+.secondary-btn{width:100%;padding:12px;border:1.5px solid var(--gold);border-radius:12px;background:transparent;color:var(--gold);font-weight:700;font-size:15px;cursor:pointer;margin-top:6px;}
 .primary-btn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--gold);color:#1A1206;
   font-weight:700;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;}
 .form-error{color:var(--coral);font-size:12px;margin:-8px 0 12px;display:none;}
@@ -236,7 +237,7 @@ select.field{appearance:none;}
 .ad-card{border-color:rgba(240,166,60,.35);}
 .ad-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);margin-right:4px;}
 .plan-row{display:flex;gap:10px;margin:10px 0;}
-.plan-btn{flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:12px;color:var(--text);cursor:pointer;text-align:left;font-size:12px;}
+.plan-btn{flex:1;min-width:0;overflow-wrap:break-word;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:12px 10px;color:var(--text);cursor:pointer;text-align:left;font-size:12px;}
 .plan-btn b{display:block;font-family:'Sora',sans-serif;font-size:15px;margin-bottom:2px;}
 .plan-btn.best{border-color:var(--gold);}
 .biz-badge{display:inline-block;font-size:11px;font-weight:700;color:#0A2320;background:var(--teal);border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:middle;}
@@ -351,16 +352,17 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
 <body>
 
 <!-- ÉCRAN D'INSCRIPTION -->
-<div class="onboarding" id="onboarding-screen">
+<div class="onboarding" id="onboarding-screen" style="display:none;">
   <div class="onboarding-card">
     <p class="onboarding-title">Cr&eacute;er ton compte Eaji</p>
     <p class="onboarding-sub">Rejoins les cr&eacute;ateurs d&eacute;j&agrave; r&eacute;mun&eacute;r&eacute;s sur Eaji.</p>
 
     <label class="field-label">Nom complet (comme sur ta pi&egrave;ce d'identit&eacute;)</label>
-    <input class="field" id="reg-name" placeholder="Amina D." />
+    <input class="field" id="reg-name" placeholder="Jimmy Komba" />
 
-    <label class="field-label">Email</label>
+    <label class="field-label">Email (facultatif)</label>
     <input class="field" id="reg-email" type="email" placeholder="toi@exemple.com" />
+    <p class="feed-type" style="margin:-8px 0 14px;font-size:12px;">Pas d'email ? Laisse vide : tu te connecteras avec ton num&eacute;ro de t&eacute;l&eacute;phone.</p>
 
     <label class="field-label">Zone</label>
     <select class="field" id="reg-zone"></select>
@@ -418,25 +420,26 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
 </div>
 
 <!-- ÉCRAN DE CONNEXION (compte existant) -->
-<div class="onboarding" id="login-screen" style="display:none;">
+<div class="onboarding" id="login-screen">
   <div class="onboarding-card">
-    <p class="onboarding-title">Connexion</p>
-    <p class="onboarding-sub">Retrouve ton compte Eaji.</p>
+    <p class="onboarding-title">Se connecter</p>
+    <p class="onboarding-sub">Avec ton email ou ton num&eacute;ro de t&eacute;l&eacute;phone.</p>
 
     <div id="login-step-credentials">
-      <label class="field-label">Email</label>
-      <input class="field" id="login-email" type="email" placeholder="toi@exemple.com" />
+      <label class="field-label">Email ou num&eacute;ro de t&eacute;l&eacute;phone</label>
+      <input class="field" id="login-email" type="text" autocomplete="username" autocapitalize="off" placeholder="toi@exemple.com ou 0812 345 678" />
       <label class="field-label">Mot de passe</label>
       <input class="field" id="login-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
       <p class="form-error" id="login-error-1">Identifiants invalides.</p>
       <button class="primary-btn" id="login-btn" onclick="loginCreator()">Continuer</button>
       <p class="avatar-edit-label" style="margin-top:14px;"><a href="#" onclick="showForgotForm();return false;" style="color:var(--teal);">Mot de passe oubli&eacute; ?</a></p>
-      <p class="avatar-edit-label" style="margin-top:8px;">Pas encore de compte ? <a href="#" onclick="showRegisterForm();return false;" style="color:var(--teal);">Cr&eacute;er un compte</a></p>
+      <p class="avatar-edit-label" style="margin-top:16px;">Pas encore de compte ?</p>
+      <button class="secondary-btn" onclick="showRegisterForm()">Cr&eacute;er mon compte</button>
     </div>
 
     <div id="login-step-forgot" style="display:none;">
-      <label class="field-label">Email de ton compte</label>
-      <input class="field" id="forgot-email" type="email" placeholder="toi@exemple.com" />
+      <label class="field-label">Email ou num&eacute;ro de t&eacute;l&eacute;phone de ton compte</label>
+      <input class="field" id="forgot-email" type="text" autocapitalize="off" placeholder="toi@exemple.com ou 0812 345 678" />
       <button class="primary-btn" onclick="requestPasswordReset()">M&apos;envoyer un code</button>
       <div id="forgot-step-2" style="display:none;margin-top:14px;">
         <label class="field-label">Code re&ccedil;u par email ou SMS</label>
@@ -457,7 +460,7 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
       <p class="avatar-edit-label" id="login-dev-hint" style="margin:-8px 0 14px;"></p>
       <p class="form-error" id="login-error-2">Code invalide.</p>
       <button class="primary-btn" id="otp-btn" onclick="verifyLoginCode()">Valider et entrer</button>
-      <p class="avatar-edit-label" style="margin-top:14px;">Pas re&ccedil;u ? Regarde aussi dans les spams, ou <a href="#" onclick="resendLoginCode();return false;" style="color:var(--teal);">renvoyer le code</a></p>
+      <p class="avatar-edit-label" style="margin-top:14px;"><span id="login-spam-hint">Pas re&ccedil;u ? Regarde aussi dans les spams, ou </span><a href="#" onclick="resendLoginCode();return false;" style="color:var(--teal);">renvoyer le code</a></p>
     </div>
   </div>
 </div>
@@ -476,12 +479,7 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
   <div class="screens">
 
     <!-- ACCUEIL -->
-    <section class="screen active" id="s-accueil">
-      <div class="push-banner" id="push-banner" style="display:none;">
-        <div class="grow"><b>🔔 Ne rate plus rien</b><span id="push-banner-text">Reçois les messages, appels, photos et cadeaux sur ton téléphone, même écran verrouillé.</span></div>
-        <button class="mini-btn" id="push-banner-btn" onclick="enablePush(true)">Activer</button>
-        <button class="push-x" title="Plus tard" onclick="dismissPushBanner()">✕</button>
-      </div>
+    <section class="screen" id="s-accueil">
       <div class="hero-card">
         <p class="hero-label">Abonn&eacute;s v&eacute;rifi&eacute;s</p>
         <p class="hero-num num" id="sub-count">0</p>
@@ -507,7 +505,12 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
     </section>
 
     <!-- DÉCOUVRIR -->
-    <section class="screen" id="s-decouvrir">
+    <section class="screen active" id="s-decouvrir">
+      <div class="push-banner" id="push-banner" style="display:none;">
+        <div class="grow"><b>🔔 Ne rate plus rien</b><span id="push-banner-text">Reçois les messages, appels, photos et cadeaux sur ton téléphone, même écran verrouillé.</span></div>
+        <button class="mini-btn" id="push-banner-btn" onclick="enablePush(true)">Activer</button>
+        <button class="push-x" title="Plus tard" onclick="dismissPushBanner()">✕</button>
+      </div>
       <div class="section-title" style="margin-top:14px;">Contenus de la communaut&eacute;</div>
       <div class="search-box"><input class="field" id="search-input" placeholder="🔍 Chercher un créateur ou une publication" oninput="onSearchInput()"></div>
       <div id="search-results"></div>
@@ -674,9 +677,10 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
       <div class="settings-block" style="margin-top:14px;">
         <div class="section-title">Eaji Premium</div>
         <p class="feed-type" id="premium-state" style="margin:-6px 0 8px;">&ndash;</p>
-        <p class="feed-type" style="margin:0 0 4px;">Regarde toutes les vid&eacute;os payantes, vends tes livres, documents, vid&eacute;os et musiques, badge &laquo;&nbsp;Premium&nbsp;&raquo; et plus de visibilit&eacute; dans le fil.</p>
+        <p class="feed-type" style="margin:0 0 4px;"><b>&Ecirc;tre pay&eacute; pour tes contenus</b> (vid&eacute;os payantes, ventes, cadeaux sur tes publications, r&eacute;mun&eacute;ration d&egrave;s 1&nbsp;000 abonn&eacute;s et 1&nbsp;000 vues), regarder toutes les vid&eacute;os payantes, vendre tes livres, documents, vid&eacute;os et musiques, badge &laquo;&nbsp;Premium&nbsp;&raquo; et plus de visibilit&eacute;. <span style="color:var(--muted);">Compte gratuit : seulement les cadeaux re&ccedil;us pendant tes lives.</span></p>
         <div class="plan-row">
           <button class="plan-btn" onclick="buyPremium('premium_mois')"><b>1 mois</b><span id="premium-month-price">10 $</span></button>
+          <button class="plan-btn" onclick="buyPremium('premium_trimestre')"><b>3 mois</b><span id="premium-quarter-price">20 $</span></button>
           <button class="plan-btn best" onclick="buyPremium('premium_annee')"><b>1 an</b><span id="premium-year-price">100 $</span><br>2 mois offerts</button>
         </div>
       </div>
@@ -917,13 +921,13 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
 
   <div class="tabbar">
     <div class="tabbar-inner">
-      <button class="tab active" data-target="s-accueil">
-        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/></svg>
-        Accueil
-      </button>
-      <button class="tab" data-target="s-decouvrir">
+      <button class="tab active" data-target="s-decouvrir">
         <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5 13 13l-4.5 2.5L11 11z"/></svg>
         D&eacute;couvrir
+      </button>
+      <button class="tab" data-target="s-accueil">
+        <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/></svg>
+        Accueil
       </button>
       <button class="tab" data-target="s-contenu">
         <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg>
@@ -1181,7 +1185,7 @@ function wireCountryPicker(zoneId, countryId, dialId, langId, initialCountry, in
 // Explique, selon le pays, si le créateur peut gagner de l'argent.
 function monetizationNote(code) {
   return MONETIZED_COUNTRIES.has(code)
-    ? '✅ Monétisation disponible : tu peux gagner de l\'argent avec tes contenus (avec un numéro de téléphone de ce pays).'
+    ? '✅ Monétisation possible dans ce pays : ouverture du compte gratuite ; pour être payé sur tes contenus (dès 1 000 abonnés et 1 000 vues), passe au Premium. Avec le compte gratuit, tu reçois les cadeaux de tes lives.'
     : 'ℹ️ Tout est gratuit et ouvert dans ce pays. Tu peux recevoir des cadeaux pendant tes lives et les retirer. La monétisation (gains des créateurs) est réservée à l\'Afrique, aux Caraïbes et aux pays en développement d\'Asie, d\'Amérique, d\'Europe et d\'Océanie. Tu peux tout de même publier, suivre, écrire, prendre le Premium ou faire de la publicité.';
 }
 
@@ -1221,7 +1225,19 @@ async function loadRealData() {
   });
   if (!res.ok) throw new Error('API indisponible');
   const data = await res.json();
-  MY_MONETIZED = data.monetized !== false;
+  MY_MONETIZED = data.monetized !== false || data.monetizationReason === 'premium';
+  if (data.monetizationReason === 'premium') {
+    // Pays éligible mais compte gratuit : les vidéos restent payantes pour les spectateurs,
+    // le créateur est payé seulement après être passé au Premium.
+    const why = 'Compte gratuit : tu reçois les cadeaux de tes lives. Pour être payé sur tes contenus, passe au Premium (10 $ / 1 mois, 20 $ / 3 mois, 100 $ / 1 an).';
+    document.getElementById('home-estimate').textContent = '—';
+    document.getElementById('balance-estimate').textContent = why;
+    updateDashboard({ subscribers: data.subscribers ?? 0, missingSubscribers: data.missingSubscribers ?? 0, missingViews: data.missingViews ?? 0, eligible: false });
+    const badge = document.querySelector('.badge');
+    badge.className = 'badge wait';
+    badge.innerHTML = `<span class="badge-dot"></span>${why} <button class="mini-btn" style="margin-left:6px;" onclick="document.querySelector('.tab[data-target=&quot;s-paiements&quot;]').click()">Passer au Premium</button>`;
+    return;
+  }
   if (!MY_MONETIZED) {
     const why = data.monetizationReason === 'telephone'
       ? 'Ajoute un numéro de téléphone de ton pays pour activer tes gains.'
@@ -1456,7 +1472,7 @@ function feedCardHtml(item) {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22V4h12l-1.5 4L16 12H4"/></svg>
           Signaler
         </button>
-        <button class="feed-action" onclick="openGift('${id}', this)" ${item.creator_monetized === false ? 'style="display:none;"' : ''}>
+        <button class="feed-action" onclick="openGift('${id}', this)" ${item.creator_monetized === false || item.creator_earns === false ? 'style="display:none;"' : ''}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v9H4v-9M2 7h20v5H2V7zM12 22V7M12 7C8 7 7 4.5 7 3.5A2.5 2.5 0 0 1 12 3M12 7c4 0 5-2.5 5-3.5A2.5 2.5 0 0 0 12 3"/></svg>
           Cadeau
         </button>`}
@@ -1619,8 +1635,8 @@ async function registerCreator() {
   const errorEl = document.getElementById('reg-error');
   const successEl = document.getElementById('reg-success');
 
-  if (!name || !email || !phone || !password) {
-    errorEl.textContent = 'Merci de remplir tous les champs.';
+  if (!name || !phone || !password) {
+    errorEl.textContent = 'Merci de remplir ton nom, ton téléphone et ton mot de passe (l\'email est facultatif).';
     errorEl.style.display = 'block';
     successEl.style.display = 'none';
     return;
@@ -1663,7 +1679,7 @@ async function registerCreator() {
 
   // Le compte est créé mais pas encore de session ouverte : on enchaîne
   // directement sur une vraie connexion pour obtenir un vrai jeton.
-  document.getElementById('login-email').value = email;
+  document.getElementById('login-email').value = email || phone; // connexion avec l'email, sinon le téléphone
   document.getElementById('login-password').value = password;
   setTimeout(() => {
     document.getElementById('onboarding-screen').style.display = 'none';
@@ -1696,7 +1712,7 @@ async function loginCreator() {
     const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ identifier: email, password, countryCode: MY_COUNTRY }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'échec');
@@ -1704,9 +1720,12 @@ async function loginCreator() {
     errorEl.style.display = 'none';
     document.getElementById('login-step-credentials').style.display = 'none';
     document.getElementById('login-step-2fa').style.display = 'block';
-    document.getElementById('login-dev-hint').textContent = data.devCode
-      ? `Ton code : ${data.devCode} (l'email n'a pas pu être envoyé, le voici directement)`
-      : `Code envoyé par email à ${email}. Il arrive en quelques secondes.`;
+    document.getElementById('login-dev-hint').textContent = data.via === 'telephone'
+      ? `Ton code de confirmation : ${data.devCode}`
+      : data.devCode
+        ? `Ton code : ${data.devCode} (l'email n'a pas pu être envoyé, le voici directement)`
+        : `Code envoyé par email à ${email}. Il arrive en quelques secondes.`;
+    document.getElementById('login-spam-hint').style.display = data.via === 'telephone' ? 'none' : '';
     setTimeout(() => document.getElementById('login-otp').focus(), 50);
   } catch (e) {
     errorEl.textContent = e.message === 'Failed to fetch'
@@ -1879,6 +1898,8 @@ async function loadProfile() {
 
 // ==== Après connexion : tout charger dans le bon ordre ====
 async function afterLogin() {
+  // À la connexion, on commence par découvrir les publications des autres.
+  document.querySelector('.tab[data-target="s-decouvrir"]')?.click();
   await loadProfile().catch(() => {});
   loadRealData().catch(() => {});
   checkLiveEligibility();
@@ -2455,6 +2476,7 @@ function videoPriceFor(seconds) {
 function renderPricingLabels() {
   const set = (id, usd) => { const el = document.getElementById(id); if (el) el.textContent = priceLabel(usd); };
   set('premium-month-price', PRICING ? PRICING.premiumPlans.premium_mois.price : 10);
+  set('premium-quarter-price', PRICING && PRICING.premiumPlans.premium_trimestre ? PRICING.premiumPlans.premium_trimestre.price : 20);
   set('premium-year-price', PRICING ? PRICING.premiumPlans.premium_annee.price : 100);
   set('biz-month-price', PRICING && PRICING.businessPlans ? PRICING.businessPlans.entreprise_mois.price : 20);
   set('biz-year-price', PRICING && PRICING.businessPlans ? PRICING.businessPlans.entreprise_annee.price : 200);
@@ -3066,11 +3088,11 @@ function backToLogin() {
 async function requestPasswordReset() {
   const status = document.getElementById('forgot-status');
   const email = document.getElementById('forgot-email').value.trim();
-  if (!email) { status.textContent = 'Indique ton email.'; return; }
+  if (!email) { status.textContent = 'Indique ton email ou ton numéro de téléphone.'; return; }
   try {
-    const d = await apiCall('/api/auth/forgot', { method: 'POST', body: { email } });
+    const d = await apiCall('/api/auth/forgot', { method: 'POST', body: { identifier: email, countryCode: MY_COUNTRY } });
     status.style.color = 'var(--teal)'; status.textContent = d.message;
-    document.getElementById('forgot-step-2').style.display = 'block';
+    document.getElementById('forgot-step-2').style.display = d.noCode ? 'none' : 'block'; // pas de code sans email ni SMS
   } catch (e) { status.style.color = 'var(--coral)'; status.textContent = e.message; }
 }
 async function confirmPasswordReset() {
@@ -3079,7 +3101,7 @@ async function confirmPasswordReset() {
   if (p1 !== p2) { status.style.color = 'var(--coral)'; status.textContent = 'Les deux mots de passe ne sont pas identiques.'; return; }
   try {
     await apiCall('/api/auth/reset', { method: 'POST', body: {
-      email: document.getElementById('forgot-email').value.trim(), code: document.getElementById('forgot-code').value.trim(), newPassword: p1 } });
+      identifier: document.getElementById('forgot-email').value.trim(), countryCode: MY_COUNTRY, code: document.getElementById('forgot-code').value.trim(), newPassword: p1 } });
   } catch (e) { status.style.color = 'var(--coral)'; status.textContent = e.message; return; }
   document.getElementById('login-email').value = document.getElementById('forgot-email').value.trim();
   document.getElementById('login-password').value = '';
@@ -3814,6 +3836,7 @@ window.addEventListener('load', async () => {
     // Session déjà ouverte (rechargement de page) : on saute directement dans l'app.
     CREATOR_ID = storeGet('eaji_creator_id') || CREATOR_ID;
     document.getElementById('onboarding-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-shell').style.display = 'flex';
     checkLiveEligibility();
     await loadProfile().catch(() => {});
