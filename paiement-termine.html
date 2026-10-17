@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eaji — Paiement</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0E0E14;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:16px;box-sizing:border-box;}
+  .card{max-width:420px;text-align:center;background:#1A1A24;border:1px solid #2A2A36;border-radius:20px;padding:28px 22px;}
+  h1{font-size:22px;margin:10px 0;}
+  p{color:#C9CBD3;line-height:1.5;}
+  a{display:inline-block;margin-top:14px;background:#E4AE3A;color:#1A1206;text-decoration:none;font-weight:800;border-radius:99px;padding:12px 22px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div style="font-size:44px;" id="icon">✅</div>
+  <h1 id="title">Paiement terminé</h1>
+  <p id="text">Retourne dans Eaji : ton achat s'active automatiquement dès que le paiement est vraiment reçu (quelques secondes).</p>
+  <a href="./index.html">Retourner dans Eaji</a>
+</div>
+<script>
+  if (new URLSearchParams(location.search).has('annule')) {
+    document.getElementById('icon').textContent = '↩️';
+    document.getElementById('title').textContent = 'Paiement annulé';
+    document.getElementById('text').textContent = 'Aucun argent n\'a été pris. Tu peux réessayer depuis Eaji quand tu veux.';
+  }
+  // Ouverte dans un nouvel onglet : on peut la fermer pour revenir à Eaji.
+  try { if (window.opener) setTimeout(() => window.close(), 4000); } catch (e) {}
+</script>
+</body>
+</html>

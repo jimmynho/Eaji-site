@@ -1,0 +1,2239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eaji — Admin</title>
+<!-- Application « Eaji Admin » installable sur le téléphone de l'administrateur -->
+<link rel="manifest" href="admin-manifest.json">
+<meta name="theme-color" content="#14141C">
+<link rel="icon" href="icon-admin-192.png">
+<link rel="apple-touch-icon" href="icon-admin-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Eaji Admin">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#12141C;--surface:#1B1E29;--surface2:#232838;--line:#2C3140;
+  --gold:#F0A63C;--teal:#45C7B5;--coral:#E8654F;
+  --text:#F3F1EB;--muted:#8A8FA0;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100%;}
+h1,h2,.num{font-family:'Sora',sans-serif;}
+.shell{max-width:960px;margin:0 auto;padding:20px 20px 60px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+.brand{font-family:'Sora',sans-serif;font-weight:700;font-size:19px;}
+.brand span{color:var(--gold);}
+.role-tag{font-size:12px;color:var(--teal);background:rgba(69,199,181,.14);padding:5px 12px;border-radius:99px;font-weight:600;}
+
+.tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:22px;padding-bottom:4px;}
+.tab{flex-shrink:0;padding:9px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
+  color:var(--muted);font-size:13px;cursor:pointer;font-weight:500;}
+.tab.active{background:var(--gold);color:#1A1206;border-color:var(--gold);font-weight:700;}
+
+.view{display:none;}
+.view.active{display:block;animation:rise .3s ease both;}
+@keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.sys-status{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 16px;font-size:13px;}
+.sys-item{border-radius:99px;padding:5px 10px;border:1px solid var(--line);}
+.sys-item.on{border-color:rgba(69,199,181,.5);}
+.sys-item.off{border-color:rgba(240,166,60,.6);}
+.sup-wrap{display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:14px;}
+@media (max-width:760px){.sup-wrap{grid-template-columns:1fr;}}
+.sup-list{max-height:70vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+.sup-item{border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;}
+.sup-item.unread{border-color:var(--gold);}
+.sup-item.sel{background:var(--surface);}
+.sup-thread{border:1px solid var(--line);border-radius:14px;padding:12px;min-height:200px;}
+.sup-msgs{max-height:48vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.sup-msg{max-width:85%;padding:8px 12px;border-radius:12px;background:var(--surface);}
+.sup-msg.team{align-self:flex-end;background:rgba(228,174,58,.18);}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:26px;}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;}
+.kpi .label{font-size:12px;color:var(--muted);margin:0 0 6px;}
+.kpi .val{font-size:24px;font-weight:800;margin:0;}
+
+.section-title{font-size:15px;font-weight:600;margin:6px 0 12px;}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+th,td{padding:12px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--line);}
+th{color:var(--muted);font-weight:500;font-size:12px;}
+tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;}
+.badge.wait{background:rgba(240,166,60,.14);color:var(--gold);}
+.badge.ok{background:rgba(69,199,181,.14);color:var(--teal);}
+.badge.danger{background:rgba(232,101,79,.14);color:var(--coral);}
+.btn{padding:6px 13px;border-radius:9px;border:none;font-size:12px;font-weight:700;cursor:pointer;}
+.btn.approve{background:var(--teal);color:#0A2320;}
+.btn.remove{background:var(--coral);color:#2A0D07;}
+.btn.pause{background:var(--gold);color:#1A1206;}
+.btn:disabled{opacity:.4;cursor:default;}
+.empty{color:var(--muted);font-size:13px;padding:14px 2px;}
+
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px 24px;}
+.login-title{font-size:18px;font-weight:700;margin:0 0 4px;}
+.login-sub{font-size:13px;color:var(--muted);margin:0 0 22px;}
+.field-label{font-size:12px;color:var(--muted);margin:0 0 6px;display:block;}
+.field{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);
+  color:var(--text);font-size:14px;font-family:'Inter',sans-serif;margin-bottom:16px;}
+.field:focus{outline:none;border-color:var(--teal);}
+.login-btn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--gold);color:#1A1206;
+  font-weight:700;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;}
+.login-error{color:var(--coral);font-size:12px;margin:-8px 0 14px;display:none;}
+.login-hint{font-size:11px;color:var(--muted);margin-top:16px;text-align:center;}
+.logout-btn{background:none;border:1px solid var(--line);color:var(--muted);font-size:12px;padding:6px 12px;
+  border-radius:9px;cursor:pointer;font-family:'Inter',sans-serif;}
+.pill-count{display:inline-block;min-width:18px;padding:0 6px;margin-left:6px;border-radius:99px;background:var(--coral);color:#fff;font-size:11px;font-weight:700;text-align:center;}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;}
+.ftab{padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;}
+.ftab.active{background:var(--teal);color:#0A2320;border-color:var(--teal);font-weight:700;}
+.table-wrap{overflow-x:auto;margin-bottom:26px;}
+/* Téléphone (application Eaji Admin) : les grands tableaux défilent dans leur cadre, jamais toute la page. */
+.view > table{display:block;overflow-x:auto;max-width:100%;}
+@media (max-width:760px){
+  .shell{padding:14px 12px 60px;}
+  .topbar{flex-wrap:wrap;gap:8px;}
+  .topbar > div:last-child{flex-wrap:wrap;}
+  .role-tag{display:none;}
+}
+.small{font-size:11px;color:var(--muted);}
+textarea.field{min-height:70px;resize:vertical;}
+/* Classement des créateurs par ville / abonnés / vues */
+.city-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:0 0 16px;}
+.city-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer;}
+.city-card.sel{border-color:var(--gold);}
+.city-card b{font-size:15px;}
+.city-card .big{font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--gold);}
+.link-btn{background:none;border:none;color:var(--teal);cursor:pointer;font-weight:700;font-size:13px;padding:0;text-decoration:underline;}
+sup.flags{color:#1A1206;background:#FFD43B;border-radius:99px;padding:0 5px;font-size:10px;font-weight:800;margin-left:2px;}
+mark.watch{background:#FFD43B;color:#1A1206;border-radius:3px;padding:0 2px;font-weight:700;}
+.word-chip{display:inline-block;background:rgba(255,212,59,.16);color:#FFD43B;border:1px solid rgba(255,212,59,.4);border-radius:99px;padding:2px 8px;margin:2px;font-size:11px;}
+.word-chip button{background:none;border:none;color:inherit;cursor:pointer;font-weight:700;margin-left:4px;}
+.flag-card{background:var(--surface);border:1px solid var(--line);border-left:4px solid #FFD43B;border-radius:12px;padding:10px 12px;margin:8px 0;}
+.flag-card.done{opacity:.55;border-left-color:var(--line);}
+.flag-text{white-space:pre-wrap;font-size:13px;line-height:1.5;margin:6px 0;}
+.watch-row{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin:0 0 10px;}
+/* Fenêtre (abonnés, compte ouvert) */
+.modal{position:fixed;inset:0;background:rgba(5,6,10,.82);z-index:80;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 12px;}
+.modal-card{background:var(--bg);border:1px solid var(--line);border-radius:18px;width:100%;max-width:980px;padding:16px;}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;}
+.insp-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;}
+.bubble{max-width:80%;padding:8px 12px;border-radius:12px;background:var(--surface);margin:4px 0;font-size:13px;}
+.bubble.me{margin-left:auto;background:rgba(69,199,181,.14);}
+.bubble .meta{font-size:10px;color:var(--muted);margin-top:4px;}
+.bubble .hist{font-size:11px;background:rgba(255,212,59,.12);border-radius:8px;padding:4px 8px;margin-top:4px;}
+.media-prev img,.media-prev video{max-width:260px;max-height:220px;border-radius:10px;display:block;margin:6px 0;}
+.media-prev audio{max-width:260px;display:block;margin:6px 0;}
+</style>
+</head>
+<body>
+
+<!-- ÉCRAN DE CONNEXION -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <p class="login-title">Connexion administrateur</p>
+    <p class="login-sub" id="login-step-label">Réservé aux numéros de l'administrateur principal.</p>
+
+    <div id="step-credentials">
+      <label class="field-label">Numéro de téléphone</label>
+      <input class="field" id="admin-phone" placeholder="+243823239572" />
+      <label class="field-label">Mot de passe</label>
+      <input class="field" id="admin-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+      <p class="login-error" id="login-error-1">Identifiants refusés.</p>
+      <button class="login-btn" onclick="checkCredentials()">Continuer</button>
+    </div>
+
+    <div id="step-2fa" style="display:none;">
+      <label class="field-label">Code de vérification</label>
+      <input class="field" id="admin-otp" placeholder="123456" />
+      <p class="login-hint" id="login-dev-hint" style="margin:-8px 0 14px;"></p>
+      <p class="login-error" id="login-error-2">Code invalide.</p>
+      <button class="login-btn" onclick="checkOtp()">Valider et entrer</button>
+    </div>
+
+    <p class="login-hint" id="bootstrap-link" style="cursor:pointer;" onclick="showBootstrap()">Premier accès ? Définir ton mot de passe</p>
+  </div>
+</div>
+
+<!-- CONFIGURATION INITIALE (une seule fois, à la création du compte admin principal) -->
+<div class="login-screen" id="bootstrap-screen" style="display:none;">
+  <div class="login-card">
+    <p class="login-title">Configurer le compte principal</p>
+    <p class="login-sub">À faire une seule fois — refusé ensuite si déjà fait.</p>
+
+    <label class="field-label">Nom</label>
+    <input class="field" id="bs-name" value="Jimmy Komba" />
+    <label class="field-label">Numéro principal</label>
+    <input class="field" id="bs-phone1" value="+243823239572" />
+    <label class="field-label">Numéro secondaire</label>
+    <input class="field" id="bs-phone2" value="+243850171480" />
+    <label class="field-label">Mot de passe</label>
+    <input class="field" id="bs-password" type="password" placeholder="Choisis un mot de passe fort" />
+    <p class="login-error" id="bootstrap-error">Échec — un administrateur principal existe peut-être déjà.</p>
+    <p class="login-hint" id="bootstrap-success" style="display:none;color:var(--teal);">Compte créé — connecte-toi maintenant.</p>
+    <button class="login-btn" onclick="bootstrapPrincipal()">Créer le compte principal</button>
+    <p class="login-hint" style="cursor:pointer;" onclick="showLogin()">Retour à la connexion</p>
+  </div>
+</div>
+
+<div class="shell" id="app-shell" style="display:none;">
+  <div class="topbar">
+    <div class="brand">Ea<span>ji</span> Admin</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="role-tag">Administrateur principal &mdash; Jimmy Komba</div>
+      <button class="logout-btn" id="admin-install-btn" style="display:none;" onclick="installAdminApp()">📲 Installer l'application</button>
+      <button class="logout-btn" id="admin-alerts-btn" onclick="enableAdminAlerts()">🔔 Activer les alertes</button>
+      <button class="logout-btn" onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-target="v-overview">Vue d'ensemble</div>
+    <div class="tab" data-target="v-creators">Cr&eacute;ateurs</div>
+    <div class="tab" data-target="v-moderation">Mod&eacute;ration</div>
+    <div class="tab" data-target="v-identities">Identit&eacute;s</div>
+    <div class="tab" data-target="v-broadcast">Annonces</div>
+    <div class="tab" data-target="v-support">Support<span class="pill-count" id="sup-count" style="display:none;"></span></div>
+    <div class="tab" data-target="v-rates">Tarifs</div>
+    <div class="tab" data-target="v-backgrounds">Arri&egrave;re-plans</div>
+    <div class="tab" data-target="v-admins">Administrateurs</div>
+    <div class="tab" data-target="v-payments">Paiements<span class="pill-count" id="pay-count" style="display:none;"></span></div>
+    <div class="tab" data-target="v-revenue">Revenus</div>
+    <div class="tab" data-target="v-finance">Mon argent</div>
+    <div class="tab" data-target="v-payouts">R&eacute;mun&eacute;ration</div>
+    <div class="tab" data-target="v-advertise">Annonceurs<span class="pill-count" id="adv-count" style="display:none;"></span></div>
+    <div class="tab" data-target="v-commissions">Commissions</div>
+    <div class="tab" data-target="v-threats">Alertes s&eacute;curit&eacute;<span class="pill-count" id="sec-count" style="display:none;"></span></div>
+    <div class="tab" data-target="v-security">S&eacute;curit&eacute;</div>
+    <div class="tab" data-target="v-watch">Surveillance<span class="pill-count" id="watch-count" style="display:none;"></span></div>
+  </div>
+
+  <!-- VUE D'ENSEMBLE -->
+  <section class="view active" id="v-overview">
+    <div class="sys-status" id="sys-status" style="display:none;"></div>
+    <div class="kpi-grid">
+      <div class="kpi"><p class="label">Comptes cr&eacute;ateurs</p><p class="val" id="kpi-creators">&ndash;</p></div>
+      <div class="kpi"><p class="label">&Eacute;ligibles (1 000 abonn&eacute;s + 1 000 vues)</p><p class="val" id="kpi-eligible">&ndash;</p></div>
+      <div class="kpi"><p class="label">Signalements ouverts</p><p class="val" id="kpi-reports">&ndash;</p></div>
+      <div class="kpi"><p class="label">Contenus publi&eacute;s</p><p class="val" id="kpi-contents">&ndash;</p></div>
+    </div>
+    <p class="login-hint" id="overview-msg" style="margin:0 0 12px;text-align:left;"></p>
+    <div class="section-title">Derniers comptes cr&eacute;&eacute;s</div>
+    <table id="latest-table">
+      <tr><th>Nom</th><th>Pays</th><th>Date</th></tr>
+    </table>
+  </section>
+
+  <!-- CR&Eacute;ATEURS -->
+  <section class="view" id="v-creators">
+    <div class="section-title">Comptes cr&eacute;ateurs</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+      <select class="field" id="cr-country" style="width:auto;margin:0;" onchange="document.getElementById('cr-city').value='';loadCreators()"><option value="">Tous les pays</option></select>
+      <select class="field" id="cr-city" style="width:auto;margin:0;" onchange="loadCreators()"><option value="">Toutes les villes</option></select>
+      <select class="field" id="cr-sort" style="width:auto;margin:0;" onchange="loadCreators()">
+        <option value="abonnes">Classer par abonn&eacute;s</option><option value="vues">Classer par vues</option><option value="recent">Plus r&eacute;cents</option></select>
+      <input class="field" id="cr-search" style="width:auto;flex:1;min-width:150px;margin:0;" placeholder="Chercher un nom, un num&eacute;ro&hellip;" oninput="renderCreatorsTable()">
+    </div>
+    <div class="section-title" style="font-size:13px;color:var(--muted);">Villes (total des abonn&eacute;s et des vues de leurs cr&eacute;ateurs) &mdash; touche une ville pour voir ses comptes</div>
+    <div class="city-grid" id="cr-groups"></div>
+    <p class="login-hint" id="creators-msg" style="margin:0 0 12px;">Chargement des comptes&hellip;</p>
+    <table id="creators-table">
+      <tr><th>#</th><th>Nom</th><th>Ville</th><th>Abonn&eacute;s</th><th>Vues</th><th>Contact</th><th>Pays</th><th>Mon&eacute;tis&eacute;</th><th>Abonnement</th><th>Statut</th><th></th></tr>
+    </table>
+  </section>
+
+  <!-- MOD&Eacute;RATION -->
+  <section class="view" id="v-moderation">
+    <div class="section-title">Publications &agrave; v&eacute;rifier</div>
+    <p class="login-hint" style="margin:0 0 8px;text-align:left;">La d&eacute;tection automatique de nudit&eacute; n'a pas pu tourner sur le t&eacute;l&eacute;phone de l'auteur (pas de r&eacute;seau&hellip;). Ces publications restent cach&eacute;es jusqu'&agrave; ta d&eacute;cision.</p>
+    <p class="login-hint" id="review-msg" style="margin:0 0 8px;text-align:left;"></p>
+    <div id="review-list" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:22px;"></div>
+    <div class="section-title">Contenus signal&eacute;s</div>
+    <p class="login-hint" id="mod-msg" style="margin:0 0 12px;text-align:left;">Chargement&hellip;</p>
+    <table id="mod-table">
+      <tr><th>Contenu</th><th>Cr&eacute;ateur</th><th>Motif</th><th>Signal&eacute; par</th><th></th></tr>
+    </table>
+  </section>
+
+  <!-- ADMINS -->
+  <section class="view" id="v-admins">
+    <div class="section-title">Ajouter un administrateur secondaire</div>
+    <div style="max-width:420px;">
+      <label class="field-label">Nom</label>
+      <input class="field" id="na-name" placeholder="Nom complet" />
+      <label class="field-label">T&eacute;l&eacute;phone (sert &agrave; se connecter)</label>
+      <input class="field" id="na-phone" placeholder="+243..." />
+      <label class="field-label">Mot de passe initial (8 caract&egrave;res minimum, &agrave; lui transmettre)</label>
+      <input class="field" id="na-password" type="password" />
+      <label class="field-label">T&acirc;ches autoris&eacute;es</label>
+      <label style="display:block;font-size:13px;margin:4px 0;"><input type="checkbox" class="na-perm" value="moderer_contenu" checked> Retirer les contenus signal&eacute;s</label>
+      <label style="display:block;font-size:13px;margin:4px 0;"><input type="checkbox" class="na-perm" value="gerer_comptes_utilisateurs"> G&eacute;rer les comptes (suspendre / r&eacute;activer)</label>
+      <label style="display:block;font-size:13px;margin:4px 0 14px;"><input type="checkbox" class="na-perm" value="repondre_signalements"> R&eacute;pondre aux signalements</label>
+      <p class="login-error" id="na-error"></p>
+      <p class="login-error" id="na-success" style="display:none;color:var(--teal);">Administrateur ajout&eacute;.</p>
+      <button class="login-btn" onclick="addAdmin()">Ajouter</button>
+    </div>
+    <div class="section-title" style="margin-top:24px;">Administrateurs</div>
+    <p class="login-hint" id="admins-msg" style="margin:0 0 12px;text-align:left;"></p>
+    <table id="admins-table">
+      <tr><th>Nom</th><th>R&ocirc;le</th><th>T&eacute;l&eacute;phone(s)</th><th>T&acirc;ches</th><th>Statut</th></tr>
+    </table>
+  </section>
+
+  <!-- PAIEMENTS À VÉRIFIER (administrateur principal uniquement) -->
+  <section class="view" id="v-payments">
+    <div class="section-title">Paiements des utilisateurs (en ligne uniquement)</div>
+    <p class="login-hint" style="margin:0 0 12px;text-align:left;">Chaque paiement se fait en ligne (pawaPay, CinetPay ou PayPal) avec le code secret mobile money ou la carte de l'acheteur. Il se confirme <b>tout seul</b> quand l'argent est vraiment re&ccedil;u : plus aucune confirmation &agrave; la main, donc plus d'argent non r&eacute;el.</p>
+    <p class="login-error" id="pay-numbers-msg" style="display:block;color:var(--muted);"></p>
+    <div class="section-title" style="margin-top:26px;">Liste des paiements</div>
+    <div class="filter-row" id="pay-filter">
+      <div class="ftab active" data-status="en_attente">En attente</div>
+      <div class="ftab" data-status="confirme">Confirm&eacute;s</div>
+      <div class="ftab" data-status="refuse">Refus&eacute;s</div>
+      <div class="ftab" data-status="">Tous</div>
+    </div>
+    <p class="login-hint" id="pay-msg" style="margin:0 0 12px;text-align:left;"></p>
+    <div class="table-wrap"><table id="pay-table">
+      <tr><th>R&eacute;f&eacute;rence</th><th>Utilisateur</th><th>Achat</th><th>Montant</th><th>Preuve</th><th>Date</th><th></th></tr>
+    </table></div>
+
+    <div class="section-title">Retraits &agrave; payer aux cr&eacute;ateurs</div>
+    <p class="login-hint" style="margin:0 0 12px;text-align:left;">Envoie le montant net au num&eacute;ro ou au compte indiqu&eacute;, puis clique sur <b>Pay&eacute;</b>. Les frais de retrait restent &agrave; Eaji.</p>
+    <p class="login-hint" id="wd-msg" style="margin:0 0 12px;text-align:left;"></p>
+    <div class="table-wrap"><table id="wd-table">
+      <tr><th>Cr&eacute;ateur</th><th>Type</th><th>&Agrave; envoyer</th><th>Frais Eaji</th><th>Vers</th><th>Date</th><th></th></tr>
+    </table></div>
+  </section>
+
+  <!-- TARIFS ET POURCENTAGES (administrateur principal uniquement) -->
+  <section class="view" id="v-rates">
+    <div class="section-title">Tarifs et pourcentages d'Eaji</div>
+    <p class="login-hint" style="margin:0 0 12px;text-align:left;">Ces chiffres ne sont visibles que par toi. Les utilisateurs voient seulement leurs soldes, ce qu'ils recevront, et la condition « 1 000 abonn&eacute;s et 1 000 vues ».</p>
+    <div class="table-wrap"><table id="rates-table"><tr><th>R&egrave;gle</th><th>Valeur</th></tr></table></div>
+    <div class="section-title" style="margin-top:22px;">Frais de retrait des gains</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;max-width:720px;">
+      <label class="login-hint" style="margin:0;text-align:left;">Petits comptes (%)<input class="field" id="rt-small" type="number" min="0" max="50" step="0.5" style="width:110px;margin:4px 0 0;"></label>
+      <label class="login-hint" style="margin:0;text-align:left;">Grands comptes (%)<input class="field" id="rt-big" type="number" min="0" max="50" step="0.5" style="width:110px;margin:4px 0 0;"></label>
+      <label class="login-hint" style="margin:0;text-align:left;">Grand compte &agrave; partir de (abonn&eacute;s)<input class="field" id="rt-threshold" type="number" min="1000" step="1000" style="width:170px;margin:4px 0 0;"></label>
+      <button class="btn approve" onclick="saveRates()">Enregistrer</button>
+    </div>
+    <p class="login-hint" id="rates-msg" style="margin:10px 0 0;text-align:left;"></p>
+  </section>
+
+  <!-- ARRIÈRE-PLANS virtuels proposés dans l'éditeur et pendant les lives -->
+  <section class="view" id="v-backgrounds">
+    <div class="section-title">Arri&egrave;re-plans virtuels</div>
+    <p class="login-hint" style="margin:0 0 12px;text-align:left;">Ces images sont propos&eacute;es &agrave; tous les utilisateurs dans l'&eacute;diteur (avant publication) et pendant les lives, en plus des d&eacute;cors dessin&eacute;s par Eaji. Utilise uniquement des photos libres de droits (par exemple Pexels ou Unsplash) ou tes propres photos. Elles sont r&eacute;duites automatiquement.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;max-width:760px;">
+      <label class="login-hint" style="margin:0;text-align:left;">Nom<input class="field" id="bgad-name" maxlength="60" placeholder="ex : Villa à la plage" style="width:220px;margin:4px 0 0;"></label>
+      <label class="login-hint" style="margin:0;text-align:left;">Cat&eacute;gorie<select class="field" id="bgad-cat" style="width:150px;margin:4px 0 0;">
+        <option value="nature">Nature</option><option value="maison">Maisons de luxe</option><option value="voiture">Voitures</option>
+        <option value="bureau">Bureaux</option><option value="ville">Villes</option><option value="autre">Autres</option></select></label>
+      <label class="login-hint" style="margin:0;text-align:left;">Image<input class="field" id="bgad-file" type="file" accept="image/*" style="width:230px;margin:4px 0 0;"></label>
+      <button class="btn approve" id="bgad-btn" onclick="addBackground()">Ajouter</button>
+    </div>
+    <p class="login-hint" id="bgad-msg" style="margin:10px 0 0;text-align:left;"></p>
+    <div id="bgad-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:16px;"></div>
+  </section>
+
+  <!-- ANNONCES : message à tous, à un pays ou à une ville -->
+  <section class="view" id="v-broadcast">
+    <div class="section-title">Envoyer une annonce aux comptes</div>
+    <p class="login-hint" style="margin:0 0 12px;text-align:left;">Pour signaler un changement, une maintenance ou une panne. Le message arrive tout de suite dans la cloche 🔔 de chaque compte choisi et sur son t&eacute;l&eacute;phone (m&ecirc;me &eacute;cran verrouill&eacute;, si les notifications sont activ&eacute;es).</p>
+    <div style="max-width:560px;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;">
+        <label><input type="radio" name="bc-scope" value="tous" checked onchange="bcScopeChanged()"> Tous les comptes</label>
+        <label><input type="radio" name="bc-scope" value="pays" onchange="bcScopeChanged()"> Un pays</label>
+        <label><input type="radio" name="bc-scope" value="ville" onchange="bcScopeChanged()"> Une ville</label>
+      </div>
+      <div id="bc-country-wrap" style="display:none;"><label class="login-hint" style="display:block;text-align:left;margin:0 0 4px;">Pays</label>
+        <select class="field" id="bc-country" onchange="bcScopeChanged()"></select></div>
+      <div id="bc-city-wrap" style="display:none;"><label class="login-hint" style="display:block;text-align:left;margin:0 0 4px;">Ville</label>
+        <input class="field" id="bc-city" list="bc-cities" placeholder="Ex : Kinshasa" oninput="bcCount()"><datalist id="bc-cities"></datalist></div>
+      <label class="login-hint" style="display:block;text-align:left;margin:0 0 4px;">Titre</label>
+      <input class="field" id="bc-title" maxlength="80" placeholder="Ex : Maintenance ce soir">
+      <label class="login-hint" style="display:block;text-align:left;margin:0 0 4px;">Message</label>
+      <textarea class="field" id="bc-text" maxlength="500" placeholder="Ex : Eaji sera en maintenance de 22 h à 23 h. Les paiements reprendront ensuite."></textarea>
+      <p class="login-hint" id="bc-count" style="margin:0 0 10px;text-align:left;"></p>
+      <button class="btn approve" onclick="sendBroadcast()">Envoyer maintenant</button>
+      <p class="login-hint" id="bc-msg" style="margin:10px 0 0;text-align:left;"></p>
+    </div>
+    <div class="section-title" style="margin-top:24px;">Annonces envoy&eacute;es</div>
+    <div class="table-wrap"><table id="bc-table">
+      <tr><th>Date</th><th>Destinataires</th><th>Message</th><th>Comptes</th></tr>
+    </table></div>
+  </section>
+
+  <!-- IDENTITÉS : vérification avant retrait -->
+  <section class="view" id="v-identities">
+    <div class="section-title">V&eacute;rification d'identit&eacute; (obligatoire avant un retrait)</div>
+    <p class="login-hint" style="margin:0 0 12px;text-align:left;">Compare la photo du visage prise en direct avec la photo de la pi&egrave;ce, et v&eacute;rifie que le nom, le num&eacute;ro et la date de naissance correspondent. En validant, le nom du compte devient celui de la pi&egrave;ce et ne peut plus &ecirc;tre chang&eacute;.</p>
+    <div class="filter-row" id="id-filter">
+      <div class="ftab active" data-status="en_attente">En attente</div>
+      <div class="ftab" data-status="verifie">V&eacute;rifi&eacute;es</div>
+      <div class="ftab" data-status="rejete">Refus&eacute;es</div>
+    </div>
+    <p class="login-hint" id="id-msg" style="margin:0 0 12px;text-align:left;"></p>
+    <div id="id-list"></div>
+  </section>
+
+  <!-- RÉMUNÉRATION MENSUELLE (administrateur principal uniquement) -->
+  <section class="view" id="v-payouts">
+    <div class="section-title">R&eacute;mun&eacute;ration des cr&eacute;ateurs (par p&eacute;riode d'abonnement)</div>
+    <p class="login-hint" style="margin:0 0 8px;text-align:left;">🔒 <b>R&egrave;gle interne, jamais affich&eacute;e aux utilisateurs.</b>
+      Une p&eacute;riode = un mois, du jour o&ugrave; le cr&eacute;ateur a pay&eacute; son Premium au m&ecirc;me jour du mois suivant (1 mois, 3 mois ou 1 an : un mois apr&egrave;s l'autre).
+      Chaque jour, le cr&eacute;ateur voit sa r&eacute;mun&eacute;ration (vues et abonn&eacute;s) grandir <b>en attente</b>.
+      <b>5 jours avant la fin</b> de chaque mois de p&eacute;riode, Eaji contr&ocirc;le les vues (fausses vues retir&eacute;es, copies &eacute;cart&eacute;es, r&egrave;gle des 70 % &eacute;valu&eacute;e),
+      calcule le montant et l'ajoute <b>automatiquement</b> aux gains disponibles du cr&eacute;ateur.
+      Une publication n'est r&eacute;mun&eacute;r&eacute;e qu'une fois : ensuite ses vues profitent &agrave; Eaji et le cr&eacute;ateur ne touche plus que 30 % de ses ventes et cadeaux.
+      Les publications d'avant le Premium ne comptent pas ; un contenu r&eacute;p&eacute;t&eacute; (m&ecirc;me fichier ou m&ecirc;me lien) ne rapporte rien au cr&eacute;ateur : tout va &agrave; Eaji.</p>
+    <p class="login-hint" style="margin:0 0 8px;text-align:left;"><b>Taux</b> : 2 $ / 1 000 abonn&eacute;s jusqu'&agrave; 100 000, puis 1 $ / 1 000 jusqu'&agrave; 1 million, puis 0,50 $ / 1 000.
+      <b>Vues de la p&eacute;riode</b> (sur les nouvelles publications) : au moins 70 % des abonn&eacute;s, sinon seuls (vues &divide; 0,7) abonn&eacute;s sont pay&eacute;s.
+      <b>Budget</b> : jamais plus que le pourcentage choisi des revenus d'Eaji des 30 derniers jours.</p>
+    <p class="login-hint" style="margin:0 0 8px;text-align:left;"><b>Fausses vues</b> (retir&eacute;es avant le calcul) : vues venant d'un t&eacute;l&eacute;phone du cr&eacute;ateur ou de ses autres comptes ;
+      plusieurs comptes sur un m&ecirc;me t&eacute;l&eacute;phone pour une m&ecirc;me publication le m&ecirc;me jour (une seule vue gard&eacute;e) ; comptes cr&eacute;&eacute;s en s&eacute;rie (au moins 4 comptes qui regardent ce cr&eacute;ateur sur un m&ecirc;me t&eacute;l&eacute;phone).
+      D&egrave;s 10 fausses vues repr&eacute;sentant au moins 5 % des vues (ou 200 fausses vues), le cr&eacute;ateur re&ccedil;oit automatiquement une <b>mise en garde</b>, puis un <b>avertissement</b>, puis un <b>dernier avertissement</b> : &agrave; ce stade tu es pr&eacute;venu et tu peux suspendre le compte.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+      <label class="login-hint" style="margin:0;">Budget : <input class="field" id="po-budget" type="number" min="0" max="100" step="1" style="width:80px;margin:0 4px;display:inline-block;"> % des revenus d'Eaji</label>
+      <button class="btn approve" onclick="saveBudget()">Enregistrer</button>
+      <button class="btn pause" onclick="runCycles()">Calculer maintenant les p&eacute;riodes arriv&eacute;es &agrave; &eacute;ch&eacute;ance</button>
+    </div>
+    <div class="kpi-grid" id="po-kpis"></div>
+    <p class="login-hint" id="po-msg" style="margin:0 0 12px;text-align:left;"></p>
+    <div class="table-wrap"><table id="po-table">
+      <tr><th>Cr&eacute;ateur</th><th>Pays</th><th>P&eacute;riode</th><th>Nouvelles publications</th><th>Vues de la p&eacute;riode</th><th>Fausses vues retir&eacute;es</th><th>Abonn&eacute;s</th><th>Calcul&eacute;</th><th>Vers&eacute;</th><th>&Eacute;tat</th></tr>
+    </table></div>
+    <div class="section-title" style="margin-top:18px;">Mises en garde envoy&eacute;es (fausses vues)</div>
+    <div class="table-wrap"><table id="po-warn">
+      <tr><th>Date</th><th>Cr&eacute;ateur</th><th>Niveau</th><th>Fausses vues</th><th>D&eacute;tail</th><th>Compte</th></tr>
+    </table></div>
+  </section>
+
+  <!-- ANNONCEURS (administrateur principal uniquement) -->
+  <section class="view" id="v-advertise">
+    <div class="section-title">Entreprises qui veulent annoncer sur Eaji</div>
+    <p class="login-hint" style="margin:0 0 8px;text-align:left;">Messages envoy&eacute;s depuis la page publique &laquo;&nbsp;📣 Annoncer sur Eaji&nbsp;&raquo; (lien direct : <b>index.html#annoncer</b>).
+      Les entreprises y voient l'audience r&eacute;elle d'Eaji, un exemple de publicit&eacute;, les offres (essai 3 $ pour 5 jours, une seule fois par compte ; 20 $ / mois ; 200 $ / an) et ton WhatsApp <b id="adv-wa-admin"></b>.</p>
+    <div class="kpi-grid" id="adv-kpis"></div>
+    <p class="login-hint" id="adv-msg" style="margin:0 0 12px;text-align:left;"></p>
+    <div class="table-wrap"><table id="adv-table">
+      <tr><th>Date</th><th>Entreprise</th><th>Contact</th><th>Message</th><th>Compte Eaji</th><th>&Eacute;tat</th></tr>
+    </table></div>
+  </section>
+
+  <!-- REVENUS (administrateur principal uniquement) -->
+  <section class="view" id="v-revenue">
+    <div class="section-title">Mes revenus Eaji</div>
+    <div class="kpi-grid" id="rev-kpis"></div>
+    <p class="login-hint" id="rev-msg" style="margin:0 0 12px;text-align:left;"></p>
+    <div class="section-title">D&eacute;tail par source</div>
+    <div class="table-wrap"><table id="rev-table">
+      <tr><th>Source</th><th>Nombre</th><th>Total</th></tr>
+    </table></div>
+    <div class="section-title">Publicit&eacute;s des entreprises</div>
+    <div class="table-wrap"><table id="ads-table">
+      <tr><th>Entreprise</th><th>Pays</th><th>Dur&eacute;e</th><th>Statut</th><th>Vues / clics</th><th></th></tr>
+    </table></div>
+  </section>
+
+  <!-- SUPPORT : messages des utilisateurs à l'équipe Eaji -->
+  <section class="view" id="v-support">
+    <div class="section-title">Messages des utilisateurs</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="btn pause" onclick="SUP_FILTER = 'ouvert'; loadSupport()">À traiter</button>
+      <button class="btn pause" onclick="SUP_FILTER = 'resolu'; loadSupport()">Résolus</button>
+      <button class="btn pause" onclick="SUP_FILTER = ''; loadSupport()">Tous</button>
+    </div>
+    <div class="sup-wrap">
+      <div class="sup-list" id="sup-list"></div>
+      <div class="sup-thread" id="sup-thread"><p class="login-hint" style="text-align:left;">Choisis une conversation.</p></div>
+    </div>
+  </section>
+
+  <!-- MON ARGENT : retirer les revenus d'Eaji (administrateur principal) -->
+  <section class="view" id="v-finance">
+    <div class="section-title">Mon argent (revenus d'Eaji)</div>
+    <div class="kpi-grid" id="mon-kpis"></div>
+    <p class="login-hint" id="mon-gw" style="margin:0 0 12px;text-align:left;"></p>
+    <div id="nr-box" style="max-width:640px;border:1px solid rgba(232,48,79,.4);border-radius:12px;padding:12px;margin:0 0 18px;">
+      <div class="section-title" style="margin:0 0 6px;">Argent non réel</div>
+      <p class="login-hint" id="nr-detail" style="margin:0 0 8px;text-align:left;">Chargement&hellip;</p>
+      <div id="nr-form" style="display:none;">
+        <p class="login-hint" style="margin:0 0 8px;text-align:left;">Ces montants n'ont jamais été reçus par pawaPay, CinetPay ou PayPal. Les retirer remet tes revenus, les gains des créateurs et les soldes à leur vraie valeur (les abonnements déjà activés restent).</p>
+        <input class="field" id="nr-password" type="password" placeholder="Ton mot de passe administrateur (confirmation)">
+        <button class="btn remove" id="nr-btn" onclick="cleanNonReel()">Retirer l'argent non réel</button>
+      </div>
+      <p class="login-hint" id="nr-msg" style="margin:8px 0 0;text-align:left;"></p>
+    </div>
+    <div class="section-title">Retirer de l'argent</div>
+    <div style="max-width:560px;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;">
+        <label><input type="radio" name="fin-method" value="mobile_money" checked onchange="finMethodChanged()"> Mobile money</label>
+        <label><input type="radio" name="fin-method" value="banque" onchange="finMethodChanged()"> Compte bancaire</label>
+      </div>
+      <label class="login-hint" style="display:block;text-align:left;margin:0 0 4px;">Montant en dollars</label>
+      <input class="field" id="mon-amount" type="number" min="1" step="0.01" placeholder="ex : 250">
+      <div id="mon-mm">
+        <select class="field" id="mon-provider"></select>
+        <input class="field" id="mon-phone" inputmode="tel" placeholder="Ton numéro mobile money (ex : 0812345678)">
+      </div>
+      <div id="mon-bank" style="display:none;">
+        <input class="field" id="mon-bank-name" placeholder="Banque (ex : Rawbank, Equity BCDC)">
+        <input class="field" id="mon-bank-holder" placeholder="Titulaire du compte">
+        <input class="field" id="mon-bank-number" placeholder="Numéro de compte / IBAN">
+        <input class="field" id="mon-bank-swift" placeholder="Code SWIFT (facultatif)">
+      </div>
+      <input class="field" id="mon-password" type="password" placeholder="Ton mot de passe administrateur (confirmation)">
+      <button class="btn approve" id="mon-btn" onclick="adminWithdraw()">Retirer</button>
+      <p class="login-hint" id="mon-msg" style="margin:10px 0 0;text-align:left;"></p>
+    </div>
+    <div class="section-title" style="margin-top:22px;">Mes retraits</div>
+    <div class="table-wrap"><table id="mon-table"><tr><th>Date</th><th>Montant</th><th>Vers</th><th>État</th><th></th></tr></table></div>
+  </section>
+
+  <!-- COMMISSIONS (administrateur principal uniquement) -->
+  <section class="view" id="v-commissions">
+    <div class="section-title">Commissions et revenus</div>
+    <div class="kpi-grid" id="fin-totals"></div>
+    <p class="login-hint" id="fin-msg" style="margin:0 0 12px;text-align:left;">Chargement&hellip;</p>
+    <table id="fin-table">
+      <tr><th>Type</th><th>Montant</th><th>Statut</th><th>Date</th></tr>
+    </table>
+  </section>
+
+  <!-- SÉCURITÉ -->
+  <!-- ALERTES SÉCURITÉ : tentatives de piratage et activités suspectes -->
+  <section class="view" id="v-threats">
+    <div class="section-title">Activités suspectes et tentatives de piratage</div>
+    <div class="kpi-grid" id="th-kpis"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="btn pause" onclick="TH_LEVEL = 'alerte'; loadThreats()">Alertes seulement</button>
+      <button class="btn pause" onclick="TH_LEVEL = ''; loadThreats()">Toute l'activité</button>
+    </div>
+    <p class="login-hint" id="th-msg" style="margin:0 0 10px;text-align:left;"></p>
+    <div class="section-title">Comptes visés (24 h)</div>
+    <div class="table-wrap"><table id="th-targets"><tr><th>Compte</th><th>Mots de passe faux</th><th>Adresses différentes</th><th>Dernier essai</th><th></th></tr></table></div>
+    <div class="section-title" style="margin-top:18px;">Adresses suspectes (24 h)</div>
+    <p class="login-hint" style="margin:0 0 8px;text-align:left;">⚠️ En RDC, beaucoup de personnes partagent la même adresse internet (même opérateur). Bloque une adresse seulement si elle essaie <b>beaucoup de comptes différents</b>.</p>
+    <div class="table-wrap"><table id="th-ips"><tr><th>Adresse</th><th>Essais ratés</th><th>Comptes essayés</th><th>Dernier essai</th><th></th></tr></table></div>
+    <div class="section-title" style="margin-top:18px;">Journal</div>
+    <div class="table-wrap"><table id="th-events"><tr><th>Quand</th><th>Gravité</th><th>Quoi</th><th>Compte / adresse</th><th></th></tr></table></div>
+    <div class="section-title" style="margin-top:18px;">Adresses bloquées</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;"><input class="field" id="th-ip" placeholder="Bloquer une adresse (ex : 102.68.12.34)" style="max-width:280px;margin:0;"><button class="btn remove" onclick="blockIp(document.getElementById('th-ip').value)">Bloquer</button></div>
+    <div class="table-wrap"><table id="th-blocks"><tr><th>Adresse</th><th>Raison</th><th>Depuis</th><th></th></tr></table></div>
+  </section>
+
+  <!-- SURVEILLANCE : mots sensibles, lecture automatique des photos / vidéos, contenus IA, accès aux comptes -->
+  <section class="view" id="v-watch">
+    <div class="section-title">Surveillance (pour &eacute;viter les ennuis judiciaires)</div>
+    <p class="login-hint" style="text-align:left;margin:0 0 10px;">Les publications, commentaires, messages, statuts et messages de live sont lus automatiquement. Les mots surveill&eacute;s sont <mark class="watch">surlign&eacute;s en jaune</mark>. L'utilisateur ne voit rien. Le texte &eacute;crit dans les photos et ce qui est dit dans les vid&eacute;os et les vocaux est lu par cette page (&laquo; Lecture automatique &raquo;).</p>
+    <div class="filter-row" id="watch-tabs">
+      <button class="ftab active" data-w="comptes" onclick="watchTab('comptes')">Comptes signal&eacute;s</button>
+      <button class="ftab" data-w="lecture" onclick="watchTab('lecture')">Lecture automatique</button>
+      <button class="ftab" data-w="mots" onclick="watchTab('mots')">Mots surveill&eacute;s</button>
+      <button class="ftab" data-w="ia" onclick="watchTab('ia')">Contenus IA</button>
+      <button class="ftab" data-w="doublons" id="watch-tab-doublons" onclick="watchTab('doublons')">Contenus r&eacute;p&eacute;t&eacute;s</button>
+      <button class="ftab" data-w="journal" id="watch-tab-journal" onclick="watchTab('journal')">Journal des acc&egrave;s</button>
+    </div>
+    <div id="w-comptes">
+      <label class="small"><input type="checkbox" id="w-all" onchange="loadWatchAccounts()"> Voir aussi les alertes d&eacute;j&agrave; trait&eacute;es</label>
+      <p class="login-hint" id="w-msg" style="text-align:left;margin:8px 0;"></p>
+      <div id="w-accounts"></div>
+    </div>
+    <div id="w-doublons" style="display:none;">
+      <p class="login-hint" style="text-align:left;margin:0 0 8px;">Publications identiques &agrave; une publication d&eacute;j&agrave; en ligne (m&ecirc;me fichier ou m&ecirc;me lien import&eacute;). Elles ne rapportent rien &agrave; leur auteur : vues et argent vont &agrave; Eaji. L'utilisateur n'en sait rien.</p>
+      <div class="table-wrap"><table id="w-dup-table"><tr><th>Publication r&eacute;p&eacute;t&eacute;e</th><th>Par</th><th>Le</th><th>Copie de</th><th>Publi&eacute;e par</th><th>Le</th></tr></table></div>
+    </div>
+    <div id="w-lecture" style="display:none;">
+      <p class="login-hint" style="text-align:left;margin:0 0 8px;">Cette page lit le texte des photos (reconnaissance de caract&egrave;res) et &eacute;coute les vid&eacute;os, audios et vocaux (reconnaissance de la parole, avec l'heure exacte). La premi&egrave;re fois, elle t&eacute;l&eacute;charge les outils de lecture (environ 60 Mo, une seule fois). Laisse-la ouverte : elle traite les nouveaux fichiers un par un.</p>
+      <button class="btn approve" id="w-run" onclick="toggleWatchRunner()">&#9654; D&eacute;marrer la lecture automatique</button>
+      <span class="small" id="w-remaining" style="margin-left:8px;"></span>
+      <p class="small" id="w-current" style="margin:10px 0;"></p>
+      <div id="w-log"></div>
+    </div>
+    <div id="w-mots" style="display:none;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;max-width:640px;">
+        <textarea class="field" id="w-new-words" style="flex:1;min-width:220px;margin:0;" placeholder="Mots &agrave; ajouter, s&eacute;par&eacute;s par des virgules (ex : faux visa, Bitcoin, nom d'un ministre&hellip;)"></textarea>
+        <select class="field" id="w-new-cat" style="width:auto;margin:0;"></select>
+        <button class="btn approve" onclick="addWatchWords()">Ajouter</button>
+      </div>
+      <p class="small" id="w-words-msg"></p>
+      <div id="w-words"></div>
+    </div>
+    <div id="w-ia" style="display:none;">
+      <p class="login-hint" style="text-align:left;margin:0 0 8px;">Vid&eacute;os et photos cr&eacute;&eacute;es par intelligence artificielle (rep&eacute;r&eacute;es par les marques que les outils d'IA laissent dans le fichier, ou marqu&eacute;es par toi). Elles ne sont jamais r&eacute;mun&eacute;r&eacute;es et leurs vues ne comptent pas : l'argent qu'elles rapportent va dans tes revenus.</p>
+      <div class="table-wrap"><table id="w-ia-table"><tr><th>Contenu</th><th>Cr&eacute;ateur</th><th>Rep&eacute;r&eacute; par</th><th>Vues</th><th>Argent pour Eaji</th><th></th></tr></table></div>
+    </div>
+    <div id="w-journal" style="display:none;">
+      <div class="table-wrap"><table id="w-log-table"><tr><th>Date</th><th>Administrateur</th><th>Compte</th><th>Action</th><th>Raison</th></tr></table></div>
+    </div>
+  </section>
+
+  <section class="view" id="v-security">
+    <div class="section-title">Changer le mot de passe</div>
+    <div style="max-width:360px;">
+      <label class="field-label">Mot de passe actuel</label>
+      <input class="field" id="pwd-current" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+      <label class="field-label">Nouveau mot de passe</label>
+      <input class="field" id="pwd-new" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+      <label class="field-label">Confirmer le nouveau mot de passe</label>
+      <input class="field" id="pwd-confirm" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+      <p class="login-error" id="pwd-error">Les deux mots de passe ne correspondent pas.</p>
+      <p class="login-error" id="pwd-success" style="display:none;color:var(--teal);">Mot de passe mis à jour.</p>
+      <button class="login-btn" onclick="changePassword()">Mettre à jour</button>
+      <p class="login-hint">Le mot de passe actuel est v&eacute;rifi&eacute; avant d'accepter le nouveau (8 caract&egrave;res minimum).</p>
+    </div>
+  </section>
+</div>
+
+
+<script>
+// ==== Intégration API réelle — authentification admin dédiée ====
+const API_BASE_URL = 'https://eajimmy-production.up.railway.app';
+let ADMIN_ID = sessionStorage.getItem('eaji_admin_id');
+let ADMIN_TOKEN = sessionStorage.getItem('eaji_admin_token');
+let PENDING_LOGIN_ID = null;
+
+function normalizePhone(v){ return (v || '').replace(/[\s.-]/g, ''); }
+
+function showBootstrap(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('bootstrap-screen').style.display = 'flex';
+}
+function showLogin(){
+  document.getElementById('bootstrap-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function bootstrapPrincipal(){
+  const name = document.getElementById('bs-name').value.trim();
+  const phones = [document.getElementById('bs-phone1').value.trim(), document.getElementById('bs-phone2').value.trim()].filter(Boolean);
+  const password = document.getElementById('bs-password').value;
+  const errorEl = document.getElementById('bootstrap-error');
+  const successEl = document.getElementById('bootstrap-success');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/admin/auth/bootstrap-principal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, password, phones }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'échec');
+    errorEl.style.display = 'none';
+    successEl.style.display = 'block';
+    setTimeout(showLogin, 1200);
+  } catch (e) {
+    errorEl.textContent = e.message;
+    errorEl.style.display = 'block';
+  }
+}
+
+async function checkCredentials(){
+  const phone = normalizePhone(document.getElementById('admin-phone').value);
+  const password = document.getElementById('admin-password').value;
+  const errorEl = document.getElementById('login-error-1');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/admin/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Identifiants refusés.');
+    PENDING_LOGIN_ID = data.adminId;
+    errorEl.style.display = 'none';
+    document.getElementById('step-credentials').style.display = 'none';
+    document.getElementById('step-2fa').style.display = 'block';
+    document.getElementById('login-dev-hint').textContent = data.devCode
+      ? `Mode test — code : ${data.devCode}`
+      : 'Un code a été envoyé.';
+  } catch (e) {
+    errorEl.textContent = e.message;
+    errorEl.style.display = 'block';
+  }
+}
+
+async function checkOtp(){
+  const code = document.getElementById('admin-otp').value.trim();
+  const errorEl = document.getElementById('login-error-2');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/admin/auth/login/verify-2fa`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminId: PENDING_LOGIN_ID, code }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Code invalide.');
+
+    ADMIN_ID = data.adminId;
+    ADMIN_TOKEN = data.token;
+    sessionStorage.setItem('eaji_admin_id', ADMIN_ID);
+    sessionStorage.setItem('eaji_admin_token', ADMIN_TOKEN);
+
+    errorEl.style.display = 'none';
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-shell').style.display = 'block';
+    loadAdminData();
+    openTabFromUrl();
+  } catch (e) {
+    errorEl.textContent = e.message;
+    errorEl.style.display = 'block';
+  }
+}
+
+function authHeaders(){
+  return {
+    'Content-Type': 'application/json',
+    ...(ADMIN_TOKEN ? { Authorization: `Bearer ${ADMIN_TOKEN}` } : {}),
+  };
+}
+
+// Session déjà ouverte (rechargement de page) : on saute directement dans le tableau de bord.
+if (ADMIN_TOKEN && ADMIN_ID) {
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-shell').style.display = 'block';
+    loadAdminData();
+    openTabFromUrl();
+  });
+}
+
+// ==== Application Eaji Admin : installation et alertes sur le téléphone ====
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+let ADMIN_INSTALL = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); ADMIN_INSTALL = e; const b = document.getElementById('admin-install-btn'); if (b) b.style.display = ''; });
+async function installAdminApp() {
+  if (!ADMIN_INSTALL) return alert('Sur Android : menu ⋮ du navigateur → « Installer l\'application ». Sur iPhone : bouton Partager → « Sur l\'écran d\'accueil ».');
+  ADMIN_INSTALL.prompt(); ADMIN_INSTALL = null;
+  document.getElementById('admin-install-btn').style.display = 'none';
+}
+function urlB64ToBytes(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4), raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+// Alertes : paiement à vérifier, retrait à payer, message au support, paiement reçu, alerte de sécurité.
+async function enableAdminAlerts() {
+  const btn = document.getElementById('admin-alerts-btn');
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) throw new Error('Ce navigateur ne permet pas les alertes. Installe l\'application (Chrome sur Android).');
+    if ((await Notification.requestPermission()) !== 'granted') throw new Error('Autorise les notifications pour recevoir les alertes.');
+    const reg = await navigator.serviceWorker.ready;
+    const { publicKey } = await adminApi('/api/push/public-key');
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToBytes(publicKey) });
+    await adminApi('/api/admin/push/subscribe', { method: 'POST', body: { subscription: sub.toJSON() } });
+    await adminApi('/api/admin/push/test', { method: 'POST', body: {} });
+    btn.textContent = '🔔 Alertes activées ✓';
+  } catch (e) { alert(e.message); }
+}
+function openAdminLink(link) {
+  if (!link || !String(link).startsWith('admin:')) return;
+  const tab = document.querySelector(`.tab[data-target="${String(link).slice(6)}"]`);
+  if (tab && tab.style.display !== 'none') tab.click();
+}
+function openTabFromUrl() {
+  const t = new URLSearchParams(location.search).get('tab');
+  if (t) setTimeout(() => openAdminLink('admin:' + t), 300);
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (e) => {
+  const d = e.data || {};
+  if (d.type === 'eaji-open') openAdminLink(d.link);
+  if (d.type === 'eaji-push' && String(d.link || '').startsWith('admin:')) refreshPendingCount();
+});
+
+async function changePassword(){
+  const current = document.getElementById('pwd-current').value;
+  const next = document.getElementById('pwd-new').value;
+  const confirmVal = document.getElementById('pwd-confirm').value;
+  const errorEl = document.getElementById('pwd-error');
+  const successEl = document.getElementById('pwd-success');
+
+  successEl.style.display = 'none';
+  errorEl.style.display = 'none';
+  if (!current || !next || next !== confirmVal) {
+    errorEl.textContent = 'Les deux mots de passe ne correspondent pas.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  try {
+    await adminApi('/api/admin/auth/change-password', { method: 'POST', body: { currentPassword: current, newPassword: next } });
+  } catch (e) {
+    errorEl.textContent = e.message;
+    errorEl.style.display = 'block';
+    return;
+  }
+  successEl.style.display = 'block';
+  document.getElementById('pwd-current').value = '';
+  document.getElementById('pwd-new').value = '';
+  document.getElementById('pwd-confirm').value = '';
+}
+
+function logout(){
+  sessionStorage.removeItem('eaji_admin_id');
+  sessionStorage.removeItem('eaji_admin_token');
+  ADMIN_ID = null;
+  ADMIN_TOKEN = null;
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('step-2fa').style.display = 'none';
+  document.getElementById('step-credentials').style.display = 'block';
+  document.getElementById('login-step-label').textContent = "Réservé aux numéros de l'administrateur principal.";
+  document.getElementById('admin-phone').value = '';
+  document.getElementById('admin-password').value = '';
+  document.getElementById('admin-otp').value = '';
+}
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.target).classList.add('active');
+    if (VIEW_LOADERS[t.dataset.target]) VIEW_LOADERS[t.dataset.target]();
+  });
+});
+function escapeHtml(v){
+  return String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+// Nombres courts : 950, 1K, 1,2K, 15K, 1,5M.
+function kfmt(n) {
+  n = Number(n) || 0;
+  const f = (v, u) => (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10).toString().replace('.', ',') + u;
+  if (n >= 1e6) return f(n / 1e6, 'M');
+  if (n >= 1000) return f(n / 1000, 'K');
+  return String(n);
+}
+let CREATORS_DATA = null;
+async function loadCreators(){
+  const msg = document.getElementById('creators-msg');
+  msg.textContent = 'Chargement des comptes…';
+  try {
+    const fc = document.getElementById('cr-country').value, fv = document.getElementById('cr-city').value;
+    const q = new URLSearchParams(); if (fc) q.set('country', fc); if (fv) q.set('city', fv);
+    q.set('sort', document.getElementById('cr-sort').value || 'abonnes');
+    const data = await adminApi(`/api/admin/creators?${q}`);
+    CREATORS_DATA = data;
+    renderCreatorGroups(data.groups || [], fc, fv);
+    renderCities(data.cities || [], fv);
+    renderCreatorsTable();
+  } catch (e) {
+    msg.textContent = e.message;
+  }
+}
+// Villes : « Kinshasa — 100 abonnés · 3,4K vues · 12 comptes ».
+function renderCities(cities, fv) {
+  document.getElementById('cr-groups').innerHTML = cities.slice(0, 60).map((c) => `
+    <div class="city-card${fv && c.city.toLowerCase() === fv.toLowerCase() ? ' sel' : ''}" data-cc="${escapeHtml(c.country_code)}" data-city="${escapeHtml(c.city)}" onclick="pickCity(this)">
+      <b>${escapeHtml(c.city)}</b> <span class="small">${escapeHtml(countryLabel(c.country_code))}</span>
+      <div class="big">${kfmt(c.subscribers)} <span class="small">abonnés</span></div>
+      <div class="small">${kfmt(c.views)} vues · ${kfmt(c.month_views)} ce mois · ${c.accounts} compte${c.accounts > 1 ? 's' : ''}</div>
+    </div>`).join('') || '<p class="empty">Aucune ville.</p>';
+}
+function pickCity(el) {
+  const cs = document.getElementById('cr-country'), vs = document.getElementById('cr-city');
+  const same = vs.value && vs.value.toLowerCase() === el.dataset.city.toLowerCase();
+  if (same) { vs.value = ''; return loadCreators(); }
+  if (el.dataset.city === '(ville non indiquée)') return;
+  cs.value = el.dataset.cc;
+  renderCreatorGroups(CREATOR_GROUPS, el.dataset.cc, el.dataset.city);
+  vs.value = [...vs.options].find((o) => o.value.toLowerCase() === el.dataset.city.toLowerCase())?.value || el.dataset.city;
+  loadCreators();
+}
+function renderCreatorsTable() {
+  const data = CREATORS_DATA; if (!data) return;
+  const table = document.getElementById('creators-table');
+  const msg = document.getElementById('creators-msg');
+  const header = table.rows[0].outerHTML;
+  const statusBadge = { actif: 'ok', suspendu: 'wait', supprime: 'danger' };
+  const q = (document.getElementById('cr-search').value || '').trim().toLowerCase();
+  const list = data.creators.filter((c) => !q || [c.name, c.phone, c.email, c.city].some((x) => String(x || '').toLowerCase().includes(q)));
+  table.innerHTML = header + list.slice(0, 1000).map((c, i) => `
+      <tr data-creator-id="${escapeHtml(c.id)}" data-creator-name="${escapeHtml(c.name)}" data-status="${escapeHtml(c.account_status)}">
+        <td class="small">${i + 1}</td>
+        <td><b>${escapeHtml(c.name)}</b>${c.open_flags ? `<sup class="flags" title="Alertes de surveillance">${c.open_flags}</sup>` : ''}</td>
+        <td>${escapeHtml(c.city || '–')}</td>
+        <td><button class="link-btn" title="Voir la liste des abonnés" onclick="showAdminFollowers(this)">👥 ${kfmt(c.subscribers)}</button></td>
+        <td>${kfmt(c.views)}<div class="small">${kfmt(c.month_views)} ce mois</div></td>
+        <td class="small">${escapeHtml(c.phone || '')}<br>${escapeHtml(c.email || '')}</td>
+        <td>${escapeHtml(countryLabel(c.country_code))}</td><td>${c.monetized ? '<span class="badge ok">Oui</span>' : '<span class="badge wait">Non</span>'}</td>
+        <td style="white-space:nowrap;">${c.business_until ? `<span class="badge ok">Entreprise</span><div class="small">→ ${fmtDate(c.business_until)}</div>`
+              : c.premium_until ? `<span class="badge ok">Premium</span><div class="small">→ ${fmtDate(c.premium_until)}</div>` : '<span class="small">Gratuit</span>'}${c.has_gift ? '<div class="small">(offert)</div>' : ''}
+          ${ADMIN_ROLE === 'admin_principal' ? `<div style="margin-top:4px;"><button class="btn approve" onclick="grantPlan(this, 'premium')">Offrir Premium</button>
+          <button class="btn approve" onclick="grantPlan(this, 'entreprise')">Offrir Entreprise</button>
+          ${c.has_gift ? '<button class="btn remove" onclick="revokeGift(this)">Retirer l\'offre</button>' : ''}</div>` : ''}</td>
+        <td><span class="badge ${statusBadge[c.account_status] || 'wait'}">${escapeHtml(c.account_status)}</span></td>
+        <td style="white-space:nowrap;">
+          ${ADMIN_ROLE === 'admin_principal' ? '<button class="btn approve" onclick="inspectCreator(this.closest(\'tr\').dataset.creatorId, this.closest(\'tr\').dataset.creatorName)">🔍 Ouvrir le compte</button>' : ''}
+          <button class="btn pause" onclick="toggleSuspend(this)">${c.account_status === 'suspendu' ? 'Réactiver' : 'Suspendre'}</button>
+          <button class="btn pause" onclick="resetCreatorPassword(this)">Nouveau mot de passe</button>
+          <button class="btn approve" onclick="writeToCreator(this)">✉️ Écrire</button>
+          ${ADMIN_ROLE === 'admin_principal' ? '<button class="btn pause" onclick="adjustEarnings(this)">Corriger les gains</button>' : ''}
+          <button class="btn remove" onclick="deleteCreator(this)">Supprimer</button>
+        </td>
+      </tr>`).join('');
+  msg.textContent = list.length
+    ? `${list.length} compte(s) — classés ${({ abonnes: 'par nombre d\'abonnés', vues: 'par nombre de vues', recent: 'du plus récent au plus ancien' })[data.sort] || ''}.`
+    : 'Aucun compte créateur pour le moment.';
+}
+
+// ==== Fenêtre générique ====
+function openModal(title, html) {
+  document.getElementById('a-modal-title').textContent = title;
+  document.getElementById('a-modal-body').innerHTML = html;
+  document.getElementById('a-modal').style.display = 'flex';
+}
+function closeModal() { document.getElementById('a-modal').style.display = 'none'; document.getElementById('a-modal-body').innerHTML = ''; }
+
+// ==== Abonnés d'un compte : la liste ne s'ouvre qu'au clic, par pages de 50 ====
+async function showAdminFollowers(btn, offset = 0) {
+  const tr = btn.closest('tr') || btn;
+  const id = tr.dataset.creatorId, name = tr.dataset.creatorName;
+  try {
+    const d = await adminApi(`/api/admin/creators/${id}/followers?offset=${offset}`);
+    const rows = d.followers.map((f) => `<tr><td>${escapeHtml(f.name)}</td><td>${escapeHtml(f.city || '–')}</td><td>${escapeHtml(countryLabel(f.country_code))}</td><td class="small">${escapeHtml(f.phone || '')}</td><td class="small">${fmtDate(f.created_at)}</td></tr>`).join('');
+    const more = offset + d.followers.length < d.total
+      ? `<button class="btn approve" data-creator-id="${escapeHtml(id)}" data-creator-name="${escapeHtml(name)}" onclick="showAdminFollowers(this, ${offset + 50})">Voir les 50 suivants</button>` : '';
+    const prev = offset > 0 ? `<button class="btn pause" data-creator-id="${escapeHtml(id)}" data-creator-name="${escapeHtml(name)}" onclick="showAdminFollowers(this, ${Math.max(0, offset - 50)})">← Précédents</button>` : '';
+    openModal(`Abonnés de ${name} — ${d.total}`, d.total
+      ? `<p class="small">${offset + 1} à ${offset + d.followers.length} sur ${d.total}</p><div class="table-wrap"><table><tr><th>Nom</th><th>Ville</th><th>Pays</th><th>Téléphone</th><th>Abonné depuis</th></tr>${rows}</table></div>${prev} ${more}`
+      : '<p class="empty">Aucun abonné.</p>');
+  } catch (e) { alert(e.message); }
+}
+
+// ==== Surveillance : mots sensibles surlignés, lecture automatique, contenus IA, accès complet aux comptes ====
+let WATCH_WORDS = [], WATCH_RE = null;
+const W_VARIANTS = { a: 'aàâäáã', e: 'eéèêë', i: 'iîïí', o: 'oôöóõ', u: 'uùûüú', c: 'cç', n: 'nñ', y: 'yÿ' };
+function wStrip(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function wPattern(word) {
+  return [...wStrip(word).trim()].map((ch) => W_VARIANTS[ch] ? `[${W_VARIANTS[ch]}]` : ch === "'" || ch === '’' ? "['’ ]?" : ch === ' ' ? '\\s+' : ch === '-' ? '[-\\s]?' : ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('');
+}
+async function loadWatchWords() {
+  try {
+    const d = await adminApi('/api/admin/watch/words');
+    WATCH_WORDS = d.words; WATCH_CATS = d.categories;
+    const list = d.words.map((w) => w.word).sort((a, b) => b.length - a.length);
+    WATCH_RE = list.length ? new RegExp(`(?<![\\p{L}\\p{N}])(?:${list.map(wPattern).join('|')})(?:s|x|es)?(?![\\p{L}\\p{N}])`, 'giu') : null;
+  } catch (e) { /* pas la permission */ }
+}
+let WATCH_CATS = {};
+// Texte avec les mots surveillés surlignés en jaune (positions venant du serveur, ou recherche locale).
+function highlight(text, ranges) {
+  text = String(text || '');
+  let r = Array.isArray(ranges) && ranges.length ? ranges : [];
+  if (!r.length && WATCH_RE) { WATCH_RE.lastIndex = 0; let m; while ((m = WATCH_RE.exec(text))) r.push([m.index, m.index + m[0].length]); }
+  r = [...r].sort((a, b) => a[0] - b[0]);
+  let out = '', pos = 0;
+  for (const [s, e] of r) { if (s < pos) continue; out += escapeHtml(text.slice(pos, s)) + `<mark class="watch">${escapeHtml(text.slice(s, e))}</mark>`; pos = e; }
+  return out + escapeHtml(text.slice(pos));
+}
+function sup(n) { return n ? `<sup class="flags">${n}</sup>` : ''; }
+function mediaPreview(url, mime, at) {
+  if (!url) return '';
+  const m = String(mime || '');
+  const u = escapeHtml(url);
+  if (m.startsWith('image/') || ['photo', 'publication'].includes(m)) return `<div class="media-prev"><a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt=""></a></div>`;
+  if (m.startsWith('video/') || ['video_courte', 'video_longue', 'film', 'video'].includes(m)) return `<div class="media-prev"><video src="${u}${at ? '#t=' + Number(at) : ''}" controls preload="metadata"></video></div>`;
+  if (m.startsWith('audio/') || ['musique', 'audio', 'podcast'].includes(m)) return `<div class="media-prev"><audio src="${u}${at ? '#t=' + Number(at) : ''}" controls preload="none"></audio></div>`;
+  return `<div class="media-prev"><a class="link-btn" href="${u}" target="_blank" rel="noopener">📎 Ouvrir le fichier</a></div>`;
+}
+let WATCH_TAB = 'comptes';
+function watchTab(t) {
+  WATCH_TAB = t;
+  document.querySelectorAll('#watch-tabs .ftab').forEach((b) => b.classList.toggle('active', b.dataset.w === t));
+  ['comptes', 'lecture', 'mots', 'ia', 'journal', 'doublons'].forEach((x) => { document.getElementById('w-' + x).style.display = x === t ? '' : 'none'; });
+  if (t === 'doublons') loadDuplicates();
+  if (t === 'comptes') loadWatchAccounts();
+  if (t === 'lecture') refreshWatchQueue();
+  if (t === 'mots') renderWatchWords();
+  if (t === 'ia') loadAiContents();
+  if (t === 'journal') loadAccessLog();
+}
+async function loadDuplicates() {
+  const t = document.getElementById('w-dup-table');
+  try {
+    const { duplicates } = await adminApi('/api/admin/duplicates');
+    const day = (x) => new Date(x).toLocaleDateString('fr-FR');
+    t.innerHTML = t.rows[0].outerHTML + (duplicates.map((d) => `<tr><td>${escapeHtml(d.title || '')}</td><td>${escapeHtml(d.creator_name)}</td><td>${day(d.created_at)}</td>
+      <td>${escapeHtml(d.original_title || '')}</td><td>${escapeHtml(d.original_creator)}</td><td>${day(d.original_at)}</td></tr>`).join('')
+      || '<tr><td colspan="6">Aucun contenu r\u00e9p\u00e9t\u00e9 pour le moment.</td></tr>');
+  } catch (e) { t.innerHTML = t.rows[0].outerHTML + `<tr><td colspan="6">${escapeHtml(e.message)}</td></tr>`; }
+}
+async function loadWatchView() {
+  document.getElementById('watch-tab-journal').style.display = ADMIN_ROLE === 'admin_principal' ? '' : 'none';
+  document.getElementById('watch-tab-doublons').style.display = ADMIN_ROLE === 'admin_principal' ? '' : 'none';
+  await loadWatchWords();
+  watchTab(WATCH_TAB);
+  if (localStorage.getItem('eaji_watch_runner') === '1' && !W_RUN.on) toggleWatchRunner();
+}
+async function refreshWatchCount() {
+  try { const { accounts } = await adminApi('/api/admin/watch/count'); const el = document.getElementById('watch-count'); el.textContent = accounts; el.style.display = accounts ? '' : 'none'; } catch (e) {}
+}
+const ORIGIN_LABEL = { texte: '📝 Écrit', image: '🖼️ Texte dans la photo / vidéo', parole: '🎙️ Parole dans la vidéo / l\'audio' };
+async function loadWatchAccounts() {
+  const box = document.getElementById('w-accounts'), msg = document.getElementById('w-msg');
+  msg.textContent = 'Chargement…';
+  try {
+    const d = await adminApi(`/api/admin/watch/accounts${document.getElementById('w-all').checked ? '?all=1' : ''}`);
+    msg.textContent = d.accounts.length ? `${d.accounts.length} compte(s) — ${d.openFlags} alerte(s) à traiter.` : 'Aucun compte signalé pour le moment.';
+    box.innerHTML = d.accounts.map((a) => `
+      <div class="watch-row" data-id="${escapeHtml(a.id)}" data-name="${escapeHtml(a.name)}">
+        <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;">
+          <div><b style="font-size:15px;">${escapeHtml(a.name)}</b>${sup(a.open)} <span class="small">${escapeHtml(a.city || '')} · ${escapeHtml(countryLabel(a.country_code))} · ${escapeHtml(a.phone || '')} · ${escapeHtml(a.account_status)}</span>
+            <div>${(a.words || []).map((w) => `<span class="word-chip">${escapeHtml(w)}</span>`).join('')}</div></div>
+          <div style="white-space:nowrap;">
+            <button class="btn pause" onclick="toggleFlags(this)">Voir les alertes</button>
+            ${ADMIN_ROLE === 'admin_principal' ? `<button class="btn approve" onclick="inspectCreator('${escapeHtml(a.id)}', this.closest('.watch-row').dataset.name)">🔍 Ouvrir le compte</button>` : ''}
+            <button class="btn remove" onclick="watchSuspend(this)">${a.account_status === 'suspendu' ? 'Réactiver' : 'Suspendre'}</button>
+            <button class="btn approve" onclick="resolveAccount(this)">Tout traité</button>
+          </div>
+        </div>
+        <div class="flags-box" style="display:none;"></div>
+      </div>`).join('');
+  } catch (e) { msg.textContent = e.message; }
+}
+async function toggleFlags(btn) {
+  const row = btn.closest('.watch-row'), box = row.querySelector('.flags-box');
+  if (box.style.display !== 'none') { box.style.display = 'none'; return; }
+  box.style.display = ''; box.innerHTML = '<p class="small">Chargement…</p>';
+  try {
+    const { flags } = await adminApi(`/api/admin/watch/flags?creatorId=${row.dataset.id}`);
+    box.innerHTML = flags.map((f) => {
+      const t = f.target || {};
+      const at = f.at_seconds != null ? ` (à ${Math.floor(f.at_seconds / 60)}:${String(Math.floor(f.at_seconds % 60)).padStart(2, '0')})` : '';
+      return `<div class="flag-card${f.resolved ? ' done' : ''}" data-fid="${escapeHtml(String(f.id))}">
+        <div class="small"><b>${escapeHtml(f.sourceLabel)}</b> · ${escapeHtml(ORIGIN_LABEL[f.origin] || f.origin)}${at} · ${new Date(f.updated_at).toLocaleString('fr-FR')}${t.title ? ' · « ' + escapeHtml(t.title) + ' »' : ''}${t.status && t.status !== 'actif' ? ' · ' + escapeHtml(t.status) : ''}</div>
+        <div class="flag-text">${highlight(f.excerpt, f.ranges)}</div>
+        ${mediaPreview(t.url, t.mime || t.kind, f.at_seconds)}
+        ${f.resolved ? '<span class="small">traitée</span>' : `<button class="btn approve" onclick="resolveFlag(this)">Traité</button>`}
+        ${f.source === 'publication' && t.status === 'actif' ? `<button class="btn remove" onclick="removeFlaggedContent('${escapeHtml(f.ref_id)}', this)">Retirer la publication</button>` : ''}
+      </div>`;
+    }).join('') || '<p class="small">Aucune alerte.</p>';
+  } catch (e) { box.innerHTML = `<p class="small">${escapeHtml(e.message)}</p>`; }
+}
+async function resolveFlag(btn) {
+  const card = btn.closest('.flag-card');
+  try { await adminApi(`/api/admin/watch/flags/${card.dataset.fid}/resolve`, { method: 'POST' }); card.classList.add('done'); btn.remove(); refreshWatchCount(); } catch (e) { alert(e.message); }
+}
+async function resolveAccount(btn) {
+  const row = btn.closest('.watch-row');
+  try { await adminApi(`/api/admin/watch/accounts/${row.dataset.id}/resolve`, { method: 'POST' }); loadWatchAccounts(); refreshWatchCount(); } catch (e) { alert(e.message); }
+}
+async function watchSuspend(btn) {
+  const row = btn.closest('.watch-row');
+  const suspend = btn.textContent.trim() === 'Suspendre';
+  if (suspend && !confirm(`Suspendre le compte de ${row.dataset.name} ?`)) return;
+  try { await adminApi(`/api/admin/creators/${row.dataset.id}`, { method: 'PATCH', body: { accountStatus: suspend ? 'suspendu' : 'actif' } }); loadWatchAccounts(); } catch (e) { alert(e.message); }
+}
+async function removeFlaggedContent(id, btn) {
+  if (!confirm('Retirer cette publication ? Elle ne sera plus visible.')) return;
+  try { await adminApi(`/api/content/${id}`, { method: 'DELETE' }); btn.remove(); } catch (e) { alert(e.message); }
+}
+function renderWatchWords() {
+  const cats = WATCH_CATS || {};
+  document.getElementById('w-new-cat').innerHTML = Object.entries(cats).map(([k, l]) => `<option value="${escapeHtml(k)}">${escapeHtml(l)}</option>`).join('');
+  const by = {};
+  WATCH_WORDS.forEach((w) => { (by[w.category] = by[w.category] || []).push(w.word); });
+  document.getElementById('w-words').innerHTML = Object.entries(by).map(([c, ws]) => `<div style="margin:10px 0;"><b class="small">${escapeHtml(cats[c] || c)}</b><div>${ws.map((w) => `<span class="word-chip">${escapeHtml(w)}<button title="Retirer" data-w="${escapeHtml(w)}" onclick="removeWatchWord(this.dataset.w)">×</button></span>`).join('')}</div></div>`).join('') || '<p class="empty">Aucun mot.</p>';
+}
+async function addWatchWords() {
+  const words = document.getElementById('w-new-words').value;
+  try {
+    const r = await adminApi('/api/admin/watch/words', { method: 'POST', body: { words, category: document.getElementById('w-new-cat').value } });
+    document.getElementById('w-new-words').value = '';
+    document.getElementById('w-words-msg').textContent = `${r.added} mot(s) ajouté(s). Les anciens messages sont relus avec la nouvelle liste.`;
+    await loadWatchWords(); renderWatchWords();
+  } catch (e) { document.getElementById('w-words-msg').textContent = e.message; }
+}
+async function removeWatchWord(w) {
+  if (!confirm(`Ne plus surveiller « ${w} » ?`)) return;
+  try { await adminApi(`/api/admin/watch/words/${encodeURIComponent(w)}`, { method: 'DELETE' }); await loadWatchWords(); renderWatchWords(); } catch (e) { alert(e.message); }
+}
+async function loadAiContents() {
+  const t = document.getElementById('w-ia-table');
+  try {
+    const { items } = await adminApi('/api/admin/watch/ai');
+    t.innerHTML = t.rows[0].outerHTML + items.map((i) => `<tr><td><b>${escapeHtml(i.title)}</b><div class="small">${escapeHtml(i.content_type)} · ${fmtDate(i.created_at)}</div>${mediaPreview(i.url, i.content_type)}</td>
+      <td>${escapeHtml(i.creator_name)}</td><td class="small">${escapeHtml(i.ai_source || '')}</td><td>${kfmt(i.view_count)}</td><td>${Number(i.revenue_usd).toFixed(2)} $</td>
+      <td><button class="btn pause" onclick="setAi('${escapeHtml(i.id)}', false)">Ce n'est pas de l'IA</button></td></tr>`).join('') || t.rows[0].outerHTML + '<tr><td colspan="6" class="empty">Aucun contenu IA repéré.</td></tr>';
+  } catch (e) { t.innerHTML = t.rows[0].outerHTML + `<tr><td colspan="6">${escapeHtml(e.message)}</td></tr>`; }
+}
+async function setAi(id, on, after) {
+  try { await adminApi(`/api/admin/content/${id}/ai`, { method: 'POST', body: { ai: on } }); if (after) after(); else loadAiContents(); } catch (e) { alert(e.message); }
+}
+async function loadAccessLog() {
+  const t = document.getElementById('w-log-table');
+  try {
+    const { log } = await adminApi('/api/admin/access-log');
+    t.innerHTML = t.rows[0].outerHTML + log.map((l) => `<tr><td>${new Date(l.created_at).toLocaleString('fr-FR')}</td><td>${escapeHtml(l.admin_name || '')}</td><td>${escapeHtml(l.creator_name || '')}</td><td>${escapeHtml(l.action)}</td><td>${escapeHtml(l.reason || '')}</td></tr>`).join('');
+  } catch (e) { t.innerHTML = t.rows[0].outerHTML + `<tr><td colspan="5">${escapeHtml(e.message)}</td></tr>`; }
+}
+
+// ---- Lecture automatique (sur cet ordinateur / ce téléphone) : texte des photos et parole des vidéos ----
+const OCR_LIB = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+const ASR_LIB = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2';
+const W_RUN = { on: false, busy: false, ocr: null, asr: null, done: 0 };
+function loadScript(src) { return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ko(new Error('Téléchargement impossible')); document.head.appendChild(s); }); }
+async function ocrEngine() {
+  if (window.__eajiOcr) return window.__eajiOcr; // tests automatiques
+  if (!W_RUN.ocr) W_RUN.ocr = (async () => {
+    if (!window.Tesseract) await loadScript(OCR_LIB);
+    const worker = await window.Tesseract.createWorker('fra+eng');
+    return { recognize: async (img) => (await worker.recognize(img)).data.text || '' };
+  })().catch((e) => { W_RUN.ocr = null; throw e; });
+  return W_RUN.ocr;
+}
+async function asrEngine() {
+  if (window.__eajiAsr) return window.__eajiAsr; // tests automatiques
+  if (!W_RUN.asr) W_RUN.asr = (async () => {
+    const T = await import(ASR_LIB);
+    const p = await T.pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny');
+    return { transcribe: async (pcm) => {
+      const o = await p(pcm, { chunk_length_s: 30, stride_length_s: 5, return_timestamps: true });
+      return (o.chunks && o.chunks.length ? o.chunks : [{ timestamp: [0, 0], text: o.text || '' }]).map((c) => ({ start: (c.timestamp && c.timestamp[0]) || 0, end: (c.timestamp && c.timestamp[1]) || 0, text: c.text || '' }));
+    } };
+  })().catch((e) => { W_RUN.asr = null; throw e; });
+  return W_RUN.asr;
+}
+// Son du fichier en 16 000 Hz mono (format attendu par la reconnaissance de la parole), 15 minutes au plus.
+async function pcm16k(blob, maxSec = 900) {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  try {
+    const buf = await ctx.decodeAudioData(await blob.arrayBuffer());
+    const dur = Math.min(buf.duration, maxSec);
+    const off = new OfflineAudioContext(1, Math.max(1, Math.ceil(dur * 16000)), 16000);
+    const src = off.createBufferSource(); src.buffer = buf; src.connect(off.destination); src.start(0);
+    return (await off.startRendering()).getChannelData(0);
+  } finally { ctx.close().catch(() => {}); }
+}
+async function videoFramesOf(url, n = 6) {
+  const v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.crossOrigin = 'anonymous'; v.src = url;
+  await new Promise((ok, ko) => { v.onloadedmetadata = ok; v.onerror = () => ko(new Error('vidéo illisible')); setTimeout(ok, 15000); });
+  const dur = Number.isFinite(v.duration) ? v.duration : 0, out = [];
+  for (let i = 0; i < n && dur; i++) {
+    v.currentTime = Math.min(dur - 0.1, (dur * (i + 0.5)) / n);
+    await new Promise((ok) => { v.onseeked = ok; setTimeout(ok, 5000); });
+    const c = document.createElement('canvas'); c.width = v.videoWidth || 640; c.height = v.videoHeight || 360;
+    c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); out.push(c);
+  }
+  return out;
+}
+async function analyzeItem(it) {
+  const res = await fetch(it.url); if (!res.ok) throw new Error('fichier introuvable');
+  const blob = await res.blob();
+  let ocrText = '', transcript = [];
+  if (it.kind === 'image') {
+    ocrText = await (await ocrEngine()).recognize(blob);
+  } else {
+    if (it.kind === 'video') {
+      const url = URL.createObjectURL(blob);
+      try {
+        const ocr = await ocrEngine(), seen = new Set();
+        for (const f of await videoFramesOf(url)) {
+          for (const line of String(await ocr.recognize(f)).split('\n')) { const l = line.trim(); if (l && !seen.has(l.toLowerCase())) { seen.add(l.toLowerCase()); ocrText += l + '\n'; } }
+        }
+      }
+      finally { URL.revokeObjectURL(url); }
+    }
+    try { transcript = await (await asrEngine()).transcribe(await pcm16k(blob)); }
+    catch (e) { if (it.kind !== 'video') throw e; } // vidéo sans son : seul le texte des images compte
+  }
+  return { ocrText: ocrText.trim(), transcript };
+}
+async function refreshWatchQueue() {
+  try { const d = await adminApi('/api/admin/watch/queue?limit=1'); document.getElementById('w-remaining').textContent = `${d.remaining} fichier(s) à lire`; return d; } catch (e) { return null; }
+}
+function toggleWatchRunner() {
+  W_RUN.on = !W_RUN.on;
+  try { localStorage.setItem('eaji_watch_runner', W_RUN.on ? '1' : '0'); } catch (e) {}
+  document.getElementById('w-run').innerHTML = W_RUN.on ? '⏸ Arrêter la lecture automatique' : '▶ Démarrer la lecture automatique';
+  if (W_RUN.on) watchRunnerLoop();
+}
+async function watchRunnerLoop() {
+  if (W_RUN.busy) return;
+  W_RUN.busy = true;
+  const cur = document.getElementById('w-current'), log = document.getElementById('w-log');
+  try {
+    while (W_RUN.on) {
+      const d = await adminApi('/api/admin/watch/queue?limit=3').catch(() => null);
+      if (!d) { await new Promise((r) => setTimeout(r, 15000)); continue; }
+      document.getElementById('w-remaining').textContent = `${d.remaining} fichier(s) à lire`;
+      if (!d.items.length) { cur.textContent = 'Tout est lu. En attente de nouveaux fichiers…'; await new Promise((r) => setTimeout(r, 30000)); continue; }
+      for (const it of d.items) {
+        if (!W_RUN.on) break;
+        cur.textContent = `Lecture : ${({ image: '🖼️ photo', video: '🎥 vidéo', audio: '🎙️ audio' })[it.kind]} « ${it.title || it.refId} »…`;
+        let body;
+        try { if (!it.url) throw new Error('fichier indisponible'); body = await analyzeItem(it); }
+        catch (e) { body = { error: true, ocrText: '', transcript: [] }; }
+        const r = await adminApi('/api/admin/watch/analysis', { method: 'POST', body: { source: it.source, refId: it.refId, ...body } }).catch(() => ({ flagged: 0 }));
+        W_RUN.done++;
+        const said = (body.transcript || []).map((c) => `[${Math.floor(c.start / 60)}:${String(Math.floor(c.start % 60)).padStart(2, '0')}] ${c.text.trim()}`).join(' ');
+        log.insertAdjacentHTML('afterbegin', `<div class="flag-card${r.flagged ? '' : ' done'}"><div class="small">${r.flagged ? '⚠️ Mots surveillés trouvés' : body.error ? '— illisible' : '✓ rien à signaler'} · ${escapeHtml(it.title || it.source)}</div>
+          ${body.ocrText ? `<div class="flag-text">🖼️ ${highlight(body.ocrText.slice(0, 600))}</div>` : ''}${said ? `<div class="flag-text">🎙️ ${highlight(said.slice(0, 1200))}</div>` : ''}</div>`);
+        while (log.children.length > 40) log.lastChild.remove();
+        if (r.flagged) refreshWatchCount();
+      }
+    }
+  } finally { W_RUN.busy = false; cur.textContent = W_RUN.on ? cur.textContent : 'Lecture automatique arrêtée.'; }
+}
+
+// ---- Accès complet à un compte (administrateur principal) : chaque ouverture est inscrite au journal ----
+let INSP = null;
+async function inspectCreator(id, name) {
+  try { await adminApi(`/api/admin/inspect/${id}`); }
+  catch (e) {
+    const reason = prompt(`Ouvrir le compte de ${name}.\nÉcris la raison (elle est gardée dans le journal des accès) :`, 'Vérification après signalement');
+    if (reason === null) return;
+    try { await adminApi(`/api/admin/inspect/${id}/open`, { method: 'POST', body: { reason } }); } catch (e2) { return alert(e2.message); }
+  }
+  if (!WATCH_RE) await loadWatchWords();
+  try {
+    const d = await adminApi(`/api/admin/inspect/${id}`);
+    INSP = { id, name, d, tab: 'profil' };
+    openModal(`Compte de ${name}`, '<div class="insp-tabs" id="insp-tabs"></div><div id="insp-body"></div>');
+    renderInspector();
+  } catch (e) { alert(e.message); }
+}
+const INSP_TABS = [['profil', 'Profil'], ['publications', 'Publications'], ['messages', 'Messages privés'], ['groupes', 'Groupes'], ['commentaires', 'Commentaires'],
+  ['statuts', 'Statuts'], ['archive', 'Modifiés / supprimés'], ['live', 'Messages de live'], ['journal', 'Journal d\'accès']];
+function inspTab(t) { INSP.tab = t; renderInspector(); }
+function renderInspector() {
+  const { d } = INSP;
+  const counts = { publications: d.publications.length, messages: d.conversations.length, groupes: d.groups.length, commentaires: d.comments.length, statuts: d.statuses.length, archive: d.archive.length, live: d.liveMessages.length };
+  document.getElementById('insp-tabs').innerHTML = INSP_TABS.map(([k, l]) => `<button class="ftab${INSP.tab === k ? ' active' : ''}" onclick="inspTab('${k}')">${l}${counts[k] ? ' (' + counts[k] + ')' : ''}</button>`).join('');
+  const b = document.getElementById('insp-body');
+  const when = (t) => (t ? new Date(t).toLocaleString('fr-FR') : '');
+  if (INSP.tab === 'profil') {
+    const c = d.creator;
+    b.innerHTML = `${c.photoUrl ? `<img src="${escapeHtml(c.photoUrl)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">` : ''}
+      <table><tr><td>Nom</td><td><b>${escapeHtml(c.name)}</b>${sup(d.flags.open)}</td></tr><tr><td>Téléphone</td><td>${escapeHtml(c.phone || '')}</td></tr><tr><td>Email</td><td>${escapeHtml(c.email || '')}</td></tr>
+      <tr><td>Pays / ville</td><td>${escapeHtml(countryLabel(c.country_code))} — ${escapeHtml(c.city || '')}</td></tr><tr><td>Statut</td><td>${escapeHtml(c.account_status)}</td></tr>
+      <tr><td>Inscrit le</td><td>${when(c.created_at)}</td></tr><tr><td>Dernière présence</td><td>${when(c.last_seen_at)}</td></tr>
+      <tr><td>Alertes de surveillance</td><td>${d.flags.open} à traiter / ${d.flags.total} au total</td></tr></table>`;
+  } else if (INSP.tab === 'publications') {
+    b.innerHTML = d.publications.map((p) => `<div class="flag-card${p.status === 'actif' ? '' : ' done'}" style="border-left-color:${p.ai_generated ? 'var(--coral)' : 'var(--teal)'};">
+      <div class="small">${escapeHtml(p.content_type)} · ${escapeHtml(p.status)} · ${escapeHtml(p.visibility_scope)} · ${kfmt(p.view_count)} vues · ${when(p.created_at)}${p.ai_generated ? ' · 🤖 IA (' + escapeHtml(p.ai_source || '') + ')' : ''}</div>
+      <div class="flag-text"><b>${highlight(p.title)}</b></div>${mediaPreview(p.url, p.content_type)}
+      <button class="btn pause" onclick="setAi('${escapeHtml(p.id)}', ${!p.ai_generated}, () => inspectCreator(INSP.id, INSP.name))">${p.ai_generated ? 'Ce n\'est pas de l\'IA' : '🤖 Marquer créé par IA'}</button>
+      ${p.status === 'actif' ? `<button class="btn remove" onclick="removeFlaggedContent('${escapeHtml(p.id)}', this)">Retirer</button>` : ''}</div>`).join('') || '<p class="empty">Aucune publication.</p>';
+  } else if (INSP.tab === 'messages') {
+    b.innerHTML = `<div class="sup-wrap"><div class="sup-list">${d.conversations.map((c) => `<div class="sup-item" data-other="${escapeHtml(c.other_id)}" onclick="inspConversation(this)"><b>${escapeHtml(c.other_name)}</b><div class="small">${c.messages} message(s) · ${c.files} fichier(s)/vocal(aux) · ${when(c.last_at)}</div></div>`).join('') || '<p class="empty">Aucune conversation.</p>'}</div>
+      <div class="sup-thread" id="insp-thread"><p class="small">Choisis une conversation.</p></div></div>`;
+  } else if (INSP.tab === 'groupes') {
+    b.innerHTML = `<div class="sup-wrap"><div class="sup-list">${d.groups.map((g) => `<div class="sup-item" data-group="${escapeHtml(g.id)}" onclick="inspGroup(this)"><b>${escapeHtml(g.name)}</b><div class="small">${g.sent} message(s) envoyé(s) par ce compte</div></div>`).join('') || '<p class="empty">Aucun groupe.</p>'}</div>
+      <div class="sup-thread" id="insp-thread"><p class="small">Choisis un groupe.</p></div></div>`;
+  } else if (INSP.tab === 'commentaires') {
+    b.innerHTML = d.comments.map((c) => `<div class="bubble"><div class="small">sur « ${escapeHtml(c.content_title || '')} »</div>${highlight(c.text)}<div class="meta">${when(c.created_at)}</div></div>`).join('') || '<p class="empty">Aucun commentaire.</p>';
+  } else if (INSP.tab === 'statuts') {
+    b.innerHTML = d.statuses.map((s) => `<div class="bubble">${s.text ? highlight(s.text) : ''}${mediaPreview(s.url, s.mime)}<div class="meta">${escapeHtml(s.kind)} · ${when(s.created_at)} · ${new Date(s.expires_at) > new Date() ? 'en ligne' : 'expiré'}</div></div>`).join('') || '<p class="empty">Aucun statut.</p>';
+  } else if (INSP.tab === 'archive') {
+    b.innerHTML = '<p class="small">Copies gardées 90 jours des messages que ce compte a modifiés ou supprimés.</p>' + d.archive.map((a) => `<div class="bubble"><div class="small">${a.action === 'supprime' ? '🗑️ Supprimé' : '✏️ Avant modification'} · ${a.kind === 'groupe' ? 'groupe' : 'message privé'} · envoyé le ${when(a.original_created_at)}</div>
+      ${a.text ? highlight(a.text) : ''}${a.audioUrl ? mediaPreview(a.audioUrl, 'audio/webm') : ''}${a.fileUrl ? mediaPreview(a.fileUrl, a.file_mime) : ''}<div class="meta">${when(a.archived_at)}</div></div>`).join('');
+  } else if (INSP.tab === 'live') {
+    b.innerHTML = d.liveMessages.map((m) => `<div class="bubble">${highlight(m.text)}<div class="meta">${when(m.created_at)}</div></div>`).join('') || '<p class="empty">Aucun message de live.</p>';
+  } else if (INSP.tab === 'journal') {
+    b.innerHTML = `<table><tr><th>Date</th><th>Administrateur</th><th>Action</th><th>Raison</th></tr>${d.access.map((l) => `<tr><td>${when(l.created_at)}</td><td>${escapeHtml(l.admin_name || '')}</td><td>${escapeHtml(l.action)}</td><td>${escapeHtml(l.reason || '')}</td></tr>`).join('')}</table>`;
+  }
+}
+function inspBubbles(messages) {
+  const when = (t) => new Date(t).toLocaleString('fr-FR');
+  return messages.map((m) => `<div class="bubble${m.sender_id === INSP.id ? ' me' : ''}">
+    <div class="small"><b>${escapeHtml(m.sender_name || '')}</b></div>
+    ${m.deleted_at ? '<i class="small">🗑️ supprimé par l\'expéditeur</i>' : ''}
+    ${m.text ? `<div>${highlight(m.text)}</div>` : ''}${m.audioUrl ? '🎤 Vocal' + mediaPreview(m.audioUrl, 'audio/webm') : ''}${m.fileUrl ? mediaPreview(m.fileUrl, m.file_mime) + `<a class="link-btn" href="${escapeHtml(m.fileUrl)}" target="_blank" rel="noopener">⬇️ ${escapeHtml(m.file_name || 'Fichier')}</a>` : ''}
+    ${m.shared_content_id ? '<div class="small">🔗 Publication partagée</div>' : ''}
+    ${(m.history || []).map((h) => `<div class="hist">${h.action === 'supprime' ? '🗑️ Texte d\'origine' : '✏️ Avant modification'} : ${highlight(h.text || '')}${h.audioUrl ? mediaPreview(h.audioUrl, 'audio/webm') : ''}${h.fileUrl ? mediaPreview(h.fileUrl, '') : ''}</div>`).join('')}
+    <div class="meta">${when(m.created_at)}${m.edited_at ? ' · modifié' : ''}${m.read_at ? ' · lu' : ''}</div></div>`).join('') || '<p class="empty">Aucun message.</p>';
+}
+async function inspConversation(el) {
+  document.querySelectorAll('#insp-body .sup-item').forEach((x) => x.classList.toggle('sel', x === el));
+  const box = document.getElementById('insp-thread'); box.innerHTML = '<p class="small">Chargement…</p>';
+  try { const { messages } = await adminApi(`/api/admin/inspect/${INSP.id}/dm/${el.dataset.other}`); box.innerHTML = `<div class="sup-msgs" style="max-height:62vh;">${inspBubbles(messages)}</div>`; }
+  catch (e) { box.innerHTML = `<p class="small">${escapeHtml(e.message)}</p>`; }
+}
+async function inspGroup(el) {
+  document.querySelectorAll('#insp-body .sup-item').forEach((x) => x.classList.toggle('sel', x === el));
+  const box = document.getElementById('insp-thread'); box.innerHTML = '<p class="small">Chargement…</p>';
+  try { const { messages } = await adminApi(`/api/admin/inspect/${INSP.id}/group/${el.dataset.group}`); box.innerHTML = `<div class="sup-msgs" style="max-height:62vh;">${inspBubbles(messages)}</div>`; }
+  catch (e) { box.innerHTML = `<p class="small">${escapeHtml(e.message)}</p>`; }
+}
+
+// ==== Alertes sécurité ====
+let TH_LEVEL = 'alerte';
+async function loadThreats() {
+  const msg = document.getElementById('th-msg');
+  try {
+    const d = await adminApi(`/api/admin/security/overview${TH_LEVEL ? '?level=' + TH_LEVEL : ''}`);
+    const k = d.kpis;
+    document.getElementById('th-kpis').innerHTML = [['Alertes à traiter', k.open_alerts], ['Mots de passe faux (24 h)', k.failed24h], ['Attaques (24 h)', k.attacks24h],
+      ['Comptes verrouillés (24 h)', k.locked24h], ['Adresses bloquées', k.blocked]]
+      .map(([a, b]) => `<div class="kpi"><p class="label">${escapeHtml(a)}</p><p class="val">${escapeHtml(String(b))}</p></div>`).join('');
+    const when = (t) => new Date(t).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const tt = document.getElementById('th-targets');
+    tt.innerHTML = tt.rows[0].outerHTML + d.targeted.map((c) => `<tr data-id="${escapeHtml(c.creator_id)}"><td><b>${escapeHtml(c.name)}</b><div class="small">${escapeHtml(c.phone || '')} · ${escapeHtml(c.account_status)}</div></td>
+      <td>${c.failures}</td><td>${c.ips}</td><td>${when(c.last_at)}</td>
+      <td style="white-space:nowrap;"><button class="btn pause" onclick="forceLogout(this)">Déconnecter partout</button></td></tr>`).join('');
+    const ti = document.getElementById('th-ips');
+    ti.innerHTML = ti.rows[0].outerHTML + d.topIps.map((r) => `<tr><td><b>${escapeHtml(r.ip_address)}</b></td><td>${r.failures}</td><td>${r.accounts}${r.accounts >= 10 ? ' ⚠️' : ''}</td><td>${when(r.last_at)}</td>
+      <td>${r.blocked ? '<span class="badge danger">Bloquée</span>' : `<button class="btn remove" data-ip="${escapeHtml(r.ip_address)}" onclick="blockIp(this.dataset.ip)">Bloquer</button>`}</td></tr>`).join('');
+    const lv = { info: ['wait', 'Info'], alerte: ['wait', 'Alerte'], critique: ['danger', 'Critique'] };
+    const te = document.getElementById('th-events');
+    te.innerHTML = te.rows[0].outerHTML + d.events.map((e) => `<tr><td>${when(e.created_at)}</td><td><span class="badge ${lv[e.level][0]}">${lv[e.level][1]}</span>${e.resolved ? '<div class="small">traitée</div>' : ''}</td>
+      <td><b>${escapeHtml(e.label)}</b><div class="small">${escapeHtml(e.detail)}</div></td>
+      <td>${e.creator_name ? escapeHtml(e.creator_name) : escapeHtml(e.identifier || '')}<div class="small">${escapeHtml(e.ip_address || '')}${e.ip_blocked ? ' (bloquée)' : ''}</div></td>
+      <td style="white-space:nowrap;">${!e.resolved && e.level !== 'info' ? `<button class="btn approve" onclick="resolveThreat('${e.id}')">Traitée</button>` : ''}
+        ${e.ip_address && !e.ip_blocked ? `<button class="btn remove" data-ip="${escapeHtml(e.ip_address)}" onclick="blockIp(this.dataset.ip)">Bloquer l'adresse</button>` : ''}</td></tr>`).join('');
+    const tb = document.getElementById('th-blocks');
+    tb.innerHTML = tb.rows[0].outerHTML + d.blocklist.map((b) => `<tr><td>${escapeHtml(b.ip_address || b.device_fingerprint || '')}</td><td>${escapeHtml(b.reason)}</td><td>${fmtDate(b.blocked_at)}</td>
+      <td><button class="btn approve" onclick="unblockIp('${escapeHtml(b.id)}')">Débloquer</button></td></tr>`).join('');
+    msg.textContent = d.events.length ? '' : 'Rien de suspect pour le moment.';
+    refreshThreatCount();
+  } catch (e) { msg.textContent = e.message; }
+}
+async function refreshThreatCount() {
+  try { const { open } = await adminApi('/api/admin/security/count'); const el = document.getElementById('sec-count'); el.textContent = open; el.style.display = open ? '' : 'none'; } catch (e) {}
+}
+async function blockIp(ip) {
+  ip = String(ip || '').trim();
+  if (!ip || !window.confirm(`Bloquer l'adresse ${ip} ? Plus personne ne pourra se connecter ou s'inscrire depuis cette adresse.`)) return;
+  try { await adminApi('/api/admin/security/block-ip', { method: 'POST', body: { ip } }); } catch (e) { return alert(e.message); }
+  document.getElementById('th-ip').value = '';
+  loadThreats();
+}
+async function unblockIp(id) {
+  try { await adminApi(`/api/admin/security/block/${id}`, { method: 'DELETE' }); } catch (e) { return alert(e.message); }
+  loadThreats();
+}
+async function forceLogout(btn) {
+  if (!window.confirm('Déconnecter ce compte de tous ses appareils ? Le propriétaire devra se reconnecter (le pirate perd l\'accès).')) return;
+  try { await adminApi(`/api/admin/security/creators/${btn.closest('tr').dataset.id}/logout-all`, { method: 'POST', body: {} }); } catch (e) { return alert(e.message); }
+  alert('Compte déconnecté de partout. Le propriétaire a été prévenu.');
+  loadThreats();
+}
+async function resolveThreat(id) {
+  try { await adminApi(`/api/admin/security/events/${id}/resolve`, { method: 'POST', body: {} }); } catch (e) { return alert(e.message); }
+  loadThreats();
+}
+
+// ==== Support : répondre aux utilisateurs ====
+let SUP_FILTER = 'ouvert', SUP_OPEN = null;
+async function loadSupport() {
+  const list = document.getElementById('sup-list');
+  try {
+    const d = await adminApi(`/api/admin/support${SUP_FILTER ? '?status=' + SUP_FILTER : ''}`);
+    list.innerHTML = d.threads.map((t) => `<div class="sup-item${t.unread ? ' unread' : ''}${SUP_OPEN === t.id ? ' sel' : ''}" onclick="openAdminSupport('${escapeHtml(t.id)}')">
+        <b>${escapeHtml(t.creator_name)}</b>${t.unread ? ` <span class="pill-count">${t.unread}</span>` : ''}
+        <div class="small">${escapeHtml(t.categoryLabel)} · ${escapeHtml(countryLabel(t.country_code))}${t.city ? ', ' + escapeHtml(t.city) : ''}${t.status === 'resolu' ? ' · ✅ résolu' : ''}</div>
+        <div class="small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(t.last_text || '')}</div></div>`).join('')
+      || '<p class="login-hint" style="text-align:left;">Aucun message.</p>';
+    refreshSupportCount();
+  } catch (e) { list.textContent = e.message; }
+}
+async function refreshSupportCount() {
+  try {
+    const { unread } = await adminApi('/api/admin/support-count');
+    const el = document.getElementById('sup-count');
+    el.textContent = unread; el.style.display = unread ? '' : 'none';
+  } catch (e) { /* pas la permission : onglet sans compteur */ }
+}
+async function openAdminSupport(id) {
+  SUP_OPEN = id;
+  const box = document.getElementById('sup-thread');
+  try {
+    const d = await adminApi(`/api/admin/support/${id}`);
+    const t = d.thread;
+    box.innerHTML = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <b style="flex:1;">${escapeHtml(t.creator_name)} — ${escapeHtml(t.categoryLabel)}</b>
+        <button class="btn ${t.status === 'resolu' ? 'pause' : 'approve'}" onclick="setSupportStatus('${escapeHtml(t.id)}', '${t.status === 'resolu' ? 'ouvert' : 'resolu'}')">${t.status === 'resolu' ? 'Rouvrir' : '✅ Marquer résolu'}</button></div>
+      <div class="small" style="margin-bottom:8px;">${escapeHtml(t.creator_phone || '')} ${t.creator_email ? '· ' + escapeHtml(t.creator_email) : ''}</div>
+      <div class="sup-msgs">${d.messages.map((m) => `<div class="sup-msg ${m.author === 'equipe' ? 'team' : 'user'}">${m.author === 'equipe' ? `<div class="small">🛡️ ${escapeHtml(m.admin_name || 'Équipe Eaji')}</div>` : ''}${escapeHtml(m.text).replace(/\n/g, '<br>')}<div class="small">${new Date(m.created_at).toLocaleString('fr-FR')}</div></div>`).join('')}</div>
+      <textarea class="field" id="sup-reply" rows="3" placeholder="Ta réponse (l'utilisateur la reçoit dans l'application et en notification)"></textarea>
+      <button class="btn approve" onclick="replySupport('${escapeHtml(t.id)}')">Envoyer la réponse</button>`;
+    const msgs = box.querySelector('.sup-msgs'); msgs.scrollTop = msgs.scrollHeight;
+    loadSupportListOnly();
+  } catch (e) { box.textContent = e.message; }
+}
+async function loadSupportListOnly() { const keep = SUP_OPEN; await loadSupport(); SUP_OPEN = keep; }
+async function replySupport(id) {
+  const text = document.getElementById('sup-reply').value.trim();
+  if (!text) return;
+  try { await adminApi(`/api/admin/support/${id}/messages`, { method: 'POST', body: { text } }); }
+  catch (e) { return alert(e.message); }
+  openAdminSupport(id);
+}
+async function setSupportStatus(id, status) {
+  try { await adminApi(`/api/admin/support/${id}/status`, { method: 'POST', body: { status } }); } catch (e) { return alert(e.message); }
+  openAdminSupport(id);
+}
+// Écrire le premier à un utilisateur (depuis la liste des créateurs).
+async function writeToCreator(btn) {
+  const row = btn.closest('tr');
+  const text = window.prompt(`Message de l'équipe Eaji à ${row.dataset.creatorName} :`);
+  if (!text || !text.trim()) return;
+  try { const d = await adminApi('/api/admin/support/new', { method: 'POST', body: { creatorId: row.dataset.creatorId, text } }); alert('Message envoyé. La conversation est dans l\'onglet Support.'); }
+  catch (e) { alert(e.message); }
+}
+
+// ==== Mon argent : revenus d'Eaji et retraits de l'administrateur ====
+function finMethodChanged() {
+  const m = document.querySelector('input[name="fin-method"]:checked').value;
+  document.getElementById('mon-mm').style.display = m === 'mobile_money' ? '' : 'none';
+  document.getElementById('mon-bank').style.display = m === 'banque' ? '' : 'none';
+}
+async function loadFinance() {
+  try {
+    const f = await adminApi('/api/admin/finance');
+    const usd = (n) => money(n, 'USD');
+    document.getElementById('mon-kpis').innerHTML = [
+      ['Revenus d\'Eaji (total)', usd(f.eajiTotal)], ['Argent non réel encore compté', usd(f.receivedManually)],
+      ['Reçus en ligne (pawaPay / CinetPay / PayPal)', usd(f.onlineReceived)], ['Déjà retirés', usd(f.withdrawn)], ['Disponible à retirer (réel)', usd(f.available)],
+    ].map(([k, v]) => `<div class="kpi"><p class="label">${escapeHtml(k)}</p><p class="val">${escapeHtml(v)}</p></div>`).join('');
+    document.getElementById('mon-gw').textContent = (f.gateways.pawapay ? '✅ pawaPay branché (mobile money).' : '⚠️ pawaPay pas encore branché : les retraits mobile money seront à faire à la main.')
+      + ' ' + (f.gateways.cinetpay ? '✅ CinetPay branché (mobile money + Visa/Mastercard).' : '⚠️ CinetPay pas encore branché.')
+      + ' ' + (f.gateways.paypal ? '✅ PayPal branché (cartes).' : '⚠️ PayPal pas encore branché.');
+    renderNonReel(f.nonReel);
+    // Republications : leurs vues et leur argent reviennent à Eaji.
+    adminApi('/api/admin/reposts/stats').then((r) => {
+      document.getElementById('mon-kpis').insertAdjacentHTML('beforeend', [
+        ['Republications', kfmt(r.reposts)], ['Vues des republications (pour Eaji)', kfmt(r.views)], ['Argent des republications', usd(r.money)],
+      ].map(([k, v]) => `<div class="kpi"><p class="label">${escapeHtml(k)}</p><p class="val">${escapeHtml(v)}</p></div>`).join(''));
+    }).catch(() => {});
+    const sel = document.getElementById('mon-provider');
+    if (!sel.options.length) sel.innerHTML = f.providers.map((p) => `<option value="${escapeHtml(p.code)}">${escapeHtml(p.name)}</option>`).join('');
+    const label = { en_cours: ['wait', 'Envoi en cours'], a_faire: ['wait', 'À faire'], paye: ['ok', 'Fait ✓'], echoue: ['danger', 'Échoué'] };
+    const t = document.getElementById('mon-table');
+    t.innerHTML = t.rows[0].outerHTML + f.payouts.map((p) => `<tr data-id="${escapeHtml(p.id)}"><td>${fmtDate(p.created_at)}</td><td><b>${escapeHtml(usd(p.amount_usd))}</b></td>
+      <td>${p.method === 'banque' ? '🏦 ' : '📱 '}${escapeHtml(p.destination)}${p.note ? `<div class="small">${escapeHtml(p.note)}</div>` : ''}</td>
+      <td><span class="badge ${(label[p.status] || ['wait'])[0]}">${escapeHtml((label[p.status] || [0, p.status])[1])}</span></td>
+      <td>${p.status === 'a_faire' ? '<button class="btn approve" onclick="finPayoutAction(this, \'done\')">C\'est fait</button> <button class="btn remove" onclick="finPayoutAction(this, \'cancel\')">Annuler</button>' : ''}</td></tr>`).join('');
+  } catch (e) { document.getElementById('mon-msg').textContent = e.message; }
+}
+// Argent non réel : paiements confirmés à la main, achats payés avec un solde non réel, commissions
+// d'ouverture jamais payées, anciens abonnements publicitaires sans paiement.
+function renderNonReel(n) {
+  const box = document.getElementById('nr-box'); if (!box || !n) return;
+  const usd = (x) => money(x, 'USD');
+  const extra = [...(n.commissions || []).map((c) => `${c.n} commission(s) d'ouverture : ${Number(c.total).toLocaleString('fr-FR')} ${c.currency}`),
+    ...(n.ads || []).map((a) => `${a.n} abonnement(s) publicitaire(s) sans paiement : ${Number(a.total).toLocaleString('fr-FR')} ${a.currency}`)];
+  document.getElementById('nr-detail').innerHTML = n.empty
+    ? '✅ Aucun argent non réel : tout ce qui est compté a été reçu en ligne.'
+    : `<b>${n.payments}</b> paiement(s) non reçu(s) en ligne · Eaji : <b>${escapeHtml(usd(n.eaji))}</b> · créateurs : <b>${escapeHtml(usd(n.createurs))}</b> · soldes des utilisateurs : <b>${escapeHtml(usd(n.soldes))}</b>`
+      + (n.declares ? ` · ${n.declares} déclaration(s) en attente` : '') + (extra.length ? '<br>' + extra.map(escapeHtml).join('<br>') : '');
+  document.getElementById('nr-form').style.display = n.empty ? 'none' : 'block';
+}
+async function cleanNonReel() {
+  const msg = document.getElementById('nr-msg'), btn = document.getElementById('nr-btn');
+  if (!window.confirm('Retirer tout l\'argent non réel des soldes (Eaji, créateurs, portefeuilles) ? Les lignes retirées restent dans l\'historique.')) return;
+  btn.disabled = true; msg.textContent = 'Nettoyage…';
+  try {
+    const d = await adminApi('/api/admin/finance/non-reel/clean', { method: 'POST', body: { password: document.getElementById('nr-password').value } });
+    document.getElementById('nr-password').value = '';
+    msg.style.color = 'var(--teal)';
+    msg.textContent = `✅ Fait : ${money(d.removed.eaji, 'USD')} retirés des revenus d'Eaji, ${money(d.removed.createurs, 'USD')} des gains des créateurs, ${money(d.removed.soldes, 'USD')} des soldes.`;
+    loadFinance();
+  } catch (e) { msg.style.color = 'var(--coral)'; msg.textContent = e.message; }
+  finally { btn.disabled = false; }
+}
+async function adminWithdraw() {
+  const msg = document.getElementById('mon-msg'), btn = document.getElementById('mon-btn');
+  const method = document.querySelector('input[name="fin-method"]:checked').value;
+  const body = { method, amountUsd: document.getElementById('mon-amount').value, password: document.getElementById('mon-password').value,
+    provider: document.getElementById('mon-provider').value, phone: document.getElementById('mon-phone').value,
+    bankName: document.getElementById('mon-bank-name').value, accountName: document.getElementById('mon-bank-holder').value,
+    accountNumber: document.getElementById('mon-bank-number').value, swift: document.getElementById('mon-bank-swift').value };
+  btn.disabled = true; msg.textContent = 'Envoi…';
+  try {
+    const d = await adminApi('/api/admin/finance/withdraw', { method: 'POST', body });
+    msg.textContent = d.payout.status === 'en_cours' ? 'Envoi lancé vers ton mobile money : il arrive en général en quelques minutes.'
+      : d.payout.method === 'banque' ? 'Retrait noté. Demande le virement vers ce compte depuis ton tableau de bord pawaPay ou PayPal, puis clique « C\'est fait ».'
+      : 'Retrait noté : fais l\'envoi depuis ton compte de paiement puis clique « C\'est fait ».';
+    document.getElementById('mon-password').value = ''; document.getElementById('mon-amount').value = '';
+  } catch (e) { msg.textContent = e.message; }
+  btn.disabled = false;
+  loadFinance();
+}
+async function finPayoutAction(btn, action) {
+  btn.disabled = true;
+  try { await adminApi(`/api/admin/finance/payouts/${btn.closest('tr').dataset.id}/${action}`, { method: 'POST', body: {} }); }
+  catch (e) { document.getElementById('mon-msg').textContent = e.message; }
+  loadFinance();
+}
+
+// ==== Arrière-plans virtuels ====
+const BG_CATS = { nature: 'Nature', maison: 'Maisons de luxe', voiture: 'Voitures', bureau: 'Bureaux', ville: 'Villes', autre: 'Autres' };
+async function loadBackgrounds(){
+  const box = document.getElementById('bgad-list');
+  try {
+    const { backgrounds } = await adminApi('/api/backgrounds');
+    box.innerHTML = backgrounds.map((b) => `<div style="border:1px solid var(--border, #333);border-radius:12px;overflow:hidden;">
+      <div style="aspect-ratio:9/12;background:#222 url('${escapeHtml(API_BASE_URL + b.url)}') center/cover;"></div>
+      <div style="padding:6px 8px;font-size:12px;"><b>${escapeHtml(b.name)}</b><br>${escapeHtml(BG_CATS[b.category] || b.category)}<br>
+      <button class="btn reject" style="margin-top:6px;padding:4px 8px;font-size:12px;" data-id="${escapeHtml(b.id)}" onclick="deleteBackground(this)">Supprimer</button></div></div>`).join('')
+      || '<p class="login-hint" style="text-align:left;">Aucune image pour l\'instant : les utilisateurs ont seulement les décors dessinés par Eaji, le flou et leur propre photo.</p>';
+  } catch (e) { box.textContent = e.message; }
+}
+// Réduit l'image (1600 px maximum) avant l'envoi : rapide à charger sur les téléphones.
+function shrinkImage(file){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob((b) => b ? resolve(b) : reject(new Error('Image illisible.')), 'image/jpeg', 0.85);
+    };
+    img.onerror = () => reject(new Error('Image illisible.'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+async function addBackground(){
+  const msg = document.getElementById('bgad-msg'), btn = document.getElementById('bgad-btn');
+  const name = document.getElementById('bgad-name').value.trim(), cat = document.getElementById('bgad-cat').value;
+  const file = document.getElementById('bgad-file').files[0];
+  if (!name || !file) { msg.textContent = 'Donne un nom et choisis une image.'; return; }
+  btn.disabled = true; msg.textContent = 'Envoi…';
+  try {
+    const blob = await shrinkImage(file);
+    const h = authHeaders(); h['Content-Type'] = 'image/jpeg';
+    const r = await fetch(`${API_BASE_URL}/api/admin/backgrounds?name=${encodeURIComponent(name)}&category=${cat}`, { method: 'POST', headers: h, body: blob });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'Envoi refusé.');
+    msg.textContent = 'Arrière-plan ajouté : il est déjà proposé aux utilisateurs.';
+    document.getElementById('bgad-name').value = ''; document.getElementById('bgad-file').value = '';
+    loadBackgrounds();
+  } catch (e) { msg.textContent = e.message; }
+  btn.disabled = false;
+}
+async function deleteBackground(btn){
+  if (!confirm('Supprimer cet arrière-plan ?')) return;
+  try { await adminApi(`/api/admin/backgrounds/${btn.dataset.id}`, { method: 'DELETE' }); loadBackgrounds(); }
+  catch (e) { document.getElementById('bgad-msg').textContent = e.message; }
+}
+
+// ==== Tarifs et pourcentages ====
+async function loadRates(){
+  try {
+    const r = await adminApi('/api/admin/rates');
+    const fr = (n) => Number(n).toLocaleString('fr-FR');
+    const rows = [
+      ['Part du créateur (vidéos, ventes, cadeaux) — créateur Premium', `${r.creatorSharePercent} %`],
+      ['Part d\'Eaji', `${r.eajiSharePercent} % (100 % des vidéos d'un créateur non Premium)`],
+      ['Frais de retrait — petits comptes', `${r.withdrawFeeSmall} %`],
+      ['Frais de retrait — grands comptes', `${r.withdrawFeeBig} % (à partir de ${fr(r.bigAccountSubscribers)} abonnés)`],
+      ['Frais de dépôt sur le solde', `${r.walletDepositFeePercent} %`],
+      ['Frais de retrait du solde (transfert, désactivé)', `${r.walletWithdrawalFeePercent} %`],
+      ['Rémunération mensuelle', r.payoutTiers.map((t) => `${String(t.usdPer1000).replace('.', ',')} $ / 1 000 abonnés ${t.upTo ? 'jusqu\'à ' + fr(t.upTo) : 'au-delà'}`).join(' · ')],
+      ['Vues du mois exigées', `${r.monthlyViewsPercent} % des abonnés`],
+      ['Budget mensuel de rémunération', `${r.payoutBudgetPercent} % des revenus d'Eaji (réglable dans « Rémunération »)`],
+      ['Éligibilité', `${fr(r.eligibility.subscribers)} abonnés et ${fr(r.eligibility.views)} vues + compte Premium`],
+      ['Premium', Object.values(r.premiumPlans).map((p) => `${p.label} : ${p.price} $`).join(' · ')],
+      ['Compte Entreprise', Object.values(r.businessPlans).map((p) => `${p.label} : ${p.price} $`).join(' · ')],
+    ];
+    const t = document.getElementById('rates-table');
+    t.innerHTML = t.rows[0].outerHTML + rows.map(([a, b]) => `<tr><td>${escapeHtml(a)}</td><td><b>${escapeHtml(b)}</b></td></tr>`).join('');
+    document.getElementById('rt-small').value = r.withdrawFeeSmall;
+    document.getElementById('rt-big').value = r.withdrawFeeBig;
+    document.getElementById('rt-threshold').value = r.bigAccountSubscribers;
+  } catch (e) { document.getElementById('rates-msg').textContent = e.message; }
+}
+async function saveRates(){
+  const msg = document.getElementById('rates-msg');
+  try {
+    await adminApi('/api/admin/rates', { method: 'PUT', body: { withdrawFeeSmall: document.getElementById('rt-small').value, withdrawFeeBig: document.getElementById('rt-big').value, bigAccountSubscribers: document.getElementById('rt-threshold').value } });
+    msg.textContent = 'Frais enregistrés : ils s\'appliquent aux prochains retraits.'; loadRates();
+  } catch (e) { msg.textContent = e.message; }
+}
+
+// ==== Correction des gains d'un créateur (erreur de versement) ====
+async function adjustEarnings(btn){
+  const row = btn.closest('tr'), msg = document.getElementById('creators-msg');
+  try {
+    const e = await adminApi(`/api/admin/creators/${row.dataset.creatorId}/earnings`);
+    const v = window.prompt(`Gains disponibles de « ${row.dataset.creatorName} » : ${e.available} $.\nMontant de la correction en dollars (ex : 5 pour ajouter, -5 pour retirer) :`, '');
+    if (v === null) return;
+    const amountUsd = Number(String(v).replace(',', '.'));
+    const reason = window.prompt('Raison de la correction (visible par le créateur) :', 'Erreur de versement');
+    if (reason === null) return;
+    const r = await adminApi(`/api/admin/creators/${row.dataset.creatorId}/adjust-earnings`, { method: 'POST', body: { amountUsd, reason } });
+    msg.textContent = `Gains de ${row.dataset.creatorName} corrigés : nouveau solde disponible ${r.available} $.`;
+  } catch (e) { msg.textContent = e.message; }
+}
+
+// ==== Regroupement par pays et par ville ====
+const REGION_NAMES = (() => { try { return new Intl.DisplayNames(['fr'], { type: 'region' }); } catch (e) { return null; } })();
+function countryLabel(code) { if (!code) return '–'; try { return (REGION_NAMES && REGION_NAMES.of(code)) || code; } catch (e) { return code; } }
+let CREATOR_GROUPS = [];
+function renderCreatorGroups(groups, fc, fv) {
+  CREATOR_GROUPS = groups;
+  const byCountry = {};
+  groups.forEach((g) => { byCountry[g.country_code] = (byCountry[g.country_code] || 0) + g.n; });
+  const cs = document.getElementById('cr-country');
+  cs.innerHTML = '<option value="">Tous les pays</option>' + Object.entries(byCountry).sort((a, b) => b[1] - a[1])
+    .map(([c, n]) => `<option value="${escapeHtml(c)}" ${c === fc ? 'selected' : ''}>${escapeHtml(countryLabel(c))} (${n})</option>`).join('');
+  const vs = document.getElementById('cr-city');
+  const cities = groups.filter((g) => g.country_code === fc && g.city !== '(ville non indiquée)');
+  vs.innerHTML = '<option value="">Toutes les villes</option>' + cities.map((g) => `<option value="${escapeHtml(g.city)}" ${g.city.toLowerCase() === (fv || '').toLowerCase() ? 'selected' : ''}>${escapeHtml(g.city)} (${g.n})</option>`).join('');
+  vs.disabled = !fc;
+}
+
+// ==== Annonces : message automatique à tous, à un pays ou à une ville ====
+async function loadBroadcastView() {
+  try {
+    if (!CREATOR_GROUPS.length) {
+      const d = await adminApi('/api/admin/creators');
+      CREATOR_GROUPS = d.groups || [];
+    }
+    const byCountry = {};
+    CREATOR_GROUPS.forEach((g) => { byCountry[g.country_code] = (byCountry[g.country_code] || 0) + g.n; });
+    const cs = document.getElementById('bc-country'), keep = cs.value;
+    cs.innerHTML = Object.entries(byCountry).sort((a, b) => b[1] - a[1]).map(([c, n]) => `<option value="${escapeHtml(c)}">${escapeHtml(countryLabel(c))} (${n})</option>`).join('');
+    if (keep) cs.value = keep;
+    bcScopeChanged();
+    const { broadcasts } = await adminApi('/api/admin/broadcasts');
+    const scopeLabel = (b) => b.scope === 'tous' ? 'Tous les comptes' : b.scope === 'pays' ? countryLabel(b.country_code) : `${b.city} (${countryLabel(b.country_code)})`;
+    const t = document.getElementById('bc-table');
+    t.innerHTML = t.rows[0].outerHTML + (broadcasts.map((b) => `<tr><td>${fmtDate(b.created_at)}</td><td>${escapeHtml(scopeLabel(b))}</td>
+      <td><b>${escapeHtml(b.title)}</b><div class="small">${escapeHtml(b.text)}</div></td><td>${b.recipients}</td></tr>`).join('')
+      || '<tr><td colspan="4">Aucune annonce envoyée pour le moment.</td></tr>');
+  } catch (e) { document.getElementById('bc-msg').textContent = e.message; }
+}
+function bcAudience() {
+  const scope = document.querySelector('input[name="bc-scope"]:checked').value;
+  return { scope, countryCode: document.getElementById('bc-country').value, city: document.getElementById('bc-city').value.trim() };
+}
+function bcScopeChanged() {
+  const { scope, countryCode } = bcAudience();
+  document.getElementById('bc-country-wrap').style.display = scope === 'tous' ? 'none' : 'block';
+  document.getElementById('bc-city-wrap').style.display = scope === 'ville' ? 'block' : 'none';
+  document.getElementById('bc-cities').innerHTML = CREATOR_GROUPS.filter((g) => g.country_code === countryCode && g.city !== '(ville non indiquée)')
+    .map((g) => `<option value="${escapeHtml(g.city)}">`).join('');
+  bcCount();
+}
+let BC_TIMER = null;
+function bcCount() {
+  clearTimeout(BC_TIMER);
+  BC_TIMER = setTimeout(async () => {
+    const a = bcAudience(), el = document.getElementById('bc-count');
+    if (a.scope === 'ville' && a.city.length < 2) { el.textContent = 'Indique la ville.'; return; }
+    try {
+      const q = new URLSearchParams({ scope: a.scope, countryCode: a.countryCode, city: a.city });
+      const r = await adminApi(`/api/admin/broadcast/count?${q}`);
+      el.textContent = `${r.recipients} compte(s) recevront ce message.`;
+    } catch (e) { el.textContent = e.message; }
+  }, 300);
+}
+async function sendBroadcast() {
+  const a = bcAudience(), msg = document.getElementById('bc-msg');
+  const title = document.getElementById('bc-title').value.trim(), text = document.getElementById('bc-text').value.trim();
+  if (text.length < 3) { msg.textContent = 'Écris le message.'; return; }
+  if (!window.confirm(`Envoyer ce message maintenant ?\n${document.getElementById('bc-count').textContent}`)) return;
+  try {
+    const r = await adminApi('/api/admin/broadcast', { method: 'POST', body: { ...a, title, text } });
+    msg.textContent = `✅ Message envoyé à ${r.recipients} compte(s) : dans leur cloche et sur leur téléphone.`;
+    document.getElementById('bc-text').value = '';
+    loadBroadcastView();
+  } catch (e) { msg.textContent = e.message; }
+}
+
+// Essai gratuit offert par l'administrateur principal.
+async function grantPlan(btn, kind){
+  const row = btn.closest('tr');
+  const days = window.prompt(`Offrir ${kind === 'entreprise' ? 'le compte Entreprise' : 'le Premium'} à « ${row.dataset.creatorName} » pendant combien de jours ?`, '30');
+  if (days === null) return;
+  try {
+    const r = await adminApi(`/api/admin/creators/${row.dataset.creatorId}/grant`, { method: 'POST', body: { kind, days: Number(days) } });
+    const name = row.dataset.creatorName;
+    await loadCreators();
+    document.getElementById('creators-msg').textContent = `${kind === 'entreprise' ? 'Compte Entreprise' : 'Premium'} offert à ${name} jusqu'au ${fmtDate(r.endsAt)}.`;
+  } catch (e) { document.getElementById('creators-msg').textContent = e.message; }
+}
+async function revokeGift(btn){
+  const row = btn.closest('tr');
+  if (!window.confirm(`Retirer l'offre gratuite de « ${row.dataset.creatorName} » ?`)) return;
+  try { await adminApi(`/api/admin/creators/${row.dataset.creatorId}/revoke-gift`, { method: 'POST', body: {} }); loadCreators(); }
+  catch (e) { document.getElementById('creators-msg').textContent = e.message; }
+}
+
+// Mot de passe provisoire (vérifie d'abord l'identité de la personne par téléphone).
+async function resetCreatorPassword(btn){
+  const row = btn.closest('tr');
+  if (!window.confirm(`Donner un mot de passe provisoire à « ${row.dataset.creatorName} » ?\nFais-le seulement après avoir vérifié son identité par téléphone.`)) return;
+  try {
+    const r = await adminApi(`/api/admin/creators/${row.dataset.creatorId}/reset-password`, { method: 'POST', body: {} });
+    document.getElementById('creators-msg').textContent = `Mot de passe provisoire de ${r.name} : ${r.temporaryPassword} — communique-le lui ; il pourra le changer dans son Profil.`;
+  } catch (e) { document.getElementById('creators-msg').textContent = e.message; }
+}
+
+// ==== Rémunération mensuelle ====
+let PO_PERIOD = null;
+function periodLabel(p){ const [y, m] = p.split('-'); return new Date(Date.UTC(+y, +m - 1, 1)).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' }); }
+async function loadPayouts(){
+  const msg = document.getElementById('po-msg');
+  try {
+    const d = await adminApi('/api/admin/cycles');
+    const k = (l, v) => `<div class="kpi"><p class="label">${l}</p><p class="val">${v}</p></div>`;
+    const b = d.budget;
+    document.getElementById('po-budget').value = b.percent;
+    document.getElementById('po-kpis').innerHTML = k('Revenus Eaji (30 jours)', money(b.revenue, 'USD')) + k(`Budget (${b.percent} %)`, money(b.budget, 'USD'))
+      + k('Vers\u00e9 (30 jours)', money(b.used, 'USD')) + k('Total vers\u00e9 depuis le d\u00e9but', money(d.all_time, 'USD'))
+      + k('P\u00e9riodes en cours', kfmt(d.open)) + k('Vues des anciens contenus (pour Eaji, 30 j)', kfmt(d.old_views))
+      + k('Argent des anciens contenus et doublons (Eaji)', money(d.old_money, 'USD')) + k('Contenus r\u00e9p\u00e9t\u00e9s', kfmt(d.duplicates))
+      + k('Fausses vues retir\u00e9es', kfmt(d.fake_views || 0)) + k('Mises en garde envoy\u00e9es', kfmt(d.warnings || 0));
+    const st = { en_cours: ['wait', 'En cours'], paye: ['ok', 'Vers\u00e9 \u2713'], sans_gain: ['danger', 'Sans gain'] };
+    const day = (x) => new Date(x).toLocaleDateString('fr-FR');
+    const t = document.getElementById('po-table');
+    t.innerHTML = t.rows[0].outerHTML + (d.items.map(i => `<tr><td>${escapeHtml(i.name)}</td><td>${escapeHtml(i.country_code)}</td>
+      <td>${day(i.cycle_start)} \u2192 versement le ${day(i.payout_at)}</td>
+      <td>${i.contents == null ? '\u2013' : i.contents}</td>
+      <td>${i.cycle_views == null ? '\u2013' : Number(i.cycle_views).toLocaleString('fr-FR')}</td>
+      <td>${i.fake_views == null ? '\u2013' : Number(i.fake_views) > 0 ? `<b style="color:#c0392b;">${Number(i.fake_views).toLocaleString('fr-FR')}</b>` : '0'}${Number(i.duplicates) > 0 ? `<div class="small">${i.duplicates} copie(s)</div>` : ''}</td>
+      <td>${i.subscribers == null ? '\u2013' : Number(i.subscribers).toLocaleString('fr-FR') + (i.paid_subscribers != null && Number(i.paid_subscribers) < Number(i.subscribers) ? `<div class="small">pay\u00e9s : ${Number(i.paid_subscribers).toLocaleString('fr-FR')}</div>` : '')}</td>
+      <td>${i.base_amount_usd == null ? '\u2013' : escapeHtml(money(i.base_amount_usd, 'USD'))}</td>
+      <td><b>${i.amount_usd == null ? '\u2013' : escapeHtml(money(i.amount_usd, 'USD'))}</b>${i.budget_factor != null && Number(i.budget_factor) < 1 && Number(i.base_amount_usd) > 0 ? `<div class="small">budget : ${Math.round(Number(i.budget_factor) * 100)} %</div>` : ''}</td>
+      <td><span class="badge ${st[i.status][0]}">${st[i.status][1]}</span>${i.reason ? `<div class="small">${escapeHtml(i.reason)}</div>` : ''}</td></tr>`).join('')
+      || '<tr><td colspan="10">Aucune p\u00e9riode pour le moment (aucun cr\u00e9ateur Premium).</td></tr>');
+    msg.textContent = '';
+    loadWarnings().catch(() => {});
+  } catch (e) { msg.textContent = e.message; }
+}
+async function loadWarnings(){
+  const { warnings } = await adminApi('/api/admin/warnings');
+  const lv = (n) => n === 1 ? '<span class="badge wait">Mise en garde</span>' : n === 2 ? '<span class="badge wait">Avertissement (2e)</span>' : `<span class="badge danger">Dernier avertissement (${n}e)</span>`;
+  const why = (d) => { d = d || {}; const out = [];
+    if (d.createur) out.push(`${d.createur} de son t\u00e9l\u00e9phone / ses comptes`);
+    if (d.meme_appareil) out.push(`${d.meme_appareil} m\u00eame t\u00e9l\u00e9phone`);
+    if (d.appareil_comptes) out.push(`${d.appareil_comptes} comptes en s\u00e9rie`);
+    if (d.copies) out.push(`${d.copies} copie(s)`);
+    return out.join(' \u00b7 '); };
+  const t = document.getElementById('po-warn');
+  t.innerHTML = t.rows[0].outerHTML + (warnings.map(w => `<tr><td>${new Date(w.created_at).toLocaleDateString('fr-FR')}</td><td>${escapeHtml(w.name)} <span class="small">${escapeHtml(w.country_code || '')}</span></td>
+    <td>${lv(w.level)}</td><td>${Number(w.fake_views).toLocaleString('fr-FR')} / ${Number(w.total_views).toLocaleString('fr-FR')}</td>
+    <td class="small">${escapeHtml(why(w.details))}</td><td>${escapeHtml(w.account_status || '')}${w.read_at ? '<div class="small">lue \u2713</div>' : ''}</td></tr>`).join('')
+    || '<tr><td colspan="6">Aucune mise en garde : aucune fausse vue importante d\u00e9tect\u00e9e.</td></tr>');
+}
+// ==== Annonceurs ====
+async function loadAdvertise(){
+  const msg = document.getElementById('adv-msg');
+  try {
+    const d = await adminApi('/api/admin/advertise/requests');
+    const k = (l, v) => `<div class="kpi"><p class="label">${l}</p><p class="val">${v}</p></div>`;
+    const a = d.audience || {};
+    document.getElementById('adv-wa-admin').textContent = d.whatsapp;
+    document.getElementById('adv-kpis').innerHTML = k('Messages \u00e0 traiter', kfmt(d.pending)) + k('Messages re\u00e7us', kfmt(d.total))
+      + k('Essais pay\u00e9s (3 $)', kfmt(d.trials)) + k('Essais devenus clients', kfmt(d.trials_converted)) + k('Comptes Entreprise actifs', kfmt(d.active_business))
+      + k('Actifs 30 jours (affich\u00e9)', kfmt(a.active30)) + k('Vues 30 jours (affich\u00e9)', kfmt(a.views30));
+    const c = document.getElementById('adv-count');
+    c.textContent = d.pending; c.style.display = d.pending ? 'inline-block' : 'none';
+    const wa = (contact) => { const digits = String(contact).replace(/\D/g, ''); return digits.length >= 8 && !/@/.test(contact) ? `https://wa.me/${digits.replace(/^0+/, '')}` : null; };
+    const t = document.getElementById('adv-table');
+    t.innerHTML = t.rows[0].outerHTML + (d.requests.map(r => {
+      const w = wa(r.contact);
+      const reach = w ? `<a href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>` : /@/.test(r.contact) ? `<a href="mailto:${encodeURIComponent(r.contact)}">✉️ Email</a>` : '';
+      return `<tr><td>${new Date(r.created_at).toLocaleString('fr-FR')}</td><td><b>${escapeHtml(r.company)}</b><div class="small">${escapeHtml(r.name)}${r.country_code ? ' \u00b7 ' + escapeHtml(r.country_code) : ''}</div></td>
+        <td>${escapeHtml(r.contact)}<div class="small">${reach}</div></td><td class="small" style="max-width:320px;white-space:pre-wrap;">${escapeHtml(r.message)}</td>
+        <td>${r.account_name ? escapeHtml(r.account_name) + (r.is_business ? ' <span class="badge ok">Entreprise</span>' : '') : '<span class="small">sans compte</span>'}</td>
+        <td>${r.status === 'traite' ? '<span class="badge ok">Trait\u00e9 \u2713</span>' : `<button class="btn approve" onclick="advDone('${r.id}')">Marquer trait\u00e9</button>`}</td></tr>`;
+    }).join('') || '<tr><td colspan="6">Aucun message pour le moment.</td></tr>');
+    msg.textContent = '';
+  } catch (e) { msg.textContent = e.message; }
+}
+async function advDone(id){
+  try { await adminApi(`/api/admin/advertise/requests/${id}/done`, { method: 'POST', body: {} }); await loadAdvertise(); }
+  catch (e) { document.getElementById('adv-msg').textContent = e.message; }
+}
+async function runCycles(){
+  const msg = document.getElementById('po-msg');
+  try { const r = await adminApi('/api/admin/cycles/run', { method: 'POST', body: {} }); await loadPayouts();
+    msg.textContent = `${r.processed} p\u00e9riode(s) calcul\u00e9e(s), ${r.paid} cr\u00e9ateur(s) pay\u00e9(s).`; }
+  catch (e) { msg.textContent = e.message; }
+}
+async function saveBudget(){
+  const percent = Number(document.getElementById('po-budget').value);
+  try { await adminApi('/api/admin/payouts/budget', { method: 'PUT', body: { percent } }); await loadPayouts();
+    document.getElementById('po-msg').textContent = `Budget enregistré : ${percent} % des revenus d'Eaji. Il s'applique aux prochains calculs.`; }
+  catch (e) { document.getElementById('po-msg').textContent = e.message; }
+}
+async function preparePayouts(){
+  try { const r = await adminApi('/api/admin/payouts/prepare', { method: 'POST', body: { period: PO_PERIOD } }); await loadPayouts(PO_PERIOD);
+    document.getElementById('po-msg').textContent = `${r.created} nouveau(x) créateur(s) ajouté(s).`; }
+  catch (e) { document.getElementById('po-msg').textContent = e.message; }
+}
+async function editPayout(btn){
+  const v = window.prompt('Nouveau montant à verser pour ce créateur (en dollars) :', '');
+  if (v === null) return;
+  try { await adminApi(`/api/admin/payouts/${btn.closest('tr').dataset.id}`, { method: 'PATCH', body: { amountUsd: Number(String(v).replace(',', '.')) } }); await loadPayouts(PO_PERIOD);
+    document.getElementById('po-msg').textContent = 'Montant modifié.'; }
+  catch (e) { document.getElementById('po-msg').textContent = e.message; }
+}
+async function cancelPayout(btn){
+  if (!window.confirm('Retirer ce créateur de la rémunération de ce mois ?')) return;
+  try { await adminApi(`/api/admin/payouts/${btn.closest('tr').dataset.id}/cancel`, { method: 'POST', body: {} }); loadPayouts(PO_PERIOD); }
+  catch (e) { document.getElementById('po-msg').textContent = e.message; }
+}
+async function creditPayouts(){
+  if (!window.confirm(`Créditer la rémunération de ${periodLabel(PO_PERIOD)} sur les gains des créateurs ?\nAssure-toi d'avoir l'argent pour payer leurs retraits.`)) return;
+  try { const r = await adminApi('/api/admin/payouts/credit', { method: 'POST', body: { period: PO_PERIOD } }); await loadPayouts(PO_PERIOD);
+    document.getElementById('po-msg').textContent = `${r.creators} créateur(s) crédité(s) pour un total de ${money(r.total, 'USD')}.`; }
+  catch (e) { document.getElementById('po-msg').textContent = e.message; }
+}
+
+async function toggleSuspend(btn){
+  const row = btn.closest('tr');
+  const next = row.dataset.status === 'suspendu' ? 'actif' : 'suspendu';
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/admin/creators/${row.dataset.creatorId}`, {
+      method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ accountStatus: next }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Action impossible.');
+    loadCreators();
+  } catch (e) {
+    document.getElementById('creators-msg').textContent = e.message;
+  }
+}
+
+async function deleteCreator(btn){
+  const row = btn.closest('tr');
+  const name = row.dataset.creatorName;
+  const typed = window.prompt(
+    `Supprimer DÉFINITIVEMENT le compte « ${name} » et toutes ses données (contenus, messages, solde, cadeaux) ?\n\nCette action est irréversible. Tape SUPPRIMER pour confirmer.`
+  );
+  if (typed !== 'SUPPRIMER') return;
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/admin/creators/${row.dataset.creatorId}`, {
+      method: 'DELETE', headers: authHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Suppression impossible.');
+    loadCreators();
+  } catch (e) {
+    btn.disabled = false;
+    document.getElementById('creators-msg').textContent = e.message;
+  }
+}
+
+async function removeContent(btn){
+  const row = btn.closest('tr');
+  btn.disabled = true;
+  try {
+    await adminApi(`/api/content/${row.dataset.contentId}`, { method: 'DELETE', body: { reason: row.dataset.reason || 'Contenu jugé dangereux' } });
+  } catch (e) {
+    btn.disabled = false;
+    document.getElementById('mod-msg').textContent = e.message;
+    return;
+  }
+  loadReports();
+}
+
+// ==== Paiements manuels, retraits, revenus ====
+const PURPOSES = { premium_mois: 'Premium 1 mois', premium_trimestre: 'Premium 3 mois', premium_annee: 'Premium 1 an', entreprise_essai: 'Essai Entreprise 5 jours', entreprise_mois: 'Entreprise 1 mois', entreprise_annee: 'Entreprise 1 an', video: 'Vidéo payante', achat: 'Achat de contenu',
+  cadeau: 'Cadeau', cadeau_live: 'Cadeau en live', don: 'Don à Eaji', annonce: 'Publicité', depot: 'Dépôt portefeuille' };
+const SOURCES = { premium: 'Abonnements premium', entreprise: 'Comptes Entreprise', video: 'Vidéos payantes (40 %)', vente: 'Ventes de contenus (40 %)', cadeau: 'Cadeaux (40 %)',
+  don: 'Dons', publicite: 'Publicité des entreprises', frais_retrait: 'Frais de retrait (15 %)',
+  frais_depot: 'Frais de dépôt (2 %)', frais_retrait_portefeuille: 'Frais de retrait portefeuille (4 %)' };
+const STATES = { en_attente: ['wait', 'En attente'], confirme: ['ok', 'Confirmé'], refuse: ['danger', 'Refusé'], annule: ['danger', 'Annulé'], paye: ['ok', 'Payé'] };
+function money(v, cur) {
+  try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: cur || 'USD' }).format(Number(v) || 0); }
+  catch (e) { return `${Number(v || 0).toLocaleString('fr-FR')} ${cur}`; }
+}
+let PAY_FILTER = 'en_attente';
+
+async function refreshPendingCount() {
+  refreshSupportCount(); refreshThreatCount(); refreshWatchCount();
+  try {
+    const { payments } = await adminApi('/api/admin/payments?status=en_attente');
+    const { withdrawals } = await adminApi('/api/admin/withdrawals?status=en_attente');
+    const n = payments.length + withdrawals.length;
+    const el = document.getElementById('pay-count');
+    el.textContent = n; el.style.display = n ? 'inline-block' : 'none';
+  } catch (e) { /* ignoré */ }
+}
+
+async function loadPaymentsView() {
+  try {
+    const f = await adminApi('/api/admin/finance');
+    const g = f.gateways || {};
+    document.getElementById('pay-numbers-msg').textContent = (g.pawapay || g.cinetpay || g.paypal)
+      ? 'Branchés : ' + [g.pawapay && 'pawaPay (mobile money)', g.cinetpay && 'CinetPay (mobile money + Visa/Mastercard)', g.paypal && 'PayPal (cartes)'].filter(Boolean).join(' · ')
+      : '⚠️ Aucun paiement en ligne branché : les utilisateurs ne peuvent pas encore payer (ajoute les clés pawaPay, CinetPay ou PayPal sur Railway).';
+  } catch (e) { document.getElementById('pay-numbers-msg').textContent = e.message; }
+  loadPaymentRequests();
+  loadWithdrawals();
+  refreshPendingCount();
+}
+
+async function savePaymentNumbers() {
+  const msg = document.getElementById('pay-numbers-msg');
+  try {
+    await adminApi('/api/admin/settings/payment-numbers', { method: 'PUT', body: { paymentNumbers: document.getElementById('pay-numbers').value } });
+    msg.style.color = 'var(--teal)'; msg.textContent = 'Numéros enregistrés : ils s\'affichent maintenant aux utilisateurs.';
+  } catch (e) { msg.style.color = 'var(--coral)'; msg.textContent = e.message; }
+}
+
+async function loadPaymentRequests() {
+  const msg = document.getElementById('pay-msg');
+  try {
+    const { payments } = await adminApi(`/api/admin/payments${PAY_FILTER ? '?status=' + PAY_FILTER : ''}`);
+    const t = document.getElementById('pay-table');
+    t.innerHTML = t.rows[0].outerHTML + payments.map(p => {
+      const st = STATES[p.status] || ['wait', p.status];
+      return `<tr data-id="${escapeHtml(p.id)}">
+        <td><b>${escapeHtml(p.reference)}</b></td>
+        <td>${escapeHtml(p.payerName || '(compte supprimé)')}<div class="small">${escapeHtml(p.payerPhone || '')}</div></td>
+        <td>${escapeHtml(p.description)}<div class="small">${escapeHtml(PURPOSES[p.purpose] || p.purpose)}</div></td>
+        <td><b>${escapeHtml(money(p.amountLocal, p.currency))}</b>${p.currency !== 'USD' ? `<div class="small">${escapeHtml(money(p.amountUsd, 'USD'))}</div>` : ''}</td>
+        <td>${p.nonReel ? '<span class="badge danger">Non réel — retiré</span><br>' : ''}${p.method === 'mobile_money' || p.method === 'paypal' || p.method === 'cinetpay'
+          ? `<b>${p.method === 'paypal' ? '💳 Carte / PayPal' : p.method === 'cinetpay' ? '📱💳 CinetPay' : '📱 Mobile money'}</b><div class="small">${p.status === 'confirme' ? 'vérifié en ligne · ' + escapeHtml(p.proof || '') : p.gatewayStatus === 'FAILED' ? 'échoué : ' + escapeHtml(p.gatewayFailure || '') : 'en attente du code secret'}</div>`
+          : p.proof ? escapeHtml(p.proof) + '<div class="small">ancien paiement déclaré à la main (non vérifié)</div>' : '<span class="small">pas encore payé</span>'}</td>
+        <td>${fmtDate(p.createdAt)}</td>
+        <td style="white-space:nowrap;">${p.status === 'en_attente' && p.method
+          ? `<span class="badge wait">En ligne</span> <button class="btn remove" onclick="refusePayment(this)">Refuser</button>`
+          : p.status === 'en_attente'
+          ? `<span class="badge wait">Pas encore payé</span> <button class="btn remove" onclick="refusePayment(this)">Refuser</button>`
+          : `<span class="badge ${st[0]}">${st[1]}</span>`}</td></tr>`;
+    }).join('');
+    msg.textContent = payments.length ? `${payments.length} paiement(s).` : 'Aucun paiement dans cette liste.';
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function confirmPayment(btn) {
+  const row = btn.closest('tr');
+  if (!window.confirm('As-tu bien reçu cet argent sur ton téléphone ? L\'achat sera activé tout de suite.')) return;
+  btn.disabled = true;
+  try { await adminApi(`/api/admin/payments/${row.dataset.id}/confirm`, { method: 'POST', body: {} }); }
+  catch (e) { btn.disabled = false; document.getElementById('pay-msg').textContent = e.message; return; }
+  loadPaymentRequests(); refreshPendingCount();
+}
+
+async function refusePayment(btn) {
+  const row = btn.closest('tr');
+  const note = window.prompt('Raison du refus (visible par l\'utilisateur) :', 'Paiement non reçu.');
+  if (note === null) return;
+  btn.disabled = true;
+  try { await adminApi(`/api/admin/payments/${row.dataset.id}/refuse`, { method: 'POST', body: { note } }); }
+  catch (e) { btn.disabled = false; document.getElementById('pay-msg').textContent = e.message; return; }
+  loadPaymentRequests(); refreshPendingCount();
+}
+
+async function loadWithdrawals() {
+  const msg = document.getElementById('wd-msg');
+  try {
+    const { withdrawals } = await adminApi('/api/admin/withdrawals');
+    const t = document.getElementById('wd-table');
+    t.innerHTML = t.rows[0].outerHTML + withdrawals.map(w => {
+      const st = STATES[w.status] || ['wait', w.status];
+      return `<tr data-id="${escapeHtml(w.id)}">
+        <td>${escapeHtml(w.creator_name)}<div class="small">${escapeHtml(w.creator_phone)}</div></td>
+        <td>${w.source === 'portefeuille' ? 'Portefeuille' : 'Gains'}</td>
+        <td><b>${escapeHtml(money(w.net_local, w.currency))}</b>${w.currency !== 'USD' ? `<div class="small">${escapeHtml(money(w.net_usd, 'USD'))}</div>` : ''}</td>
+        <td>${escapeHtml(money(w.fee_usd, 'USD'))}</td>
+        <td>${escapeHtml(w.method)}<div class="small">${escapeHtml(w.account)}</div>${w.gateway_status ? `<div class="small">pawaPay : ${escapeHtml({ COMPLETED: 'envoyé ✓', FAILED: 'échec', INITIE: 'en cours', ACCEPTED: 'en cours', PROCESSING: 'en cours', ENQUEUED: 'en file' }[w.gateway_status] || w.gateway_status)}</div>` : ''}${w.admin_note ? `<div class="small">${escapeHtml(w.admin_note)}</div>` : ''}</td>
+        <td>${fmtDate(w.created_at)}</td>
+        <td style="white-space:nowrap;">${w.status === 'en_attente'
+          ? (w.gateway_id && w.gateway_status !== 'FAILED' ? '<span class="badge wait">Envoi en cours</span>'
+            : `<button class="btn approve" onclick="sendWithdrawalMobile(this)">📱 Envoyer (pawaPay)</button> <button class="btn approve" onclick="markWithdrawal(this, 'paid')">Payé à la main</button> <button class="btn remove" onclick="markWithdrawal(this, 'refuse')">Refuser</button>`)
+          : `<span class="badge ${st[0]}">${st[1]}</span>`}</td></tr>`;
+    }).join('');
+    msg.textContent = withdrawals.some(w => w.status === 'en_attente') ? '' : 'Aucun retrait à payer pour le moment.';
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function sendWithdrawalMobile(btn) {
+  const row = btn.closest('tr');
+  if (!window.confirm('Envoyer automatiquement cet argent sur le mobile money du créateur (pawaPay) ?')) return;
+  btn.disabled = true;
+  try { const d = await adminApi(`/api/admin/withdrawals/${row.dataset.id}/send-mobile`, { method: 'POST', body: {} }); document.getElementById('wd-msg').textContent = d.message; }
+  catch (e) { btn.disabled = false; document.getElementById('wd-msg').textContent = e.message; return; }
+  loadWithdrawals();
+}
+
+async function markWithdrawal(btn, action) {
+  const row = btn.closest('tr');
+  let note = '';
+  if (action === 'paid' && !window.confirm('As-tu bien envoyé l\'argent à ce créateur ?')) return;
+  if (action === 'refuse') { note = window.prompt('Raison du refus :', 'Numéro de retrait incorrect.'); if (note === null) return; }
+  btn.disabled = true;
+  try { await adminApi(`/api/admin/withdrawals/${row.dataset.id}/${action}`, { method: 'POST', body: { note } }); }
+  catch (e) { btn.disabled = false; document.getElementById('wd-msg').textContent = e.message; return; }
+  loadWithdrawals(); refreshPendingCount();
+}
+
+async function loadRevenue() {
+  const msg = document.getElementById('rev-msg');
+  try {
+    const r = await adminApi('/api/admin/revenue');
+    const kpi = (label, val) => `<div class="kpi"><p class="label">${label}</p><p class="val">${val}</p></div>`;
+    document.getElementById('rev-kpis').innerHTML =
+      kpi('Revenus Eaji (total)', escapeHtml(money(r.eaji_total, 'USD'))) +
+      kpi('Dus aux créateurs (gagnés)', escapeHtml(money(r.creators_earned, 'USD'))) +
+      kpi('Déjà versé aux créateurs', escapeHtml(money(r.paid_out, 'USD'))) +
+      kpi('Retraits à payer', `${escapeHtml(money(r.pending_withdrawals, 'USD'))}<div class="small">${r.pending_withdrawal_count} demande(s)</div>`) +
+      kpi('Paiements à vérifier', r.pending_payments) +
+      kpi('Membres premium', r.premium_members) +
+      kpi('Comptes Entreprise', r.business_members) +
+      kpi('Publicités en ligne', r.active_ads);
+    const t = document.getElementById('rev-table');
+    t.innerHTML = t.rows[0].outerHTML + (r.bySource.map(s =>
+      `<tr><td>${escapeHtml(SOURCES[s.source] || s.source)}</td><td>${s.count}</td><td><b>${escapeHtml(money(s.total, 'USD'))}</b></td></tr>`).join('')
+      || '<tr><td colspan="3">Aucun revenu pour le moment.</td></tr>');
+    msg.textContent = r.transfersEnabled ? '' : "Le transfert d'argent entre utilisateurs est désactivé (il le restera tant que TRANSFERS_ENABLED n'est pas mis à true sur Railway).";
+    const { ads } = await adminApi('/api/admin/business-ads');
+    const at = document.getElementById('ads-table');
+    const adState = { en_attente: ['wait', 'Non payée'], actif: ['ok', 'En ligne'], refuse: ['danger', 'Refusée'], retire: ['danger', 'Retirée'] };
+    at.innerHTML = at.rows[0].outerHTML + (ads.map(a => {
+      const st = adState[a.status] || ['wait', a.status];
+      return `<tr data-id="${escapeHtml(a.id)}"><td>${escapeHtml(a.company)}<div class="small">${escapeHtml(a.owner_name)}${a.message ? ' · ' + escapeHtml(a.message) : ''}</div></td>
+        <td>${escapeHtml(a.country_code === 'ALL' ? 'Tous' : a.country_code)}</td><td>${escapeHtml(a.plan)}${a.ends_at ? `<div class="small">jusqu'au ${fmtDate(a.ends_at)}</div>` : ''}</td>
+        <td><span class="badge ${st[0]}">${st[1]}</span></td><td>${a.impressions} / ${a.clicks}</td>
+        <td>${a.status === 'actif' ? '<button class="btn remove" onclick="removeAd(this)">Retirer</button>' : ''}</td></tr>`;
+    }).join('') || '<tr><td colspan="6">Aucune publicité pour le moment.</td></tr>');
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function removeAd(btn) {
+  if (!window.confirm('Retirer cette publicité du fil ?')) return;
+  try { await adminApi(`/api/admin/business-ads/${btn.closest('tr').dataset.id}/remove`, { method: 'POST', body: {} }); }
+  catch (e) { document.getElementById('rev-msg').textContent = e.message; return; }
+  loadRevenue();
+}
+
+document.querySelectorAll('#pay-filter .ftab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('#pay-filter .ftab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  PAY_FILTER = t.dataset.status;
+  loadPaymentRequests();
+}));
+
+// ==== Identités ====
+let ID_FILTER = 'en_attente';
+document.querySelectorAll('#id-filter .ftab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('#id-filter .ftab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active'); ID_FILTER = t.dataset.status; loadIdentities();
+}));
+async function loadIdentities() {
+  const msg = document.getElementById('id-msg'), box = document.getElementById('id-list');
+  msg.textContent = 'Chargement…';
+  try {
+    const { identities } = await adminApi(`/api/admin/identities?status=${ID_FILTER}`);
+    const img = (u, label) => u ? `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" style="text-align:center;font-size:11px;color:var(--muted);"><img src="${escapeHtml(u)}" alt="${label}" style="width:150px;height:110px;object-fit:cover;border-radius:10px;display:block;margin-bottom:4px;">${label}</a>` : '';
+    box.innerHTML = identities.map(v => `
+      <div class="id-card" data-id="${escapeHtml(v.id)}" style="border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">${img(v.selfieUrl, 'Visage (direct)')}${img(v.idFrontUrl, 'Pièce — recto')}${img(v.idBackUrl, 'Pièce — verso')}</div>
+        <div><b>${escapeHtml(v.full_name)}</b> <span class="small">(compte : ${escapeHtml(v.account_name)} · ${escapeHtml(v.email || '')} · ${escapeHtml(v.phone || '')})</span></div>
+        <div class="small">${escapeHtml(v.idTypeLabel)} n° <b>${escapeHtml(v.id_number)}</b> · né(e) le ${fmtDate(v.birth_date)}</div>
+        <div class="small">${escapeHtml(v.address)}, ${escapeHtml(v.city)} (${escapeHtml(v.country_code)}) · envoyé le ${fmtDate(v.created_at)}</div>
+        ${v.admin_note ? `<div class="small">Note : ${escapeHtml(v.admin_note)}</div>` : ''}
+        ${v.status === 'en_attente' ? `<div style="margin-top:10px;"><button class="btn approve" onclick="approveIdentity(this)">Valider l'identité</button> <button class="btn remove" onclick="rejectIdentity(this)">Refuser</button></div>` : ''}
+      </div>`).join('');
+    msg.textContent = identities.length ? `${identities.length} demande(s).` : 'Aucune demande dans cette liste.';
+  } catch (e) { msg.textContent = e.message; }
+}
+async function approveIdentity(btn) {
+  if (!window.confirm('Le visage et la pièce correspondent bien ? Le nom du compte deviendra celui de la pièce.')) return;
+  btn.disabled = true;
+  try { await adminApi(`/api/admin/identities/${btn.closest('.id-card').dataset.id}/approve`, { method: 'POST', body: {} }); }
+  catch (e) { btn.disabled = false; document.getElementById('id-msg').textContent = e.message; return; }
+  loadIdentities();
+}
+async function rejectIdentity(btn) {
+  const note = window.prompt("Raison du refus (visible par l'utilisateur) :", 'Photo floue ou pièce non valide.');
+  if (note === null) return;
+  btn.disabled = true;
+  try { await adminApi(`/api/admin/identities/${btn.closest('.id-card').dataset.id}/reject`, { method: 'POST', body: { note } }); }
+  catch (e) { btn.disabled = false; document.getElementById('id-msg').textContent = e.message; return; }
+  loadIdentities();
+}
+
+// Le compteur de paiements à vérifier se met à jour tout seul toutes les 30 secondes.
+setInterval(() => {
+  if (ADMIN_ROLE !== 'admin_principal' || document.getElementById('app-shell').style.display === 'none') return;
+  refreshPendingCount();
+  if (document.getElementById('v-payments').classList.contains('active')) { loadPaymentRequests(); loadWithdrawals(); }
+}, 30000);
+
+// ==== Données réelles du panneau ====
+async function adminApi(path, { method = 'GET', body } = {}) {
+  let res;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, { method, headers: authHeaders(), body: body ? JSON.stringify(body) : undefined });
+  } catch (e) {
+    throw new Error('Impossible de joindre le serveur.');
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Action impossible.');
+  return data;
+}
+
+function fmtDate(d){ try { return new Date(d).toLocaleDateString('fr-FR'); } catch { return ''; } }
+
+let ADMIN_ROLE = null;
+async function loadMe(){
+  try {
+    const me = await adminApi('/api/admin/me');
+    ADMIN_ROLE = me.role;
+    document.querySelector('.role-tag').textContent =
+      (me.role === 'admin_principal' ? 'Administrateur principal — ' : 'Administrateur — ') + me.name;
+    if (me.role !== 'admin_principal') {
+      document.querySelectorAll('.tab[data-target="v-commissions"], .tab[data-target="v-admins"], .tab[data-target="v-payments"], .tab[data-target="v-revenue"], .tab[data-target="v-payouts"], .tab[data-target="v-advertise"], .tab[data-target="v-broadcast"], .tab[data-target="v-rates"], .tab[data-target="v-backgrounds"], .tab[data-target="v-finance"]').forEach(t => t.style.display = 'none');
+    } else {
+      refreshPendingCount();
+    }
+  } catch (e) { /* jeton expiré : la prochaine action affichera l'erreur */ }
+}
+
+// État des services branchés sur Railway (paiements, relais d'appels, SMS…).
+async function loadSystemStatus(){
+  const box = document.getElementById('sys-status');
+  try {
+    const d = await adminApi('/api/admin/system-status');
+    const item = (okv, label, help) => `<span class="sys-item ${okv ? 'on' : 'off'}" title="${escapeHtml(help || '')}">${okv ? '✅' : '⚠️'} ${escapeHtml(label)}</span>`;
+    box.innerHTML = '<b>État des services :</b> ' + [
+      item(d.pawapay, `Mobile money pawaPay${d.pawapay ? (d.pawapayLive ? ' (argent réel)' : ' (test)') : ' (à brancher)'}`, 'PAWAPAY_TOKEN et PAWAPAY_ENV=production sur Railway'),
+      item(d.paypal, `Carte / PayPal${d.paypal ? (d.paypalLive ? ' (argent réel)' : ' (test)') : ' (à brancher)'}`, 'PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_ENV=production'),
+      item(d.turn.working, `Relais d'appels TURN${d.turn.provider ? ' (' + d.turn.provider + ')' : ' (à brancher)'}`, 'CF_TURN_KEY_ID et CF_TURN_KEY_API_TOKEN (Cloudflare)'),
+      item(d.sms, `SMS${d.sms ? '' : ' (codes affichés à l\'écran)'}`, 'TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER'),
+      item(d.storage, 'Stockage des fichiers'), item(d.email, 'E-mails'),
+    ].join(' ');
+    box.style.display = '';
+  } catch (e) { box.style.display = 'none'; }
+}
+async function loadOverview(){
+  loadSystemStatus();
+  const msg = document.getElementById('overview-msg');
+  try {
+    const st = await adminApi('/api/admin/stats');
+    document.getElementById('kpi-creators').textContent = st.creators;
+    document.getElementById('kpi-eligible').textContent = st.eligible;
+    document.getElementById('kpi-reports').textContent = st.open_reports;
+    document.getElementById('kpi-contents').textContent = st.contents;
+    const t = document.getElementById('latest-table');
+    t.innerHTML = t.rows[0].outerHTML + (st.latest.map(c =>
+      `<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.country_code)}</td><td>${fmtDate(c.created_at)}</td></tr>`).join('')
+      || '<tr><td colspan="3">Aucun compte pour le moment.</td></tr>');
+    msg.textContent = st.suspended ? `${st.suspended} compte(s) suspendu(s).` : '';
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function loadReview(){
+  const msg = document.getElementById('review-msg'), box = document.getElementById('review-list');
+  try {
+    const { items } = await adminApi('/api/admin/content-review');
+    box.innerHTML = items.map((i) => {
+      const media = !i.fileUrl ? '' : /video|film|telechargement/.test(i.content_type)
+        ? `<video src="${escapeHtml(i.fileUrl)}" controls muted style="width:220px;height:150px;border-radius:10px;background:#000;"></video>`
+        : `<img src="${escapeHtml(i.fileUrl)}" alt="" style="width:220px;height:150px;object-fit:cover;border-radius:10px;">`;
+      return `<div class="review-card" data-id="${escapeHtml(i.id)}" style="border:1px solid var(--line);border-radius:12px;padding:10px;width:240px;">
+        ${media}<div style="margin:6px 0 2px;"><b>${escapeHtml(i.title)}</b></div><div class="small">${escapeHtml(i.creator_name)} · ${fmtDate(i.created_at)}</div>
+        <div style="margin-top:8px;"><button class="btn approve" onclick="approveContent(this)">Publier</button>
+        <button class="btn remove" onclick="rejectReviewContent(this)">Refuser</button></div></div>`;
+    }).join('');
+    msg.textContent = items.length ? `${items.length} publication(s) en attente.` : 'Aucune publication en attente.';
+  } catch (e) { msg.textContent = e.message; }
+}
+async function approveContent(btn){
+  try { await adminApi(`/api/admin/content/${btn.closest('.review-card').dataset.id}/approve`, { method: 'POST', body: {} }); loadReview(); }
+  catch (e) { document.getElementById('review-msg').textContent = e.message; }
+}
+async function rejectReviewContent(btn){
+  if (!window.confirm('Refuser et retirer cette publication ?')) return;
+  try { await adminApi(`/api/content/${btn.closest('.review-card').dataset.id}`, { method: 'DELETE', body: { reason: 'Nudité ou contenu sexuel' } }); loadReview(); }
+  catch (e) { document.getElementById('review-msg').textContent = e.message; }
+}
+
+async function loadReports(){
+  const msg = document.getElementById('mod-msg');
+  try {
+    const { reports } = await adminApi('/api/admin/reports');
+    const t = document.getElementById('mod-table');
+    t.innerHTML = t.rows[0].outerHTML + reports.map(r => `
+      <tr data-content-id="${escapeHtml(r.content_id)}" data-reason="${escapeHtml(r.reason)}">
+        <td>${escapeHtml(r.title)}</td><td>${escapeHtml(r.creator_name)}</td><td>${escapeHtml(r.reason)}</td>
+        <td>${escapeHtml(r.reported_by_name || '—')}</td>
+        <td>${r.status === 'retire' ? '<span class="badge danger">Retiré</span>'
+              : '<button class="btn remove" onclick="removeContent(this)">Retirer</button>'}</td>
+      </tr>`).join('');
+    msg.textContent = reports.length ? `${reports.length} signalement(s).` : 'Aucun contenu signalé.';
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function loadAdmins(){
+  const msg = document.getElementById('admins-msg');
+  try {
+    const { admins } = await adminApi('/api/admin/admins');
+    const t = document.getElementById('admins-table');
+    t.innerHTML = t.rows[0].outerHTML + admins.map(a => `
+      <tr><td>${escapeHtml(a.name)}</td><td>${a.role === 'admin_principal' ? 'Principal' : 'Secondaire'}</td>
+      <td>${escapeHtml(a.phones || '')}</td><td>${a.role === 'admin_principal' ? 'Toutes' : escapeHtml(a.permissions || 'Aucune')}</td>
+      <td><span class="badge ${a.status === 'actif' ? 'ok' : 'wait'}">${escapeHtml(a.status)}</span></td></tr>`).join('');
+    msg.textContent = '';
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function addAdmin(){
+  const errorEl = document.getElementById('na-error');
+  const successEl = document.getElementById('na-success');
+  errorEl.style.display = 'none'; successEl.style.display = 'none';
+  const body = {
+    name: document.getElementById('na-name').value.trim(),
+    phone: normalizePhone(document.getElementById('na-phone').value),
+    password: document.getElementById('na-password').value,
+    permissions: [...document.querySelectorAll('.na-perm:checked')].map(c => c.value),
+  };
+  try {
+    await adminApi('/api/admin/approve', { method: 'POST', body });
+  } catch (e) {
+    errorEl.textContent = e.message; errorEl.style.display = 'block'; return;
+  }
+  successEl.style.display = 'block';
+  ['na-name', 'na-phone', 'na-password'].forEach(id => document.getElementById(id).value = '');
+  loadAdmins();
+}
+
+async function loadFinances(){
+  const msg = document.getElementById('fin-msg');
+  try {
+    const { commissions, adRevenue } = await adminApi('/api/admin/finances');
+    const rows = [
+      ...commissions.map(c => ({ type: c.type === 'ouverture' ? 'Ouverture de compte' : 'Retrait (15 %)', amount: Number(c.amount), currency: c.currency, status: c.status, date: c.created_at })),
+      ...adRevenue.map(a => ({ type: 'Publicité', amount: Number(a.amount), currency: a.currency, status: a.status || 'payé', date: a.created_at })),
+    ].sort((x, y) => new Date(y.date) - new Date(x.date));
+    const totals = {};
+    rows.forEach(r => { totals[r.currency] = (totals[r.currency] || 0) + r.amount; });
+    document.getElementById('fin-totals').innerHTML = Object.entries(totals).map(([cur, v]) =>
+      `<div class="kpi"><p class="label">Total ${escapeHtml(cur)}</p><p class="val">${v.toLocaleString('fr-FR')}</p></div>`).join('')
+      || '<div class="kpi"><p class="label">Total</p><p class="val">0</p></div>';
+    const t = document.getElementById('fin-table');
+    t.innerHTML = t.rows[0].outerHTML + rows.map(r =>
+      `<tr><td>${r.type}</td><td>${r.amount.toLocaleString('fr-FR')} ${escapeHtml(r.currency)}</td><td>${escapeHtml(r.status)}</td><td>${fmtDate(r.date)}</td></tr>`).join('');
+    msg.textContent = rows.length ? '' : 'Aucune commission pour le moment.';
+  } catch (e) { msg.textContent = e.message; }
+}
+
+function loadAdminData(){
+  loadMe(); loadOverview();
+  // Compteurs (paiements, retraits, messages du support) mis à jour toutes les 30 secondes.
+  refreshPendingCount();
+  clearInterval(window.__countTimer);
+  window.__countTimer = setInterval(() => { if (document.visibilityState === 'visible') refreshPendingCount(); }, 30000);
+}
+
+const VIEW_LOADERS = { 'v-overview': loadOverview, 'v-creators': () => loadCreators(), 'v-broadcast': loadBroadcastView, 'v-rates': loadRates, 'v-backgrounds': loadBackgrounds, 'v-support': loadSupport, 'v-threats': loadThreats, 'v-watch': loadWatchView, 'v-finance': loadFinance, 'v-moderation': () => { loadReview(); loadReports(); }, 'v-admins': loadAdmins, 'v-commissions': loadFinances,
+  'v-payments': loadPaymentsView, 'v-identities': loadIdentities, 'v-revenue': loadRevenue, 'v-payouts': () => loadPayouts(), 'v-advertise': () => loadAdvertise() };
+</script>
+<div class="modal" id="a-modal" onclick="if (event.target === this) closeModal()">
+  <div class="modal-card">
+    <div class="modal-head"><b id="a-modal-title"></b><button class="logout-btn" onclick="closeModal()">Fermer &times;</button></div>
+    <div id="a-modal-body"></div>
+  </div>
+</div>
+</body>
+</html>
