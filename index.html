@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+// Anti-phishing : Eaji ne s'affiche jamais à l'intérieur d'un autre site (un faux site qui encadre la vraie page pour piéger les clics).
+if (window.top !== window.self) { document.documentElement.style.display = 'none'; try { window.top.location.replace(window.self.location.href); } catch (e) { /* navigateur qui refuse : la page reste cachée */ } }
+</script>
 <title>Eaji — vidéos, musique, photos et créateurs rémunérés</title>
 <!-- Pour Google et les aperçus de liens (WhatsApp, Facebook…) -->
 <meta name="description" content="Eaji : vidéos, musique, photos, livres et lives de créateurs du monde entier. Crée ton compte gratuit, découvre les publications et gagne de l'argent avec les tiennes.">
@@ -518,6 +522,18 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
 .ai-tile .ai-ic{font-size:22px;}
 .ai-tile.ai-wide{grid-column:1 / -1;border-color:var(--gold);}
 #qa-free-btn{display:block;width:100%;text-align:left;white-space:normal;}
+.exp-att{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px;}
+.exp-att label,.exp-rpm label.mini-btn{cursor:pointer;}
+.exp-rpm{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px;margin:0 0 8px;}
+.exp-rpm-row{display:flex;gap:8px;margin:4px 0 8px;}
+.exp-rpm-row label{flex:1;font-size:12px;color:var(--muted);}
+.exp-rpm-row .field{margin:4px 0 0;padding:8px;}
+.exp-thumbs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px;}
+.exp-th{position:relative;}
+.exp-th img{width:54px;height:54px;object-fit:cover;border-radius:8px;display:block;}
+.exp-th button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:#000a;color:#fff;font-size:11px;cursor:pointer;}
+.exp-meas{font-size:12px;background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:4px 8px;}
+.exp-meas button{border:none;background:none;color:var(--muted);cursor:pointer;}
 .ai-tile b{font-size:13px;line-height:1.25;}
 .ai-tile small{font-size:11px;color:var(--muted);line-height:1.3;}
 .plan-btn .plan-cond{display:block;margin-top:4px;font-size:10.5px;color:var(--muted);line-height:1.3;}
@@ -1170,6 +1186,7 @@ window.eajiLoader = (function () {
       <button class="primary-btn" id="otp-btn" onclick="verifyLoginCode()">Valider et entrer</button>
       <button class="secondary-btn" id="otp-resend-btn" onclick="resendLoginCode()" style="margin-top:10px;">Recevoir un nouveau code</button>
       <p class="avatar-edit-label" style="margin-top:14px;"><span id="login-spam-hint">Pas re&ccedil;u par email ? Regarde aussi dans les spams. </span><a href="#" onclick="backToLogin();return false;" style="color:var(--teal);">&larr; Changer d'email ou de num&eacute;ro</a></p>
+      <p class="avatar-edit-label" style="margin-top:8px;font-size:12px;">🔒 Ne donne jamais ce code &agrave; personne, m&ecirc;me &agrave; quelqu'un qui dit &ecirc;tre de l'&eacute;quipe Eaji.</p>
     </div>
   </div>
 </div>
@@ -1220,6 +1237,8 @@ window.eajiLoader = (function () {
         <p class="hero-sub" style="margin:0 0 12px;">Notre agent IA : il répond à tes questions jour et nuit, fait tes montages et veille sur la sécurité de ton compte.</p>
         <div class="ai-grid">
           <button class="ai-tile ai-wide" onclick="openAiChat()"><span class="ai-ic">💬</span><b>Discuter avec Eajimmy AI</b><small>Toutes tes questions, même hors de l'application</small></button>
+          <button class="ai-tile ai-wide" onclick="openTalking()"><span class="ai-ic">🗣️</span><b>Photo qui parle</b><small>Ta vraie photo parle en lingala, français, swahili… avec des gestes d'orateur</small></button>
+          <button class="ai-tile ai-wide" onclick="openExpert()"><span class="ai-ic">🧠</span><b>Domaines experts</b><small>Santé, hydroélectricité, agriculture, technologie, recherche scientifique</small></button>
           <button class="ai-tile" onclick="openQa()"><span class="ai-ic">❓</span><b>Aide sur Eaji</b><small>Compte, paiements, connexion</small></button>
           <button class="ai-tile" onclick="openMontage('medias')"><span class="ai-ic">🎬</span><b>Montage photos et vidéos</b><small>Musique, voix off, textes</small></button>
           <button class="ai-tile" onclick="openMontage('texte_video')"><span class="ai-ic">📝</span><b>Texte en vidéo</b><small>Avec voix off et musique</small></button>
@@ -1414,6 +1433,7 @@ window.eajiLoader = (function () {
     <!-- PAIEMENTS -->
     <section class="screen" id="s-paiements">
       <div class="warn-banner" id="earn-warn" style="display:none;" role="alert"></div>
+      <div class="warn-banner level3" id="pay-sec" style="display:none;" role="alert"></div>
       <div class="balance-card">
         <p class="balance-label">Mes gains disponibles</p>
         <p class="balance-num num" id="balance-num">0</p>
@@ -1799,7 +1819,7 @@ window.eajiLoader = (function () {
 
 <script>
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.10.29b';
+const APP_VERSION = '2026.10.30d';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -2507,6 +2527,7 @@ async function uploadContent() {
   }
   // Marques laissées par les outils d'IA : cherchées dans le fichier d'origine (l'éditeur les efface).
   const aiMarkers = await aiMarkersOf(document.getElementById('up-file').files[0] || file);
+  if (EDITED && EDITED.aiMarker && !aiMarkers.includes(EDITED.aiMarker)) aiMarkers.push(EDITED.aiMarker); // photo qui parle : contenu IA
   const fingerprint = await fileFingerprint(file);
   const original = document.getElementById('up-file').files[0];
   const sourceFingerprint = original && original !== file ? await fileFingerprint(original) : null;
@@ -3496,12 +3517,14 @@ async function loadPayoutAccount() {
 async function savePayoutAccount() {
   const status = document.getElementById('payout-status');
   try {
-    await apiCall('/api/creators/me/payout-account', { method: 'PUT', body: {
+    const d = await apiCall('/api/creators/me/payout-account', { method: 'PUT', body: {
       method: document.getElementById('payout-method').value,
       operator: document.getElementById('payout-operator').value,
       accountNumber: document.getElementById('prof-withdrawal-phone').value,
     } });
-    status.textContent = 'Mode de retrait enregistré.';
+    status.textContent = d && d.holdHours
+      ? i18nF('Mode de retrait enregistré. Pour ta sécurité, les retraits seront envoyés seulement après {0} h.', d.holdHours)
+      : 'Mode de retrait enregistré.';
   } catch (e) { status.textContent = e.message; }
 }
 
@@ -3766,6 +3789,483 @@ async function aicSend() {
     inp.value = text;
     const err = document.createElement('div'); err.className = 'qa-msg bot'; err.textContent = e.message; log.appendChild(err); log.scrollTop = log.scrollHeight;
   } finally { btn.disabled = false; }
+}
+// ==== Eajimmy AI : domaines experts (santé, hydroélectricité, agriculture, technologie, recherche) ====
+// Photos et images tirées d'une vidéo envoyées à l'IA ; mesure des tours par minute sur une vidéo (calculée dans le téléphone).
+const EXP_DOMAINS = {
+  sante: { ic: '🩺', label: 'Santé', intro: 'Symptômes, maladies, examens, traitements, prévention. Tu peux joindre une photo.',
+    note: '⚕️ Ces informations ne remplacent pas un médecin. En cas d\'urgence, va tout de suite à l\'hôpital.',
+    ex: ['Mon enfant a de la fièvre depuis 3 jours et vomit : que faire ?', 'Explique-moi le paludisme grave et ses signes d\'alerte', 'Quels examens pour une fatigue qui dure depuis un mois ?'] },
+  hydro: { ic: '⚡', label: 'Hydroélectricité', intro: 'Turbines, débit, chute, puissance, alternateurs. Mesure les tours par minute avec une vidéo.',
+    ex: ['Quelle puissance avec un débit de 0,5 m³/s et une chute de 20 m ?', 'Ma turbine tourne à 750 tr/min : combien de pôles pour 50 Hz ?', 'Quelle turbine choisir pour une chute de 8 m ?'] },
+  agriculture: { ic: '🌱', label: 'Agriculture', intro: 'Maladies des plantes, ravageurs, sols, engrais, élevage. Joins des photos ou une vidéo de ton champ.',
+    ex: ['Les feuilles de mon manioc jaunissent et s\'enroulent : pourquoi ?', 'Comment améliorer un sol pauvre sans beaucoup d\'argent ?', 'Calendrier pour planter le maïs à Kinshasa'] },
+  technologie: { ic: '💡', label: 'Technologie', intro: 'Idées et solutions avancées et innovantes : logiciels, IA, énergie, électronique.',
+    ex: ['Une idée innovante pour l\'électricité solaire dans les villages', 'Comment construire une application de paiement mobile sécurisée ?', 'Propose un projet d\'IA utile pour les agriculteurs'] },
+  recherche: { ic: '🔬', label: 'Recherche scientifique', intro: 'Hypothèses, protocoles, statistiques, analyse des résultats, solutions avancées.',
+    ex: ['Aide-moi à construire le protocole de mon mémoire', 'Comment analyser mes résultats avec des statistiques ?', 'Quelles pistes de recherche sur l\'eau potable en RDC ?'] },
+};
+const EXP = { domain: 'sante', images: [], measure: null, msgs: [] };
+function expKey() { return 'eaji_exp_' + EXP.domain; }
+function expLoad() { try { EXP.msgs = JSON.parse(localStorage.getItem(expKey()) || '[]').slice(-30); } catch (e) { EXP.msgs = []; } }
+function expSave() { try { localStorage.setItem(expKey(), JSON.stringify(EXP.msgs.slice(-30))); } catch (e) { /* stockage indisponible */ } }
+function expRender() {
+  const d = EXP_DOMAINS[EXP.domain], log = document.getElementById('exp-log');
+  document.getElementById('exp-domains').innerHTML = Object.entries(EXP_DOMAINS).map(([id, x]) =>
+    `<button class="chip${id === EXP.domain ? ' sel' : ''}" onclick="expDomain('${id}')">${x.ic} ${escapeHtml(i18nT(x.label))}</button>`).join('');
+  document.getElementById('exp-intro').textContent = i18nT(d.intro);
+  const note = document.getElementById('exp-note');
+  note.textContent = d.note ? i18nT(d.note) : ''; note.style.display = d.note ? '' : 'none';
+  document.getElementById('exp-rpm-btn').style.display = EXP.domain === 'hydro' ? '' : 'none';
+  if (EXP.domain !== 'hydro') document.getElementById('exp-rpm').style.display = 'none';
+  log.innerHTML = EXP.msgs.length ? EXP.msgs.map((m) => `<div class="qa-msg ${m.role === 'user' ? 'me' : 'bot'}">${m.role === 'user' ? escapeHtml(m.text).replace(/\n/g, '<br>') : aicFormat(m.text)}</div>`).join('')
+    : `<div class="qa-msg bot">${escapeHtml(i18nF('{0} Pose ta question : je réponds comme un expert, étape par étape.', d.ic + ' ' + i18nT(d.label) + ' —'))}</div>`;
+  log.scrollTop = log.scrollHeight;
+  document.getElementById('exp-prompts').innerHTML = d.ex.map((p, i) => `<button class="qa-chip" onclick="expPrompt(${i})">${escapeHtml(i18nT(p))}</button>`).join('');
+  expThumbs();
+}
+async function openExpert(domain) {
+  if (!CREATOR_TOKEN) return showToast(i18nT("Connecte-toi d'abord."));
+  if (domain && EXP_DOMAINS[domain]) EXP.domain = domain;
+  document.getElementById('exp-sheet').style.display = 'flex';
+  document.getElementById('exp-plans').style.display = 'none';
+  expLoad(); expRender(); expStatus();
+}
+function closeExpert() { document.getElementById('exp-sheet').style.display = 'none'; }
+function expDomain(id) { EXP.domain = id; EXP.images = []; EXP.measure = null; document.getElementById('exp-rpm-res').textContent = ''; expLoad(); expRender(); }
+function expNew() { EXP.msgs = []; EXP.images = []; EXP.measure = null; expSave(); expRender(); }
+function expPrompt(i) { const inp = document.getElementById('exp-input'); inp.value = i18nT(EXP_DOMAINS[EXP.domain].ex[i]); inp.focus(); if (typeof growTa === 'function') growTa(inp); }
+async function expStatus(d) {
+  const el = document.getElementById('exp-left');
+  try {
+    d = d || await apiCall('/api/agent/expert/status');
+    el.textContent = !d.ai ? i18nT("Les domaines experts s'ouvriront bientôt : l'IA n'est pas encore activée par Eaji.")
+      : d.sub ? i18nT('✅ Abonnement Eajimmy AI : IA avancée, questions sans limite.')
+      : i18nF('Questions expertes gratuites aujourd\'hui : {0} / {1} (IA avancée et sans limite avec l\'abonnement Eajimmy AI).', d.left, d.daily);
+  } catch (e) { el.textContent = ''; }
+}
+// Photo réduite (1280 px au plus) en JPEG, prête pour l'IA.
+function expShrink(src, max = 1280) {
+  const w = src.videoWidth || src.naturalWidth || src.width, h = src.videoHeight || src.naturalHeight || src.height;
+  const k = Math.min(1, max / Math.max(w, h)), c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  const url = c.toDataURL('image/jpeg', 0.82);
+  return { type: 'image/jpeg', data: url.split(',')[1], url };
+}
+function expLoadImage(file) {
+  return new Promise((ok, ko) => { const im = new Image(); im.onload = () => { ok(expShrink(im)); URL.revokeObjectURL(im.src); }; im.onerror = () => ko(new Error(i18nT('Photo illisible.'))); im.src = URL.createObjectURL(file); });
+}
+function expVideo(file) {
+  return new Promise((ok, ko) => {
+    const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto';
+    v.onloadedmetadata = () => ok(v); v.onerror = () => ko(new Error(i18nT('Vidéo illisible sur ce téléphone.'))); v.src = URL.createObjectURL(file);
+  });
+}
+const expSeek = (v, t) => new Promise((ok) => { const f = () => { v.removeEventListener('seeked', f); ok(); }; v.addEventListener('seeked', f); v.currentTime = t; });
+async function expPhotos(input) {
+  for (const f of [...input.files].slice(0, 6 - EXP.images.length)) { try { EXP.images.push(await expLoadImage(f)); } catch (e) { showToast(e.message); } }
+  input.value = ''; expThumbs();
+}
+// Vidéo : 4 images prises à intervalles réguliers sont envoyées à l'IA.
+async function expVideoFrames(input) {
+  const f = input.files[0]; input.value = '';
+  if (!f) return;
+  const st = document.getElementById('exp-left'); st.textContent = i18nT('Préparation des images de la vidéo…');
+  try {
+    const v = await expVideo(f), dur = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : 4;
+    for (let i = 0; i < 4 && EXP.images.length < 6; i++) { await expSeek(v, Math.min(dur - 0.05, dur * (i + 0.5) / 4)); EXP.images.push(expShrink(v, 1024)); }
+    URL.revokeObjectURL(v.src);
+  } catch (e) { showToast(e.message); }
+  expThumbs(); expStatus();
+}
+function expThumbs() {
+  const box = document.getElementById('exp-thumbs');
+  box.innerHTML = EXP.images.map((im, i) => `<span class="exp-th"><img src="${im.url}" alt=""><button onclick="EXP.images.splice(${i}, 1); expThumbs()" aria-label="×">✕</button></span>`).join('')
+    + (EXP.measure ? `<span class="exp-meas">⏱️ ${escapeHtml(i18nF('{0} tr/min', expNum(EXP.measure.rpm, 1)))} <button onclick="EXP.measure = null; expThumbs()">✕</button></span>` : '');
+}
+async function expSend() {
+  const inp = document.getElementById('exp-input'), btn = document.getElementById('exp-send');
+  const text = inp.value.trim();
+  if (!text || btn.disabled) return;
+  const imgs = EXP.images.slice(), measure = EXP.measure;
+  const shown = text + (imgs.length ? `\n📷 ${i18nF('{0} image(s) jointe(s)', imgs.length)}` : '') + (measure ? `\n⏱️ ${i18nF('{0} tr/min', expNum(measure.rpm, 1))}` : '');
+  inp.value = ''; if (typeof growTa === 'function') growTa(inp);
+  EXP.msgs.push({ role: 'user', text: shown }); EXP.images = []; EXP.measure = null; expRender();
+  const log = document.getElementById('exp-log');
+  const wait = document.createElement('div'); wait.className = 'qa-msg bot'; wait.textContent = i18nT('Eajimmy AI analyse et réfléchit…'); log.appendChild(wait); log.scrollTop = log.scrollHeight;
+  btn.disabled = true;
+  try {
+    const d = await apiCall('/api/agent/expert', { method: 'POST', body: { domain: EXP.domain, messages: EXP.msgs.slice(-16), images: imgs.map(({ type, data }) => ({ type, data })), measure } });
+    EXP.msgs.push({ role: 'assistant', text: d.text }); expSave(); expRender();
+    expStatus({ ai: true, sub: d.sub, left: d.left, daily: d.daily });
+  } catch (e) {
+    EXP.msgs.pop(); expRender(); inp.value = text; EXP.images = imgs; EXP.measure = measure; expThumbs();
+    const err = document.createElement('div'); err.className = 'qa-msg bot'; err.textContent = e.message; log.appendChild(err); log.scrollTop = log.scrollHeight;
+    // Questions gratuites du jour utilisées : les formules de l'abonnement s'affichent.
+    try { const st = await apiCall('/api/agent/expert/status'); expStatus(st); if (st.ai && !st.sub && st.left <= 0) expShowPlans(); } catch (er) { /* hors ligne */ }
+  } finally { btn.disabled = false; }
+}
+async function expShowPlans() {
+  const box = document.getElementById('exp-plans');
+  try { const d = await apiCall('/api/montage/status'); box.innerHTML = mtPlansHtml(d.plans); box.style.display = ''; } catch (e) { /* hors ligne */ }
+}
+
+// ---- Tours par minute mesurés sur une vidéo ----
+// Un repère bien visible (ruban, peinture) sur la partie qui tourne : on suit la lumière d'une petite zone image
+// par image, puis on cherche la période qui se répète (autocorrélation). Tout se calcule dans le téléphone.
+const RPM = { file: null, v: null, zone: null };
+const expNum = (x, d) => Number(x).toLocaleString(I18N.lang || 'fr', { maximumFractionDigits: d, minimumFractionDigits: d });
+function expRpmOpen() { const b = document.getElementById('exp-rpm'); b.style.display = b.style.display === 'none' ? '' : 'none'; }
+async function expRpmFile(input) {
+  RPM.file = input.files[0]; input.value = '';
+  if (!RPM.file) return;
+  try {
+    RPM.v = await expVideo(RPM.file);
+    await expSeek(RPM.v, Math.min(0.2, (RPM.v.duration || 1) / 2));
+    const c = document.getElementById('exp-rpm-cv'), w = Math.min(320, RPM.v.videoWidth), h = Math.round(w * RPM.v.videoHeight / RPM.v.videoWidth);
+    c.width = w; c.height = h; c.style.display = '';
+    RPM.zone = { x: 0.5, y: 0.5 };
+    expRpmDraw();
+    document.getElementById('exp-rpm-res').textContent = i18nT('Touche l\'image à l\'endroit où passe le repère, puis appuie sur « Mesurer ».');
+  } catch (e) { showToast(e.message); }
+}
+function expRpmDraw() {
+  const c = document.getElementById('exp-rpm-cv'), g = c.getContext('2d');
+  g.drawImage(RPM.v, 0, 0, c.width, c.height);
+  const r = Math.max(8, c.width * 0.06);
+  g.strokeStyle = '#ff3b30'; g.lineWidth = 3; g.strokeRect(RPM.zone.x * c.width - r, RPM.zone.y * c.height - r, 2 * r, 2 * r);
+}
+function expRpmTap(ev) {
+  if (!RPM.v) return;
+  const c = ev.currentTarget, b = c.getBoundingClientRect();
+  RPM.zone = { x: Math.min(1, Math.max(0, (ev.clientX - b.left) / b.width)), y: Math.min(1, Math.max(0, (ev.clientY - b.top) / b.height)) };
+  expRpmDraw();
+}
+// Lumière moyenne de la zone choisie pour chaque image de la vidéo (au plus 20 secondes).
+function expRpmSignal(v, zone) {
+  return new Promise((ok, ko) => {
+    const W = 160, H = Math.max(1, Math.round(W * v.videoHeight / v.videoWidth)), c = document.createElement('canvas');
+    c.width = W; c.height = H; const g = c.getContext('2d', { willReadFrequently: true });
+    const r = Math.max(3, Math.round(W * 0.06)), x0 = Math.max(0, Math.round(zone.x * W - r)), y0 = Math.max(0, Math.round(zone.y * H - r));
+    const sw = Math.min(2 * r, W - x0), sh = Math.min(2 * r, H - y0), t = [], s = [];
+    const grab = (time) => {
+      g.drawImage(v, 0, 0, W, H);
+      const px = g.getImageData(x0, y0, sw, sh).data; let sum = 0;
+      for (let i = 0; i < px.length; i += 4) sum += px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114;
+      t.push(time); s.push(sum / (px.length / 4));
+    };
+    const end = Math.min(v.duration || 20, 20);
+    if (typeof v.requestVideoFrameCallback === 'function') {
+      const step = (now, meta) => {
+        grab(meta.mediaTime);
+        if (meta.mediaTime >= end - 0.02 || v.ended) { v.pause(); ok({ t, s }); return; }
+        v.requestVideoFrameCallback(step);
+      };
+      v.onended = () => ok({ t, s });
+      v.currentTime = 0; v.playbackRate = 1;
+      v.requestVideoFrameCallback(step);
+      v.play().catch(ko);
+    } else {
+      (async () => { for (let time = 0; time < end; time += 1 / 30) { await expSeek(v, time); grab(time); } ok({ t, s }); })().catch(ko);
+    }
+  });
+}
+// Période qui se répète dans le signal : autocorrélation (avec interpolation pour plus de précision).
+function rpmFromSignal(t, s, marks, slow) {
+  if (s.length < 20) return null;
+  const dts = t.slice(1).map((x, i) => x - t[i]).filter((d) => d > 0).sort((a, b) => a - b);
+  const med = dts[Math.floor(dts.length / 2)] || 1 / 30, avg = (t[t.length - 1] - t[0]) / (t.length - 1);
+  const dt = Math.abs(avg - med) / med < 0.1 ? avg : med, fps = 1 / dt; // images régulières : moyenne (plus précise)
+  const n = Math.floor((t[t.length - 1] - t[0]) / dt) + 1, u = new Array(n);
+  for (let i = 0, j = 0; i < n; i++) { const tt = t[0] + i * dt; while (j < t.length - 2 && t[j + 1] < tt) j++; const a = t[j], b = t[j + 1] || a + dt; const k = b > a ? Math.min(1, Math.max(0, (tt - a) / (b - a))) : 0; u[i] = s[j] + (s[j + 1] - s[j]) * k || s[j]; }
+  const mean = u.reduce((a, b) => a + b, 0) / n, x = u.map((v) => v - mean);
+  const e0 = x.reduce((a, b) => a + b * b, 0);
+  if (e0 < 1e-6 * n) return { error: 'flat' };
+  const ac = [1]; for (let lag = 1; lag < Math.floor(n / 2); lag++) { let sum = 0; for (let i = 0; i + lag < n; i++) sum += x[i] * x[i + lag]; ac.push(sum / e0 * n / (n - lag)); }
+  let lag = 1; while (lag < ac.length && ac[lag] > 0) lag++; // passer le premier creux
+  let best = -1, bi = -1;
+  for (let i = lag; i < ac.length - 1; i++) if (ac[i] > ac[i - 1] && ac[i] >= ac[i + 1] && ac[i] > best) { best = ac[i]; bi = i; if (best > 0.6) break; }
+  if (bi < 2) return { error: 'noperiod', fps };
+  const y1 = ac[bi - 1], y2 = ac[bi], y3 = ac[bi + 1], den = y1 - 2 * y2 + y3, off = den ? 0.5 * (y1 - y3) / den : 0;
+  const period = (bi + off) * dt, hz = 1 / period;
+  return { hz, rpm: 60 * hz * slow / marks, fps, marks, slow, confidence: Math.max(0, Math.min(1, best)), maxRpm: 60 * (fps / 2) * slow / marks };
+}
+async function expRpmMeasure() {
+  const res = document.getElementById('exp-rpm-res');
+  if (!RPM.v) { res.textContent = i18nT('Choisis d\'abord une vidéo.'); return; }
+  const marks = Math.max(1, Math.round(Number(document.getElementById('exp-rpm-marks').value) || 1)), slow = Number(document.getElementById('exp-rpm-slow').value) || 1;
+  res.textContent = i18nT('Mesure en cours : la vidéo est lue une fois…');
+  try {
+    const { t, s } = await expRpmSignal(RPM.v, RPM.zone);
+    const r = rpmFromSignal(t, s, marks, slow);
+    if (!r || r.error) {
+      res.textContent = i18nT('Mesure impossible : place un repère bien visible (ruban blanc) sur la partie qui tourne, filme sans bouger, bien éclairé, puis touche l\'endroit où passe le repère.');
+      return;
+    }
+    EXP.measure = { rpm: Math.round(r.rpm * 10) / 10, hz: r.hz, marks, slow, fps: r.fps, confidence: r.confidence, maxRpm: r.maxRpm };
+    res.textContent = i18nF('⏱️ Environ {0} tr/min ({1} passages par seconde). Fiabilité : {2} %. Avec cette vidéo, on peut mesurer jusqu\'à environ {3} tr/min ; au-delà, filme au ralenti.',
+      expNum(r.rpm, 1), expNum(r.hz, 2), Math.round(r.confidence * 100), expNum(Math.round(r.maxRpm), 0))
+      + (r.confidence < 0.4 ? ' ' + i18nT('Mesure peu sûre : refais la vidéo avec un repère plus visible.') : '')
+      + ' ' + i18nT('La mesure est jointe à ta prochaine question.');
+    expThumbs();
+  } catch (e) { res.textContent = e.message; }
+}
+// ==== Eajimmy AI : photo qui parle ====
+// La vraie photo (jamais retouchée) parle : voix automatique, voix de la personne ou fichier audio, lèvres et tête
+// animées au rythme de la voix, sous-titres. Animation faite dans le téléphone ; version « réaliste » (lèvres
+// synchronisées par un service spécialisé) avec l'abonnement Eajimmy AI.
+const TP_LANGS = [['fr', 'Français'], ['ln', 'Lingala'], ['sw', 'Swahili'], ['en', 'Anglais'], ['pt', 'Portugais'], ['es', 'Espagnol'],
+  ['ar', 'Arabe'], ['de', 'Allemand'], ['ru', 'Russe'], ['hi', 'Hindi'], ['zh', 'Chinois']];
+const TP_PIPER = { fr: ['fr_FR-siwis-low', 'fr_FR-gilles-low'], sw: ['sw_CD-lanfrica-medium', 'sw_CD-lanfrica-medium'], en: ['en_US-amy-low', 'en_US-ryan-low'],
+  pt: ['pt_BR-edresson-low', 'pt_BR-edresson-low'], es: ['es_ES-carlfm-x_low', 'es_ES-carlfm-x_low'], ar: ['ar_JO-kareem-low', 'ar_JO-kareem-low'] };
+const TP = { file: null, img: null, mouth: { x: 0.5, y: 0.66 }, faceW: 0, audio: null, rec: null, status: null, mode: 'appli', result: null, busy: false };
+const tpEl = (id) => document.getElementById(id);
+async function openTalking() {
+  if (!CREATOR_TOKEN) return showToast(i18nT("Connecte-toi d'abord."));
+  tpEl('tp-sheet').style.display = 'flex';
+  const sel = tpEl('tp-lang');
+  if (!sel.options.length) {
+    sel.innerHTML = TP_LANGS.map(([k, l]) => `<option value="${k}">${escapeHtml(i18nT(l))}</option>`).join('');
+    sel.value = TP_LANGS.some(([k]) => k === I18N.lang) ? I18N.lang : 'fr';
+  }
+  tpEl('tp-plans').style.display = 'none';
+  tpVoiceChanged();
+  tpStatus();
+}
+function closeTalking() { if (!TP.busy) tpEl('tp-sheet').style.display = 'none'; }
+async function tpStatus() {
+  try {
+    const d = TP.status = await apiCall('/api/agent/talking/status');
+    tpEl('tp-left').textContent = d.sub ? i18nT('✅ Abonnement Eajimmy AI : photos qui parlent sans limite, jusqu\'à 3 minutes.')
+      : i18nF('Photos qui parlent gratuites aujourd\'hui : {0} / {1} (1 minute chacune ; sans limite et jusqu\'à 3 minutes avec l\'abonnement Eajimmy AI).', d.free.left, d.free.daily);
+    tpEl('tp-modes').innerHTML = `<button class="chip${TP.mode === 'appli' ? ' sel' : ''}" onclick="tpMode('appli')">${escapeHtml(i18nT('✨ Animation'))}</button>`
+      + (d.realistic.available ? `<button class="chip${TP.mode === 'realiste' ? ' sel' : ''}" onclick="tpMode('realiste')">${escapeHtml(i18nT('🎯 Réaliste (lèvres synchronisées)'))}${d.sub ? '' : ' 🔒'}</button>` : '');
+    tpEl('tp-mode-note').textContent = TP.mode === 'realiste'
+      ? (d.sub ? i18nF('Version réaliste : {0} / {1} aujourd\'hui. Création en 1 à 2 minutes.', d.realistic.left, d.realistic.daily) : i18nT('La version réaliste est réservée à l\'abonnement Eajimmy AI.'))
+      : i18nT('Animation : la photo bouge la tête et les lèvres au rythme de la voix (faite dans ton téléphone).');
+  } catch (e) { tpEl('tp-left').textContent = e.message; }
+}
+function tpMode(m) { TP.mode = m; tpStatus(); tpVoiceChanged(); }
+function tpVoiceChanged() {
+  const src = tpEl('tp-voice').value, lang = tpEl('tp-lang').value;
+  tpEl('tp-mic-box').style.display = src === 'micro' ? '' : 'none';
+  tpEl('tp-audio-file').style.display = src === 'fichier' ? '' : 'none';
+  tpEl('tp-gender').style.display = src === 'auto' ? '' : 'none';
+  const noFree = src === 'auto' && TP.mode === 'appli' && !TP_PIPER[lang];
+  const noLn = src === 'auto' && TP.mode === 'realiste' && lang === 'ln' && TP.status && !TP.status.lingala;
+  tpEl('tp-voice-note').textContent = noFree || noLn
+    ? i18nT('Pas encore de voix automatique pour cette langue ici : choisis « 🎤 Ma voix » et parle dans cette langue.') : '';
+}
+// Bouche trouvée automatiquement quand le téléphone sait détecter les visages ; sinon on touche la bouche.
+async function tpPhoto(input) {
+  const f = input.files[0]; input.value = '';
+  if (!f) return;
+  try {
+    const img = await new Promise((ok, ko) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => ko(new Error(i18nT('Photo illisible.'))); im.src = URL.createObjectURL(f); });
+    TP.file = f; TP.img = img; TP.mouth = { x: 0.5, y: 0.66 }; TP.faceW = 0;
+    let found = false;
+    if ('FaceDetector' in window) {
+      try {
+        const faces = await new window.FaceDetector({ fastMode: true, maxDetectedFaces: 1 }).detect(img);
+        const fc = faces && faces[0];
+        if (fc) {
+          const m = (fc.landmarks || []).find((l) => l.type === 'mouth');
+          const b = fc.boundingBox;
+          TP.mouth = m && m.locations && m.locations[0] ? { x: m.locations[0].x / img.naturalWidth, y: m.locations[0].y / img.naturalHeight }
+            : { x: (b.x + b.width / 2) / img.naturalWidth, y: (b.y + b.height * 0.78) / img.naturalHeight };
+          TP.faceW = b.width / img.naturalWidth; found = true;
+        }
+      } catch (e) { /* détection indisponible */ }
+    }
+    tpEl('tp-cv').style.display = '';
+    tpDraw();
+    tpEl('tp-photo-note').textContent = found ? i18nT('Visage trouvé. Si le carré rouge n\'est pas sur la bouche, touche la bouche.') : i18nT('Touche la bouche sur la photo (carré rouge) pour animer les lèvres.');
+  } catch (e) { showToast(e.message); }
+}
+function tpDraw() {
+  const c = tpEl('tp-cv'), img = TP.img; if (!img) return;
+  c.width = Math.min(320, img.naturalWidth); c.height = Math.round(c.width * img.naturalHeight / img.naturalWidth);
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0, c.width, c.height);
+  const r = Math.max(8, c.width * (TP.faceW ? TP.faceW * 0.25 : 0.07));
+  g.strokeStyle = '#ff3b30'; g.lineWidth = 3; g.strokeRect(TP.mouth.x * c.width - r, TP.mouth.y * c.height - r * 0.6, 2 * r, 1.2 * r);
+}
+function tpTap(ev) {
+  if (!TP.img) return;
+  const b = ev.currentTarget.getBoundingClientRect();
+  TP.mouth = { x: Math.min(1, Math.max(0, (ev.clientX - b.left) / b.width)), y: Math.min(1, Math.max(0, (ev.clientY - b.top) / b.height)) };
+  tpDraw();
+}
+async function tpMic() {
+  const btn = tpEl('tp-mic-btn');
+  if (TP.rec) { TP.rec.stop(); return; }
+  let mic;
+  try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch (e) { showToast(i18nT('Autorise le micro pour enregistrer ta voix.')); return; }
+  const mime = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find((m) => MediaRecorder.isTypeSupported(m)) || '';
+  const rec = new MediaRecorder(mic, mime ? { mimeType: mime } : {}), chunks = [], t0 = Date.now();
+  rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+  rec.onstop = () => {
+    mic.getTracks().forEach((t) => t.stop()); TP.rec = null;
+    TP.audio = { blob: new Blob(chunks, { type: rec.mimeType || 'audio/webm' }), name: 'voix.webm' };
+    btn.textContent = i18nT('🎤 Enregistrer de nouveau');
+    tpEl('tp-mic-note').textContent = i18nF('🎤 Voix enregistrée ({0} s).', Math.round((Date.now() - t0) / 1000));
+  };
+  TP.rec = rec; rec.start(500);
+  btn.textContent = i18nT('⏹️ Arrêter l\'enregistrement');
+  tpEl('tp-mic-note').textContent = i18nT('Enregistrement… parle maintenant.');
+}
+function tpAudioFile(input) { const f = input.files[0]; if (f) TP.audio = { blob: f, name: f.name || 'voix.mp3' }; }
+// Voix automatique gratuite (Piper, dans le téléphone) : le texte est lu morceau par morceau.
+async function tpTts(ac, text, lang, male, onP) {
+  const voiceId = TP_PIPER[lang][male ? 1 : 0], parts = mtSplit(text, 80), bufs = [];
+  for (let i = 0; i < parts.length; i++) { onP(i, parts.length); bufs.push(await mtVoice(ac, parts[i], voiceId, () => {})); }
+  const gap = Math.round(ac.sampleRate * 0.25), len = bufs.reduce((a, b) => a + b.length + gap, 0);
+  const out = ac.createBuffer(1, Math.max(1, len), ac.sampleRate), d = out.getChannelData(0);
+  let pos = 0; bufs.forEach((b) => { d.set(b.getChannelData(0), pos); pos += b.length + gap; });
+  return out;
+}
+// Force de la voix image par image (0 à 1) : sert à ouvrir la bouche et à bouger la tête.
+function tpEnvelope(buf, fps) {
+  const d = buf.getChannelData(0), step = Math.round(buf.sampleRate / fps), n = Math.ceil(d.length / step), env = new Float32Array(n);
+  for (let i = 0; i < n; i++) { let s = 0; const a = i * step, b = Math.min(d.length, a + step); for (let j = a; j < b; j++) s += d[j] * d[j]; env[i] = Math.sqrt(s / Math.max(1, b - a)); }
+  const sorted = Array.from(env).sort((x, y) => x - y), ref = sorted[Math.floor(n * 0.95)] || 1e-6;
+  let sm = 0; for (let i = 0; i < n; i++) { const v = Math.min(1, env[i] / ref); sm = v > sm ? sm + (v - sm) * 0.6 : sm + (v - sm) * 0.35; env[i] = sm < 0.08 ? 0 : sm; }
+  return env;
+}
+function tpFrame(g, img, W, H, t, e, orator, subs, sub) {
+  const sx = img.naturalWidth / W, sy = img.naturalHeight / H, mx = TP.mouth.x * W, my = TP.mouth.y * H;
+  const k = orator ? 1 : 0.45;
+  const angle = 0.01 * Math.sin(t * 2.1) + k * 0.025 * e * Math.sin(t * 9.5);
+  const sc = 1.03 + 0.012 * Math.sin(t * 1.3) + k * 0.012 * e, nod = k * H * 0.008 * e * Math.sin(t * 7.3);
+  g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+  g.save();
+  g.translate(mx, my + H * 0.15); g.rotate(angle); g.scale(sc, sc); g.translate(-mx, -(my + H * 0.15) + nod);
+  g.drawImage(img, 0, 0, W, H);
+  const mw = Math.max(W * 0.1, (TP.faceW || 0.34) * W * 0.42), mh = mw * 0.45, open = e * mh * 0.42;
+  if (open > 0.6) {
+    g.save(); g.beginPath(); g.ellipse(mx, my + open * 0.45, mw * 0.4, open * 0.55 + 1, 0, 0, Math.PI * 2); g.clip();
+    const gr = g.createLinearGradient(0, my, 0, my + open); gr.addColorStop(0, '#2a0b0b'); gr.addColorStop(1, '#4a1616');
+    g.fillStyle = gr; g.fillRect(mx - mw, my - 2, 2 * mw, open + 4); g.restore();
+    // La lèvre du bas et le menton descendent avec la voix.
+    g.save(); g.beginPath(); g.ellipse(mx, my + open + mh * 0.3, mw * 0.5, mh * 0.5, 0, 0, Math.PI * 2); g.clip();
+    g.drawImage(img, (mx - mw) * sx, my * sy, 2 * mw * sx, mh * sy, mx - mw, my + open, 2 * mw, mh); g.restore();
+  }
+  g.restore();
+  if (subs && sub) mtCaption(g, W, H, sub);
+  g.save(); g.font = `700 ${Math.round(Math.max(12, W * 0.028))}px system-ui,sans-serif`; g.textAlign = 'right'; g.textBaseline = 'top';
+  g.fillStyle = 'rgba(0,0,0,.45)'; g.fillText('🤖 Eajimmy AI', W - 9, 11); g.fillStyle = 'rgba(255,255,255,.85)'; g.fillText('🤖 Eajimmy AI', W - 10, 10); g.restore();
+}
+async function tpGo() {
+  if (TP.busy) return;
+  const err = tpEl('tp-error'), prog = tpEl('tp-progress');
+  err.style.display = 'none';
+  const fail = (m) => { err.textContent = m; err.style.display = 'block'; prog.textContent = ''; };
+  if (!TP.img) return fail(i18nT('Choisis d\'abord une photo.'));
+  if (!tpEl('tp-consent').checked) return fail(i18nT("Confirme que c'est ta photo, ou que la personne a donné son accord."));
+  const src = tpEl('tp-voice').value, lang = tpEl('tp-lang').value, text = tpEl('tp-text').value.trim(), male = tpEl('tp-gender').value === 'homme';
+  if (src === 'auto' && !text) return fail(i18nT('Écris ce que la photo doit dire.'));
+  if (src !== 'auto' && !TP.audio) return fail(src === 'micro' ? i18nT('Enregistre d\'abord ta voix.') : i18nT('Choisis d\'abord le fichier audio.'));
+  if (TP.mode === 'realiste') return tpRealistic(src, lang, text, male, fail);
+  if (src === 'auto' && !TP_PIPER[lang]) return fail(i18nT('Pas encore de voix automatique pour cette langue ici : choisis « 🎤 Ma voix » et parle dans cette langue.'));
+  const mime = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find((m) => window.MediaRecorder && MediaRecorder.isTypeSupported(m));
+  if (!mime || !HTMLCanvasElement.prototype.captureStream) return fail(i18nT("Ton téléphone ne permet pas de créer la vidéo. Mets à jour ton navigateur (Chrome)."));
+  TP.busy = true; tpEl('tp-go').disabled = true;
+  const ac = new (window.AudioContext || window.webkitAudioContext)();
+  try {
+    prog.textContent = i18nT('Préparation de la voix…');
+    const buf = src === 'auto'
+      ? await tpTts(ac, text, lang, male, (i, n) => { prog.textContent = i18nF('Préparation de la voix… {0} / {1}', i + 1, n); })
+      : await ac.decodeAudioData(await TP.audio.blob.arrayBuffer());
+    const maxSec = TP.status && TP.status.sub ? 180 : 60;
+    if (buf.duration > maxSec + 0.5) throw new Error(i18nF('Trop long : {0} secondes au maximum (3 minutes avec l\'abonnement Eajimmy AI).', maxSec));
+    await apiCall('/api/agent/talking/start', { method: 'POST', body: {} });
+    const fps = 30, env = tpEnvelope(buf, fps), total = buf.duration + 0.8;
+    const big = Math.max(TP.img.naturalWidth, TP.img.naturalHeight), k = Math.min(1, 720 / big);
+    const W = Math.round(TP.img.naturalWidth * k / 2) * 2, H = Math.round(TP.img.naturalHeight * k / 2) * 2;
+    const canvas = tpEl('tp-render'); canvas.width = W; canvas.height = H; canvas.style.display = 'block';
+    tpEl('tp-result').style.display = 'none'; tpEl('tp-use').style.display = 'none';
+    const g = canvas.getContext('2d'), orator = tpEl('tp-style').value === 'orateur', subsOn = tpEl('tp-subs').checked && text;
+    const parts = subsOn ? mtSplit(text, 60) : [], lens = parts.map((p) => p.length), sum = lens.reduce((a, b) => a + b, 0) || 1;
+    let acc = 0; const times = lens.map((l) => { const a = acc; acc += l / sum * buf.duration; return [a, acc]; });
+    const dest = ac.createMediaStreamDestination(), node = ac.createBufferSource(); node.buffer = buf; node.connect(dest);
+    const stream = new MediaStream([canvas.captureStream(fps).getVideoTracks()[0], ...dest.stream.getAudioTracks()]);
+    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 2500000, audioBitsPerSecond: 128000 });
+    const chunks = []; rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    const stopped = new Promise((r) => { rec.onstop = r; });
+    tpFrame(g, TP.img, W, H, 0, 0, orator, false, '');
+    rec.start(1000);
+    const now0 = performance.now(); node.start(ac.currentTime + 0.3);
+    await new Promise((resolve) => {
+      const loop = () => {
+        const tt = (performance.now() - now0) / 1000, ta = tt - 0.3;
+        if (tt >= total) return resolve();
+        const e = ta >= 0 ? env[Math.min(env.length - 1, Math.floor(ta * fps))] || 0 : 0;
+        const si = times.findIndex(([a, b]) => ta >= a && ta < b);
+        tpFrame(g, TP.img, W, H, tt, e, orator, subsOn, si >= 0 ? parts[si] : '');
+        prog.textContent = i18nF('Création de la vidéo… {0} % — garde l\'écran allumé.', Math.min(99, Math.round(tt / total * 100)));
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+    });
+    rec.stop(); await stopped;
+    stream.getTracks().forEach((tr) => tr.stop());
+    const type = mime.split(';')[0];
+    let blob = new Blob(chunks, { type });
+    if (type === 'video/webm') blob = await fixWebmDuration(blob, total * 1000);
+    tpShow(new File([blob], `eaji-photo-qui-parle.${type === 'video/mp4' ? 'mp4' : 'webm'}`, { type }), Math.round(total));
+    canvas.style.display = 'none';
+  } catch (e) {
+    fail(e.message || i18nT('La vidéo n\'a pas pu être créée.'));
+    if (/abonnement Eajimmy AI|Eajimmy AI/.test(e.message || '')) tpShowPlans();
+  } finally { ac.close().catch(() => {}); TP.busy = false; tpEl('tp-go').disabled = false; tpStatus(); }
+}
+function tpShow(file, duration) {
+  TP.result = { file, duration };
+  const v = tpEl('tp-result'); v.src = URL.createObjectURL(file); v.style.display = 'block';
+  tpEl('tp-use').style.display = '';
+  const a = tpEl('tp-download'); a.href = v.src; a.download = file.name; a.style.display = '';
+  tpEl('tp-progress').textContent = i18nT('✅ Ta photo qui parle est prête.');
+}
+async function tpShowPlans() {
+  try { const d = await apiCall('/api/montage/status'); tpEl('tp-plans').innerHTML = mtPlansHtml(d.plans); tpEl('tp-plans').style.display = ''; } catch (e) { /* hors ligne */ }
+}
+// Version réaliste : la photo d'origine (et la voix enregistrée) sont envoyées, le service crée la vidéo en 1 à 2 minutes.
+async function tpRealistic(src, lang, text, male, fail) {
+  const prog = tpEl('tp-progress');
+  if (!TP.status || !TP.status.sub) { tpShowPlans(); return fail(i18nT('La version réaliste est réservée à l\'abonnement Eajimmy AI.')); }
+  TP.busy = true; tpEl('tp-go').disabled = true;
+  try {
+    prog.textContent = i18nT('Envoi de la photo…');
+    const photoKey = await uploadPrivate(TP.file, 'photo-qui-parle.' + ((TP.file.name || '').split('.').pop() || 'jpg'));
+    const audioKey = src === 'auto' ? null : await uploadPrivate(new File([TP.audio.blob], TP.audio.name, { type: TP.audio.blob.type || 'audio/webm' }), TP.audio.name);
+    const d = await apiCall('/api/agent/talking/realistic', { method: 'POST', body: { photoKey, audioKey, text, lang, voice: male ? 'homme' : 'femme', consent: true } });
+    const t0 = Date.now();
+    for (;;) {
+      prog.textContent = i18nF('Création réaliste en cours… {0} s (1 à 2 minutes).', Math.round((Date.now() - t0) / 1000));
+      await new Promise((r) => setTimeout(r, window.__eajiFast ? 300 : 4000));
+      const s = await apiCall(`/api/agent/talking/${d.id}`);
+      if (s.status === 'echec') throw new Error(s.error);
+      if (s.status === 'pret') break;
+      if (Date.now() - t0 > 6 * 60 * 1000) throw new Error(i18nT('La création prend trop de temps. Réessaie plus tard.'));
+    }
+    const r = await fetch(`${API_BASE_URL}/api/agent/talking/${d.id}/video`, { headers: { Authorization: `Bearer ${CREATOR_TOKEN}`, 'X-Eaji-Device': eajiDeviceId() } });
+    if (!r.ok) throw new Error(i18nT('Vidéo indisponible pour le moment.'));
+    const blob = await r.blob();
+    const dur = await new Promise((ok) => { const v = document.createElement('video'); v.preload = 'metadata'; v.onloadedmetadata = () => ok(Number.isFinite(v.duration) ? v.duration : 0); v.onerror = () => ok(0); v.src = URL.createObjectURL(blob); });
+    tpShow(new File([blob], 'eaji-photo-qui-parle.mp4', { type: 'video/mp4' }), Math.round(dur));
+  } catch (e) { fail(e.message); } finally { TP.busy = false; tpEl('tp-go').disabled = false; tpStatus(); }
+}
+// Publier : vidéo courte marquée « créée par IA » (non rémunérée, comme tout contenu IA).
+function tpUse() {
+  if (!TP.result) return;
+  EDITED = { file: TP.result.file, duration: TP.result.duration, summary: i18nT('Photo qui parle (Eajimmy AI)'), soundId: null, aiMarker: 'Photo qui parle — Eajimmy AI' };
+  document.querySelector('.tab[data-target="s-contenu"]')?.click();
+  const type = document.getElementById('up-type');
+  if (type.value !== 'video_courte') { type.value = 'video_courte'; type.dispatchEvent(new Event('change')); }
+  refreshEditButton();
+  tpEl('tp-sheet').style.display = 'none';
+  showToast(i18nT('🗣️ Photo qui parle prête : écris le titre puis appuie sur « Publier ».'));
 }
 function qaEscalateOffer(loggedIn) {
   const log = document.getElementById('qa-log');
@@ -4493,6 +4993,36 @@ function renderWarnings(list) {
   el.innerHTML = `<div>${escapeHtml(w.message)}</div><button class="mini-btn" onclick="readWarnings()">${escapeHtml(i18nT('J\'ai compris'))}</button>`;
   el.style.display = 'block';
 }
+// Sécurité des retraits : numéro de retrait changé ou retrait en attente → « Ce n'est pas moi ».
+function fmtWhen(d) { return new Date(d).toLocaleString(I18N.lang || 'fr', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }); }
+function renderPaySecurity(sec) {
+  const box = document.getElementById('pay-sec');
+  if (!box) return;
+  if (!sec) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const lines = [];
+  if (sec.payoutChangedAt) lines.push(escapeHtml(i18nF('🔐 Ton numéro de retrait a été changé le {0} (nouveau : {1}).', fmtWhen(sec.payoutChangedAt), sec.newAccount || '')));
+  (sec.held || []).forEach((w) => lines.push(escapeHtml(i18nF('⏳ Retrait de {0} en attente de sécurité : il sera envoyé après le {1}.', formatMoney(w.netUsd, 'USD'), fmtWhen(w.until)))));
+  box.innerHTML = `<b>${escapeHtml(i18nT('Sécurité de tes retraits'))}</b><br>${lines.join('<br>')}<br>`
+    + (sec.canCancel
+      ? `${escapeHtml(i18nT("Ce n'est pas toi ? Appuie ici : l'ancien numéro revient, le retrait est bloqué (l'argent reste sur ton compte) et les appareils connectés récemment sont déconnectés."))}<br><button class="mini-btn" id="pay-sec-cancel" style="background:#8A1C1C;color:#fff;border-color:#8A1C1C;font-weight:700;" onclick="paySecurityCancel()">${escapeHtml(i18nT("🚫 Ce n'est pas moi"))}</button>`
+      : escapeHtml(i18nT("Si ce n'est pas toi, appuie sur « Ce n'est pas moi » depuis ton téléphone habituel, ou écris à l'équipe Eaji.")));
+  box.style.display = 'block';
+}
+async function paySecurityCancel() {
+  const btn = document.getElementById('pay-sec-cancel');
+  if (btn) btn.disabled = true;
+  try {
+    const d = await apiCall('/api/payouts/security-cancel', { method: 'POST', body: {} });
+    const parts = [i18nT("C'est annulé.")];
+    if (d.restored) parts.push(i18nT('Ton ancien numéro de retrait est remis.'));
+    if (d.refused) parts.push(i18nF("{0} retrait(s) bloqué(s) : l'argent reste sur ton compte.", d.refused));
+    if (d.disconnected) parts.push(i18nF('{0} appareil(s) déconnecté(s).', d.disconnected));
+    parts.push(i18nT('Change ton mot de passe maintenant (Profil → Sécurité).'));
+    document.getElementById('pay-sec').innerHTML = `<b>${escapeHtml(i18nT('Sécurité de tes retraits'))}</b><br>${escapeHtml(parts.join(' '))}`;
+    loadPayoutAccount();
+    setTimeout(loadMoney, 4000);
+  } catch (e) { if (btn) btn.disabled = false; showToast(e.message); }
+}
 async function readWarnings() {
   document.getElementById('earn-warn').style.display = 'none';
   try { await apiCall('/api/warnings/read', { method: 'POST', body: {} }); } catch (e) { /* réessayé à la prochaine ouverture */ }
@@ -4512,6 +5042,7 @@ async function loadMoney() {
       || `<p class="feed-empty">${escapeHtml(i18nT('Aucun gain pour le moment. Chaque vente, vidéo payante ou cadeau apparaît ici le jour même.'))}</p>`;
     renderPending(e);
     renderWarnings(e.warnings || []);
+    renderPaySecurity(e.security);
     document.getElementById('earn-contents').innerHTML = (e.byContent || []).map((c) => `<div class="tx-row"><div><div class="tx-name" translate="no">${escapeHtml(c.title || '')}</div><div class="tx-date">${escapeHtml(i18nF('{0} paiement(s)', c.count))}</div></div><div class="tx-amt">+${escapeHtml(formatMoney(c.amount, 'USD'))}</div></div>`).join('')
       || `<p class="feed-empty">${escapeHtml(i18nT('Aucun gain pour le moment.'))}</p>`;
     document.getElementById('balance-num').textContent = formatMoney(e.availableLocal.amount, e.availableLocal.currency);
@@ -4519,7 +5050,7 @@ async function loadMoney() {
     const hist = document.getElementById('earn-history');
     const rows = [
       ...e.history.map((h) => ({ date: h.created_at, html: `<div class="tx-row"><div><div class="tx-name">${escapeHtml(EARNING_SOURCES[h.source] || h.source)}</div><div class="tx-date">${new Date(h.created_at).toLocaleDateString('fr-FR')}</div></div><div class="tx-amt"${Number(h.amount_usd) < 0 ? ' style="color:var(--coral);"' : ''}>${Number(h.amount_usd) < 0 ? '−' + escapeHtml(formatMoney(-Number(h.amount_usd), 'USD')) : '+' + escapeHtml(formatMoney(h.amount_usd, 'USD'))}</div></div>` })),
-      ...e.withdrawals.map((w) => ({ date: w.created_at, html: `<div class="tx-row"><div><div class="tx-name">Retrait (${escapeHtml(PAYMENT_STATUS[w.status] || w.status)})</div><div class="tx-date">${new Date(w.created_at).toLocaleDateString('fr-FR')} · ${escapeHtml(w.method)} · reçu : ${escapeHtml(formatMoney(w.net_local, w.currency))}</div></div><div class="tx-amt" style="color:var(--coral);">−${escapeHtml(formatMoney(w.amount_usd, 'USD'))}</div></div>` })),
+      ...e.withdrawals.map((w) => ({ date: w.created_at, html: `<div class="tx-row"><div><div class="tx-name">Retrait (${escapeHtml(PAYMENT_STATUS[w.status] || w.status)})</div><div class="tx-date">${new Date(w.created_at).toLocaleDateString('fr-FR')} · ${escapeHtml(w.method)} · reçu : ${escapeHtml(formatMoney(w.net_local, w.currency))}${w.status === 'en_attente' && w.hold_until && new Date(w.hold_until) > new Date() ? ' · ' + escapeHtml(i18nF('⏳ envoi après le {0}', fmtWhen(w.hold_until))) : ''}</div></div><div class="tx-amt" style="color:var(--coral);">−${escapeHtml(formatMoney(w.amount_usd, 'USD'))}</div></div>` })),
     ].sort((a, b) => new Date(b.date) - new Date(a.date));
     hist.innerHTML = rows.map((r) => r.html).join('') || '<p class="feed-empty">Aucun gain pour le moment. Tes gains (cadeaux, vidéos payantes, ventes, rémunération) apparaîtront ici.</p>';
   } catch (e) { /* hors ligne */ }
@@ -4592,7 +5123,8 @@ async function requestWithdraw() {
     const pv = await apiCall('/api/earnings/withdraw-preview', { method: 'POST', body: { amount } });
     if (!window.confirm(`Tu vas recevoir ${formatMoney(pv.netLocal, pv.currency)} sur ton mode de retrait. Confirmer le retrait ?`)) return;
     const d = await apiCall('/api/earnings/withdraw', { method: 'POST', body: { amount } });
-    statusEl.textContent = `Retrait demandé : tu recevras ${formatMoney(d.netLocal, d.currency)}.`;
+    statusEl.textContent = i18nF('Retrait demandé : tu recevras {0}.', formatMoney(d.netLocal, d.currency))
+      + (d.holdUntil ? ' ' + i18nF('⏳ Pour ta sécurité (nouveau numéro de retrait ou nouvel appareil), il sera envoyé après le {0}.', fmtWhen(d.holdUntil)) : '');
     loadMoney();
   } catch (e) {
     statusEl.textContent = e.message;
@@ -4647,7 +5179,8 @@ async function walletWithdraw() {
   const amount = parseFloat(String(document.getElementById('wallet-amount').value).replace(',', '.'));
   try {
     const d = await apiCall('/api/wallet/withdraw', { method: 'POST', body: { amount } });
-    showToast(`Retrait demandé : tu recevras ${formatMoney(d.netLocal, d.currency)}.`);
+    showToast(i18nF('Retrait demandé : tu recevras {0}.', formatMoney(d.netLocal, d.currency))
+      + (d.holdUntil ? ' ' + i18nF('⏳ Pour ta sécurité (nouveau numéro de retrait ou nouvel appareil), il sera envoyé après le {0}.', fmtWhen(d.holdUntil)) : ''));
     loadMoney();
   } catch (e) { showToast(e.message); }
 }
@@ -4743,10 +5276,24 @@ function renderAdCard(ad) {
       <div class="feed-type"><span class="ad-tag">Sponsoris&eacute;</span> ${escapeHtml(ad.company)}</div>
       ${media}
       ${ad.message ? `<p class="feed-title" translate="no" style="margin-top:4px;">${escapeHtml(ad.message)}</p>` : ''}
-      ${ad.link_url && /^https?:\/\//i.test(ad.link_url) ? `<a class="follow-btn" style="display:inline-block;margin-left:0;text-decoration:none;" href="${escapeHtml(ad.link_url)}" target="_blank" rel="noopener sponsored" onclick="adClick('${escapeHtml(ad.id)}')">En savoir plus</a>` : ''}
+      ${ad.link_url && /^https?:\/\//i.test(ad.link_url) ? `<a class="follow-btn" style="display:inline-block;margin-left:0;text-decoration:none;" href="${escapeHtml(ad.link_url)}" target="_blank" rel="noopener sponsored" onclick="adClick('${escapeHtml(ad.id)}'); return leaveEaji(event, this.href)">En savoir plus</a>` : ''}
     </div>`;
 }
 
+// Anti-phishing : avant d'ouvrir un site extérieur (lien d'une publicité), Eaji prévient la personne.
+let LEAVE_URL = '';
+function leaveEaji(ev, url) {
+  let host = '';
+  try { host = new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return false; }
+  if (/^(wa\.me|t\.me)$|(^|\.)(whatsapp\.com|telegram\.me|telegram\.org)$/.test(host)) return true; // WhatsApp / Telegram : ouverts directement
+  if (ev) ev.preventDefault();
+  LEAVE_URL = url;
+  document.getElementById('leave-host').textContent = host;
+  document.getElementById('leave-sheet').style.display = 'flex';
+  return false;
+}
+function closeLeave() { document.getElementById('leave-sheet').style.display = 'none'; }
+function confirmLeave() { closeLeave(); if (LEAVE_URL) window.open(LEAVE_URL, '_blank', 'noopener'); }
 function adClick(id) {
   fetch(`${API_BASE_URL}/api/business-ads/${id}/click`, { method: 'POST' }).catch(() => {});
 }
@@ -6550,10 +7097,10 @@ function mtPickKind(k) {
 }
 function mtMusicChanged() { document.getElementById('mt-music-file').style.display = document.getElementById('mt-music').value === 'file' ? '' : 'none'; }
 function mtPlansHtml(plans) {
-  return `<p class="feed-type" style="margin:0 0 6px;">${escapeHtml(i18nT('Abonnement Montage IA : 10 montages par jour.'))}</p><div class="plan-row">`
+  return `<p class="feed-type" style="margin:0 0 6px;">${escapeHtml(i18nT('Abonnement Eajimmy AI : 10 montages par jour et domaines experts avec l\'IA avancée.'))}</p><div class="plan-row">`
     + (plans || []).map((p) => `<button class="plan-btn" onclick="startPayment('${escapeHtml(p.id)}')"><b>${escapeHtml(p.months === 12 ? i18nT('1 an') : p.months === 3 ? i18nT('3 mois') : i18nT('1 mois'))}</b>`
       + `<span>${escapeHtml(priceLabel(p.price).split(' (')[0])}</span><small class="plan-cond">${escapeHtml(i18nF('{0} montages par jour, {1} au total', p.daily, Number(p.total).toLocaleString(I18N.lang || 'fr')))}</small>`
-      + `<small class="plan-cond">${escapeHtml(i18nT("jusqu'à 3 minutes chacun"))}</small></button>`).join('') + '</div>';
+      + `<small class="plan-cond">${escapeHtml(i18nT("jusqu'à 3 minutes chacun"))}</small><small class="plan-cond">${escapeHtml(i18nT('🧠 domaines experts sans limite'))}</small><small class="plan-cond">${escapeHtml(i18nT('🗣️ photos qui parlent sans limite'))}</small></button>`).join('') + '</div>';
 }
 async function mtStatus() {
   const el = document.getElementById('mt-status'), plans = document.getElementById('mt-plans');
@@ -6562,7 +7109,7 @@ async function mtStatus() {
     plans.innerHTML = mtPlansHtml(d.plans);
     const lines = [];
     if (d.sub) {
-      lines.push(i18nF('✅ Abonnement Montage jusqu\'au {0} : {1} / {2} montages utilisés, aujourd\'hui {3} / {4}.',
+      lines.push(i18nF('✅ Abonnement Eajimmy AI jusqu\'au {0} : {1} / {2} montages utilisés, aujourd\'hui {3} / {4}.',
         new Date(d.sub.until).toLocaleDateString(I18N.lang || 'fr'), d.sub.used, d.sub.total, d.sub.today, d.sub.daily));
     }
     lines.push(i18nF('📅 Cette semaine : {0} / {1} montages ({2}).', d.week.used, d.week.limit,
@@ -6581,7 +7128,7 @@ async function loadAiQuota() {
   try {
     const d = await apiCall('/api/montage/status');
     el.textContent = d.sub
-      ? i18nF('🎬 Abonnement Montage : {0} / {1} montages utilisés, aujourd\'hui {2} / {3}.', d.sub.used, d.sub.total, d.sub.today, d.sub.daily)
+      ? i18nF('🎬 Abonnement Eajimmy AI : {0} / {1} montages utilisés, aujourd\'hui {2} / {3}.', d.sub.used, d.sub.total, d.sub.today, d.sub.daily)
       : i18nF('🎬 Montages IA cette semaine : {0} / {1}.', d.week.used, d.week.limit);
   } catch (e) { el.textContent = ''; }
 }
@@ -10721,6 +11268,79 @@ window.addEventListener('load', async () => {
     <div class="qa-chips" id="aic-prompts"></div>
     <div class="qa-row"><textarea class="field grow-ta" id="aic-input" rows="1" maxlength="4000" data-max-h="0.25" placeholder="Écris ta question ou ta demande…" onkeydown="if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) aicSend()"></textarea><button class="mini-btn" id="aic-send" onclick="aicSend()">Envoyer</button></div>
     <p class="feed-type" id="aic-left" style="margin:6px 0 0;font-size:11px;"></p>
+  </div>
+</div>
+<div class="sheet" id="tp-sheet" onclick="if (event.target === this) closeTalking()">
+  <div class="sheet-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><b>🗣️ Photo qui parle</b><button class="mini-btn" onclick="closeTalking()">Fermer ✕</button></div>
+    <p class="feed-type" style="margin:0 0 6px;">Ta vraie photo, sans retouche, parle comme un humain : voix, lèvres et tête qui bougent comme un orateur, sous-titres.</p>
+    <div class="chip-row" id="tp-modes" style="margin:0 0 4px;"></div>
+    <p class="feed-type" id="tp-mode-note" style="margin:0 0 8px;"></p>
+    <label class="mini-btn" style="cursor:pointer;">🖼️ Choisir la photo<input type="file" accept="image/*" hidden onchange="tpPhoto(this)"></label>
+    <canvas id="tp-cv" style="display:none;width:100%;max-width:320px;border-radius:10px;margin:6px 0;cursor:crosshair;" onclick="tpTap(event)"></canvas>
+    <p class="feed-type" id="tp-photo-note" style="margin:0 0 6px;"></p>
+    <label class="field-label" for="tp-lang">Langue</label>
+    <select class="field" id="tp-lang" onchange="tpVoiceChanged()"></select>
+    <label class="field-label" for="tp-voice">Voix</label>
+    <select class="field" id="tp-voice" onchange="tpVoiceChanged()"><option value="auto">🤖 Voix automatique (lit le texte)</option><option value="micro">🎤 Ma voix (enregistrer)</option><option value="fichier">🎵 Fichier audio</option></select>
+    <select class="field" id="tp-gender"><option value="femme">Voix de femme</option><option value="homme">Voix d'homme</option></select>
+    <p class="feed-type" id="tp-voice-note" style="margin:-6px 0 8px;color:var(--coral);"></p>
+    <div id="tp-mic-box" style="display:none;margin-bottom:8px;"><button class="mini-btn" id="tp-mic-btn" onclick="tpMic()">🎤 Enregistrer ma voix</button> <span class="feed-type" id="tp-mic-note"></span></div>
+    <input class="field" id="tp-audio-file" type="file" accept="audio/*" style="display:none;" onchange="tpAudioFile(this)">
+    <label class="field-label" for="tp-text">Ce que la photo dit (aussi utilisé pour les sous-titres)</label>
+    <textarea class="field grow-ta" id="tp-text" rows="3" maxlength="2500" placeholder="Bonjour à tous ! Aujourd'hui je vais vous parler de…"></textarea>
+    <div class="exp-rpm-row"><label>Gestes <select class="field" id="tp-style"><option value="orateur">Orateur (expressif)</option><option value="calme">Calme</option></select></label>
+      <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="tp-subs" checked> Sous-titres</label></div>
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;margin:6px 0 10px;"><input type="checkbox" id="tp-consent"> <span>C'est ma photo, ou la personne m'a donné son accord. Je ne fais pas dire à quelqu'un des choses qu'il n'a pas dites.</span></label>
+    <p class="form-error" id="tp-error"></p>
+    <button class="primary-btn" id="tp-go" onclick="tpGo()">🗣️ Créer la vidéo</button>
+    <p class="feed-type" id="tp-progress" style="margin:8px 0;"></p>
+    <canvas id="tp-render" style="display:none;width:100%;border-radius:12px;"></canvas>
+    <video id="tp-result" controls playsinline style="display:none;width:100%;border-radius:12px;"></video>
+    <div style="display:flex;gap:8px;margin-top:8px;"><button class="primary-btn" id="tp-use" style="display:none;" onclick="tpUse()">Publier cette vidéo</button>
+      <a class="secondary-btn" id="tp-download" style="display:none;text-align:center;text-decoration:none;">⬇️ Télécharger</a></div>
+    <p class="feed-type" id="tp-left" style="margin:8px 0 0;font-size:11px;"></p>
+    <div id="tp-plans" style="display:none;margin-top:8px;"></div>
+  </div>
+</div>
+<div class="sheet" id="exp-sheet" onclick="if (event.target === this) closeExpert()">
+  <div class="sheet-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px;"><b style="flex:1;">🧠 Domaines experts</b>
+      <button class="mini-btn" onclick="expNew()">Nouvelle conversation</button><button class="mini-btn" onclick="closeExpert()">Fermer ✕</button></div>
+    <div class="chip-row" id="exp-domains" style="flex-wrap:wrap;margin:4px 0 6px;"></div>
+    <p class="feed-type" id="exp-intro" style="margin:0 0 4px;"></p>
+    <p class="feed-type" id="exp-note" style="margin:0 0 4px;color:var(--coral);font-weight:700;"></p>
+    <div class="qa-log" id="exp-log"></div>
+    <div class="feed-type" style="margin:0 0 6px;">Exemples de demandes</div>
+    <div class="qa-chips" id="exp-prompts"></div>
+    <div class="exp-att">
+      <label class="mini-btn">📷 Photos<input type="file" accept="image/*" multiple hidden onchange="expPhotos(this)"></label>
+      <label class="mini-btn">🎬 Vidéo<input type="file" accept="video/*" hidden onchange="expVideoFrames(this)"></label>
+      <button class="mini-btn" id="exp-rpm-btn" onclick="expRpmOpen()">⏱️ Tours par minute</button>
+    </div>
+    <div class="exp-rpm" id="exp-rpm" style="display:none;">
+      <b>⏱️ Mesurer les tours par minute avec une vidéo</b>
+      <p class="feed-type" style="margin:4px 0;">Colle un repère bien visible (ruban blanc) sur la partie qui tourne, filme 5 à 10 secondes sans bouger, puis choisis la vidéo.</p>
+      <label class="mini-btn">🎬 Choisir la vidéo<input type="file" accept="video/*" hidden onchange="expRpmFile(this)"></label>
+      <canvas id="exp-rpm-cv" style="display:none;width:100%;max-width:320px;border-radius:10px;margin:6px 0;cursor:crosshair;" onclick="expRpmTap(event)"></canvas>
+      <div class="exp-rpm-row"><label>Nombre de repères <input class="field" id="exp-rpm-marks" type="number" min="1" max="12" value="1"></label>
+        <label>Ralenti <select class="field" id="exp-rpm-slow"><option value="1">Non (normal)</option><option value="4">×4</option><option value="8">×8</option></select></label></div>
+      <button class="mini-btn" onclick="expRpmMeasure()">Mesurer</button>
+      <p class="feed-type" id="exp-rpm-res" style="margin:6px 0 0;"></p>
+    </div>
+    <div id="exp-thumbs" class="exp-thumbs"></div>
+    <div class="qa-row"><textarea class="field grow-ta" id="exp-input" rows="1" maxlength="6000" data-max-h="0.25" placeholder="Écris ta question en détail…" onkeydown="if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) expSend()"></textarea><button class="mini-btn" id="exp-send" onclick="expSend()">Envoyer</button></div>
+    <p class="feed-type" id="exp-left" style="margin:6px 0 0;font-size:11px;"></p>
+    <div id="exp-plans" style="display:none;margin-top:8px;"></div>
+  </div>
+</div>
+<div class="sheet" id="leave-sheet" onclick="if (event.target === this) closeLeave()">
+  <div class="sheet-card">
+    <b>🌐 Tu vas quitter Eaji</b>
+    <p class="feed-type" style="margin:8px 0;">Ce lien ouvre un autre site : <b id="leave-host" translate="no"></b></p>
+    <p class="feed-type" style="margin:0 0 12px;">🔒 Ne tape jamais ton mot de passe ou ton code Eaji sur un autre site. L'&eacute;quipe Eaji ne te les demandera jamais.</p>
+    <button class="primary-btn" onclick="confirmLeave()">Continuer vers le site</button>
+    <button class="secondary-btn" style="margin-top:8px;" onclick="closeLeave()">Rester sur Eaji</button>
   </div>
 </div>
 <div class="sheet" id="qa-sheet" onclick="if (event.target === this) closeQa()">

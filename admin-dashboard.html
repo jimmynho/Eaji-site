@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+// Anti-phishing : Eaji ne s'affiche jamais à l'intérieur d'un autre site (un faux site qui encadre la vraie page pour piéger les clics).
+if (window.top !== window.self) { document.documentElement.style.display = 'none'; try { window.top.location.replace(window.self.location.href); } catch (e) { /* navigateur qui refuse : la page reste cachée */ } }
+</script>
 <title>Eaji — Admin</title>
 <!-- Application « Eaji Admin » installable sur le téléphone de l'administrateur -->
 <link rel="manifest" href="admin-manifest.json">
@@ -2155,9 +2159,9 @@ async function removeContent(btn){
 }
 
 // ==== Paiements manuels, retraits, revenus ====
-const PURPOSES = { montage_mois: 'Montage IA 1 mois', montage_trimestre: 'Montage IA 3 mois', montage_annee: 'Montage IA 1 an', premium_essai: 'Essai Premium 1 mois', pub_essai: 'Essai espace publicitaire 1 mois', premium_mois: 'Premium 1 mois', premium_trimestre: 'Premium 3 mois', premium_annee: 'Premium 1 an', entreprise_essai: 'Essai Entreprise 1 mois', entreprise_mois: 'Entreprise 1 mois', entreprise_annee: 'Entreprise 1 an', video: 'Vidéo payante', achat: 'Achat de contenu',
+const PURPOSES = { montage_mois: 'Abonnement Eajimmy AI 1 mois', montage_trimestre: 'Abonnement Eajimmy AI 3 mois', montage_annee: 'Abonnement Eajimmy AI 1 an', premium_essai: 'Essai Premium 1 mois', pub_essai: 'Essai espace publicitaire 1 mois', premium_mois: 'Premium 1 mois', premium_trimestre: 'Premium 3 mois', premium_annee: 'Premium 1 an', entreprise_essai: 'Essai Entreprise 1 mois', entreprise_mois: 'Entreprise 1 mois', entreprise_annee: 'Entreprise 1 an', video: 'Vidéo payante', achat: 'Achat de contenu',
   cadeau: 'Cadeau', cadeau_live: 'Cadeau en live', don: 'Don à Eaji', annonce: 'Publicité', depot: 'Dépôt portefeuille' };
-const SOURCES = { montage: 'Abonnements Montage IA', premium: 'Abonnements premium', entreprise: 'Comptes Entreprise', video: 'Vidéos payantes (40 %)', vente: 'Ventes de contenus (40 %)', cadeau: 'Cadeaux (40 %)',
+const SOURCES = { montage: 'Abonnements Eajimmy AI', premium: 'Abonnements premium', entreprise: 'Comptes Entreprise', video: 'Vidéos payantes (40 %)', vente: 'Ventes de contenus (40 %)', cadeau: 'Cadeaux (40 %)',
   don: 'Dons', publicite: 'Publicité des entreprises', frais_retrait: 'Frais de retrait (15 %)',
   frais_depot: 'Frais de dépôt (2 %)', frais_retrait_portefeuille: 'Frais de retrait portefeuille (4 %)' };
 const STATES = { en_attente: ['wait', 'En attente'], confirme: ['ok', 'Confirmé'], refuse: ['danger', 'Refusé'], annule: ['danger', 'Annulé'], paye: ['ok', 'Payé'] };
@@ -2251,12 +2255,13 @@ async function loadWithdrawals() {
     const t = document.getElementById('wd-table');
     t.innerHTML = t.rows[0].outerHTML + withdrawals.map(w => {
       const st = STATES[w.status] || ['wait', w.status];
-      return `<tr data-id="${escapeHtml(w.id)}">
+      const held = w.status === 'en_attente' && w.hold_until && new Date(w.hold_until) > new Date();
+      return `<tr data-id="${escapeHtml(w.id)}"${held ? ` data-held="${escapeHtml(w.hold_reason || '')}"` : ''}>
         <td>${escapeHtml(w.creator_name)}<div class="small">${escapeHtml(w.creator_phone)}</div></td>
         <td>${w.source === 'portefeuille' ? 'Portefeuille' : 'Gains'}</td>
         <td><b>${escapeHtml(money(w.net_local, w.currency))}</b>${w.currency !== 'USD' ? `<div class="small">${escapeHtml(money(w.net_usd, 'USD'))}</div>` : ''}</td>
         <td>${escapeHtml(money(w.fee_usd, 'USD'))}</td>
-        <td>${escapeHtml(w.method)}<div class="small">${escapeHtml(w.account)}</div>${w.gateway_status ? `<div class="small">pawaPay : ${escapeHtml({ COMPLETED: 'envoyé ✓', FAILED: 'échec', INITIE: 'en cours', ACCEPTED: 'en cours', PROCESSING: 'en cours', ENQUEUED: 'en file' }[w.gateway_status] || w.gateway_status)}</div>` : ''}${w.admin_note ? `<div class="small">${escapeHtml(w.admin_note)}</div>` : ''}</td>
+        <td>${escapeHtml(w.method)}<div class="small">${escapeHtml(w.account)}</div>${w.gateway_status ? `<div class="small">pawaPay : ${escapeHtml({ COMPLETED: 'envoyé ✓', FAILED: 'échec', INITIE: 'en cours', ACCEPTED: 'en cours', PROCESSING: 'en cours', ENQUEUED: 'en file' }[w.gateway_status] || w.gateway_status)}</div>` : ''}${w.admin_note ? `<div class="small">${escapeHtml(w.admin_note)}</div>` : ''}${held ? `<div class="small" style="color:#c0392b;font-weight:700;">⚠️ Attente de sécurité jusqu'au ${escapeHtml(new Date(w.hold_until).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))} — ${escapeHtml(w.hold_reason || '')}. Vérifie avec le créateur avant de payer.</div>` : ''}</td>
         <td>${fmtDate(w.created_at)}</td>
         <td style="white-space:nowrap;">${w.status === 'en_attente'
           ? (w.gateway_id && w.gateway_status !== 'FAILED' ? '<span class="badge wait">Envoi en cours</span>'
@@ -2269,20 +2274,26 @@ async function loadWithdrawals() {
 
 async function sendWithdrawalMobile(btn) {
   const row = btn.closest('tr');
+  if (row.dataset.held !== undefined && !heldConfirm(row)) return;
   if (!window.confirm('Envoyer automatiquement cet argent sur le mobile money du créateur (pawaPay) ?')) return;
   btn.disabled = true;
-  try { const d = await adminApi(`/api/admin/withdrawals/${row.dataset.id}/send-mobile`, { method: 'POST', body: {} }); document.getElementById('wd-msg').textContent = d.message; }
+  try { const d = await adminApi(`/api/admin/withdrawals/${row.dataset.id}/send-mobile`, { method: 'POST', body: { force: row.dataset.held !== undefined } }); document.getElementById('wd-msg').textContent = d.message; }
   catch (e) { btn.disabled = false; document.getElementById('wd-msg').textContent = e.message; return; }
   loadWithdrawals();
 }
 
+// Retrait en attente de sécurité (nouveau numéro ou nouvel appareil) : le compte a peut-être été piraté.
+function heldConfirm(row) {
+  return window.confirm(`⚠️ Retrait en attente de sécurité (${row.dataset.held}).\nLe compte a peut-être été piraté. As-tu vérifié avec le créateur (appel ou WhatsApp sur son ancien numéro) ?\n\nPayer quand même ?`);
+}
 async function markWithdrawal(btn, action) {
   const row = btn.closest('tr');
   let note = '';
+  if (action === 'paid' && row.dataset.held !== undefined && !heldConfirm(row)) return;
   if (action === 'paid' && !window.confirm('As-tu bien envoyé l\'argent à ce créateur ?')) return;
   if (action === 'refuse') { note = window.prompt('Raison du refus :', 'Numéro de retrait incorrect.'); if (note === null) return; }
   btn.disabled = true;
-  try { await adminApi(`/api/admin/withdrawals/${row.dataset.id}/${action}`, { method: 'POST', body: { note } }); }
+  try { await adminApi(`/api/admin/withdrawals/${row.dataset.id}/${action}`, { method: 'POST', body: { note, force: row.dataset.held !== undefined } }); }
   catch (e) { btn.disabled = false; document.getElementById('wd-msg').textContent = e.message; return; }
   loadWithdrawals(); refreshPendingCount();
 }
@@ -2574,7 +2585,7 @@ async function loadAgent() {
       || '<tr><td colspan="4">Aucune action pour le moment.</td></tr>');
     const ct = document.getElementById('ag-chats');
     ct.innerHTML = ct.rows[0].outerHTML + (d.chats.map((c) => `<tr><td>${when(c.created_at)}</td><td>${escapeHtml(c.creator_name || 'Visiteur')}</td>
-      <td>${escapeHtml(c.question)}</td><td>${escapeHtml(c.answer)}<div class="small">${c.source === 'libre' ? 'Discussion libre (IA)' : c.source === 'ia' ? 'IA' : 'Réponse préparée'}${c.escalated ? ' · transmise à l\'équipe' : ''}</div></td></tr>`).join('')
+      <td>${escapeHtml(c.question)}</td><td>${escapeHtml(c.answer)}<div class="small">${c.source === 'libre' ? 'Discussion libre (IA)' : c.source === 'expert' ? 'Domaine expert (IA)' : c.source === 'ia' ? 'IA' : 'Réponse préparée'}${c.escalated ? ' · transmise à l\'équipe' : ''}</div></td></tr>`).join('')
       || '<tr><td colspan="4">Aucune question pour le moment.</td></tr>');
   } catch (e) { document.getElementById('ag-ai').textContent = e.message; }
 }
