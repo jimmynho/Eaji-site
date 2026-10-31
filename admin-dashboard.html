@@ -661,10 +661,11 @@ mark.watch{background:#FFD43B;color:#1A1206;border-radius:3px;padding:0 2px;font
 // ==== Intégration API réelle — authentification admin dédiée ====
 // Serveur principal (Railway) et serveur de secours (autre hébergeur). Si le principal ne répond plus,
 // l'appli passe toute seule sur le secours, puis revient sur le principal dès qu'il répond à nouveau.
-const API_PRIMARY_URL = 'https://eajimmy-production.up.railway.app';
+const API_PRIMARY_URL = 'https://api.eaji.org'; // serveur principal (Railway), à l'adresse eaji.org
+const API_RAILWAY_URL = 'https://eajimmy-production.up.railway.app'; // le même serveur, à son adresse d'origine (si l'adresse eaji.org a un souci)
 const API_BACKUP_URL = 'https://eajimmy.onrender.com'; // serveur de secours (Render)
 let API_BASE_URL = (() => {
-  try { const s = sessionStorage.getItem('eaji_api'); const b = window.EAJI_API_BACKUP || API_BACKUP_URL; if (s && b && s === b) return s; } catch (e) {}
+  try { const s = sessionStorage.getItem('eaji_api'); const b = window.EAJI_API_BACKUP || API_BACKUP_URL; if (s && ((b && s === b) || s === API_RAILWAY_URL)) return s; } catch (e) {}
   return API_PRIMARY_URL;
 })();
 (function eajiFailover() {
@@ -680,15 +681,14 @@ let API_BASE_URL = (() => {
   let picking = null;
   function pick() {
     if (!picking) picking = (async () => {
-      if (await alive(API_PRIMARY_URL)) { setBase(API_PRIMARY_URL); return; }
-      if (await alive(backup())) setBase(backup());
+      for (const b of [API_PRIMARY_URL, API_RAILWAY_URL, backup()]) { if (b && await alive(b)) { setBase(b); return; } }
     })().finally(() => setTimeout(() => { picking = null; }, 5000));
     return picking;
   }
   const reusable = (b) => b == null || typeof b === 'string' || b instanceof Blob || b instanceof FormData || b instanceof URLSearchParams || b instanceof ArrayBuffer;
   window.fetch = async (input, init) => {
     const url = typeof input === 'string' ? input : '';
-    const base = [API_PRIMARY_URL, backup()].find((b) => url.startsWith(b + '/'));
+    const base = [API_PRIMARY_URL, API_RAILWAY_URL, backup()].find((b) => b && url.startsWith(b + '/'));
     if (!base) return rawFetch(input, init);
     let res = null, err = null;
     try { res = await rawFetch(input, init); if (![502, 503, 504].includes(res.status)) return res; }

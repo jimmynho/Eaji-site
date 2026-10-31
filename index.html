@@ -13,12 +13,12 @@ if (window.top !== window.self) { document.documentElement.style.display = 'none
 <meta property="og:site_name" content="Eaji">
 <meta property="og:title" content="Eaji — vidéos, musique et créateurs rémunérés">
 <meta property="og:description" content="Crée ton compte gratuit, découvre les publications et gagne de l'argent avec les tiennes.">
-<meta property="og:image" content="https://jimmynho.github.io/Eaji-site/icon-512.png">
+<meta property="og:image" content="https://eaji.org/icon-512.png">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://jimmynho.github.io/Eaji-site/">
+<meta property="og:url" content="https://eaji.org/">
 <meta name="twitter:card" content="summary">
-<link rel="canonical" href="https://jimmynho.github.io/Eaji-site/">
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "name": "Eaji", "alternateName": "Eaji App", "url": "https://jimmynho.github.io/Eaji-site/", "inLanguage": ["fr", "en", "ar", "pt", "es", "sw", "ln", "de", "ru", "hi", "zh"]}, {"@type": "WebApplication", "name": "Eaji", "url": "https://jimmynho.github.io/Eaji-site/", "applicationCategory": "SocialNetworkingApplication", "operatingSystem": "Android, iOS, Windows, macOS", "browserRequirements": "Navigateur récent (Chrome, Safari, Edge, Firefox)", "description": "Eaji : vidéos, musique, photos, livres et lives de créateurs du monde entier. Crée ton compte gratuit, découvre les publications et gagne de l'argent avec les tiennes.", "image": "https://jimmynho.github.io/Eaji-site/icon-512.png", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}, {"@type": "Organization", "name": "Eaji", "url": "https://jimmynho.github.io/Eaji-site/", "logo": "https://jimmynho.github.io/Eaji-site/icon-512.png"}]}</script>
+<link rel="canonical" href="https://eaji.org/">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "name": "Eaji", "alternateName": "Eaji App", "url": "https://eaji.org/", "inLanguage": ["fr", "en", "ar", "pt", "es", "sw", "ln", "de", "ru", "hi", "zh"]}, {"@type": "WebApplication", "name": "Eaji", "url": "https://eaji.org/", "applicationCategory": "SocialNetworkingApplication", "operatingSystem": "Android, iOS, Windows, macOS", "browserRequirements": "Navigateur récent (Chrome, Safari, Edge, Firefox)", "description": "Eaji : vidéos, musique, photos, livres et lives de créateurs du monde entier. Crée ton compte gratuit, découvre les publications et gagne de l'argent avec les tiennes.", "image": "https://eaji.org/icon-512.png", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}, {"@type": "Organization", "name": "Eaji", "url": "https://eaji.org/", "logo": "https://eaji.org/icon-512.png"}]}</script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#E4AE3A">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -1130,7 +1130,7 @@ window.eajiLoader = (function () {
       <button class="secondary-btn" onclick="showRegisterForm()">Cr&eacute;er mon compte</button>
       <a class="adv-link" href="#annoncer" onclick="openAdvertise();return false;">📣 Entreprises : annoncer sur Eaji</a>
       <!-- Lien vers les pages publiques (lisibles par Google) : chemin direct du site vers les publications -->
-      <a class="adv-link" id="login-discover-link" href="https://eajimmy-production.up.railway.app/decouvrir" onclick="try{this.href=API_BASE_URL+'/decouvrir'}catch(e){}">🔎 Découvrir les publications sans compte</a>
+      <a class="adv-link" id="login-discover-link" href="https://api.eaji.org/decouvrir" onclick="try{this.href=API_BASE_URL+'/decouvrir'}catch(e){}">🔎 Découvrir les publications sans compte</a>
     </div>
 
     <div id="login-step-forgot" style="display:none;">
@@ -1819,7 +1819,7 @@ window.eajiLoader = (function () {
 
 <script>
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.10.30d';
+const APP_VERSION = '2026.10.31a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -1851,10 +1851,11 @@ document.querySelectorAll('.zone-item').forEach(z=>{
 // Une fois le backend déployé (Railway), remplace cette URL par la vraie.
 // Serveur principal (Railway) et serveur de secours (autre hébergeur). Si le principal ne répond plus,
 // l'appli passe toute seule sur le secours, puis revient sur le principal dès qu'il répond à nouveau.
-const API_PRIMARY_URL = 'https://eajimmy-production.up.railway.app';
+const API_PRIMARY_URL = 'https://api.eaji.org'; // serveur principal (Railway), à l'adresse eaji.org
+const API_RAILWAY_URL = 'https://eajimmy-production.up.railway.app'; // le même serveur, à son adresse d'origine (si l'adresse eaji.org a un souci)
 const API_BACKUP_URL = 'https://eajimmy.onrender.com'; // serveur de secours (Render)
 let API_BASE_URL = (() => {
-  try { const s = sessionStorage.getItem('eaji_api'); const b = window.EAJI_API_BACKUP || API_BACKUP_URL; if (s && b && s === b) return s; } catch (e) {}
+  try { const s = sessionStorage.getItem('eaji_api'); const b = window.EAJI_API_BACKUP || API_BACKUP_URL; if (s && ((b && s === b) || s === API_RAILWAY_URL)) return s; } catch (e) {}
   return API_PRIMARY_URL;
 })();
 (function eajiFailover() {
@@ -1870,15 +1871,14 @@ let API_BASE_URL = (() => {
   let picking = null;
   function pick() {
     if (!picking) picking = (async () => {
-      if (await alive(API_PRIMARY_URL)) { setBase(API_PRIMARY_URL); return; }
-      if (await alive(backup())) setBase(backup());
+      for (const b of [API_PRIMARY_URL, API_RAILWAY_URL, backup()]) { if (b && await alive(b)) { setBase(b); return; } }
     })().finally(() => setTimeout(() => { picking = null; }, 5000));
     return picking;
   }
   const reusable = (b) => b == null || typeof b === 'string' || b instanceof Blob || b instanceof FormData || b instanceof URLSearchParams || b instanceof ArrayBuffer;
   window.fetch = async (input, init) => {
     const url = typeof input === 'string' ? input : '';
-    const base = [API_PRIMARY_URL, backup()].find((b) => url.startsWith(b + '/'));
+    const base = [API_PRIMARY_URL, API_RAILWAY_URL, backup()].find((b) => b && url.startsWith(b + '/'));
     if (!base) return rawFetch(input, init);
     let res = null, err = null;
     try { res = await rawFetch(input, init); if (![502, 503, 504].includes(res.status)) return res; }
