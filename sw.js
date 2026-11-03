@@ -1,8 +1,11 @@
 // Eaji — permet d'installer l'application sur le téléphone.
 // Les pages sont toujours chargées depuis Internet en priorité (pour avoir la dernière version) ;
 // la copie gardée sur le téléphone ne sert que si la connexion est coupée.
-// Les échanges avec le serveur (API) ne sont jamais mis en cache.
-const CACHE_NAME = 'eaji-v30';
+// Les échanges avec le serveur (API) ne sont pas mis en cache ici (l'application garde elle-même le fil et les messages).
+// Les images déjà vues (photos des publications, photos de profil) sont gardées pour le mode hors connexion.
+const CACHE_NAME = 'eaji-v31';
+const IMG_CACHE = 'eaji-images';
+const IMG_MAX = 120; // images gardées au maximum (les plus anciennes sont retirées)
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -11,13 +14,30 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))));
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME && k !== IMG_CACHE).map((k) => caches.delete(k)))));
   self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
+  // Images d'autres adresses (stockage des photos) : Internet d'abord ; sans connexion, la copie gardée.
+  // Les liens de stockage changent avec le temps : la copie est retrouvée sans tenir compte de la fin du lien (?…).
+  if (req.method === 'GET' && url.origin !== self.location.origin && req.destination === 'image' && /^https:/.test(url.protocol)) {
+    event.respondWith(
+      fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(IMG_CACHE).then(async (cache) => {
+          for (const old of await cache.keys(req, { ignoreSearch: true })) await cache.delete(old);
+          await cache.put(req, copy);
+          const keys = await cache.keys();
+          for (let i = 0; i < keys.length - IMG_MAX; i++) await cache.delete(keys[i]);
+        }).catch(() => {});
+        return res;
+      }).catch(() => caches.open(IMG_CACHE).then((cache) => cache.match(req, { ignoreSearch: true })).then((r) => r || Response.error()))
+    );
+    return;
+  }
   if (req.method !== 'GET' || url.origin !== self.location.origin) return; // API, fichiers, appels : jamais en cache
   // Les pages et fichiers de l'application sont toujours revérifiés auprès du site (jamais une vieille copie).
   event.respondWith(

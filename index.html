@@ -152,7 +152,7 @@ select.field{appearance:none;}
 .follow-btn{margin-left:auto;background:none;border:1px solid var(--teal);color:var(--teal);font-size:11px;
   font-weight:700;padding:5px 11px;border-radius:99px;cursor:pointer;font-family:'Inter',sans-serif;}
 .follow-btn.following{background:var(--teal);color:#0A2320;}
-.feed-title{font-size:14px;margin:0 0 12px;}
+.feed-title{font-size:16px;line-height:1.55;margin:0 0 12px;}
 .feed-actions{display:flex;flex-wrap:wrap;gap:10px 16px;border-top:1px solid var(--line);padding-top:10px;}
 .feed-action{background:none;border:none;color:var(--muted);font-size:12px;display:flex;align-items:center;gap:5px;
   cursor:pointer;font-family:'Inter',sans-serif;padding:0;}
@@ -162,7 +162,7 @@ select.field{appearance:none;}
 .comments-box.open{display:block;}
 .gift-box{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:none;}
 .gift-box.open{display:block;}
-.dm-bubble{max-width:75%;padding:10px 13px;border-radius:14px;font-size:13px;}
+.dm-bubble{max-width:75%;padding:10px 13px;border-radius:14px;font-size:15px;line-height:1.45;}
 .dm-bubble.me{align-self:flex-end;background:var(--gold);color:#1A1206;}
 .dm-bubble.them{align-self:flex-start;background:var(--surface);border:1px solid var(--line);}
 .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--line);
@@ -763,7 +763,7 @@ textarea.grow-ta{resize:none;overflow-y:auto;line-height:1.45;min-height:46px;fo
 .my-title{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;}
 /* Publications texte : fonds de couleur, dégradés et papiers peints */
 .tp{border-radius:14px;margin:0 0 12px;padding:22px 18px;color:#fff;position:relative;overflow:hidden;}
-.tp .feed-title{margin:0;font-size:15px;line-height:1.5;}
+.tp .feed-title{margin:0;font-size:17px;line-height:1.5;}
 .tp.tp-big{min-height:230px;display:flex;align-items:center;justify-content:center;text-align:center;}
 .tp.tp-big .feed-title{font-family:'Sora',sans-serif;font-size:23px;font-weight:700;line-height:1.35;}
 .tp.tp-dark{color:#1A1206;}
@@ -771,6 +771,47 @@ textarea.grow-ta{resize:none;overflow-y:auto;line-height:1.45;min-height:46px;fo
 .tp.tp-none{background:var(--surface2);border:1px solid var(--line);color:var(--text);}
 .tp .feed-title.clamp{-webkit-line-clamp:14;}
 .tp + .more-btn{margin-top:-4px;}
+/* Textes longs (publications et messages) : les 200 premiers mots, la suite en touchant le texte ou « Voir plus » */
+.cut{cursor:pointer;}
+.cut:not(.open) .ft-rest{display:none;}
+.cut:not(.open)::after{content:'…';}
+.dm-bubble .more-btn{display:block;margin:4px 0 0;font-size:13px;color:inherit;text-decoration:underline;}
+/* Messages en 3 parties */
+.msg-tabs{display:flex;gap:6px;margin:14px 0 10px;}
+.msg-tab{flex:1;position:relative;background:var(--surface);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:10px 6px;font-weight:700;font-size:13px;cursor:pointer;}
+.msg-tab.sel{border-color:var(--gold);color:var(--gold);background:var(--surface2);}
+.msg-tab-badge{display:none;position:absolute;top:-6px;right:-4px;background:var(--coral);color:#fff;font-style:normal;font-size:11px;min-width:18px;height:18px;line-height:18px;border-radius:9px;padding:0 5px;}
+.msg-tab-badge.on{display:inline-block;}
+.call-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--surface);}
+.call-row .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.call-row .grow b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.call-row.missed b{color:var(--coral);}
+.call-row .call-dir{font-size:12px;color:var(--muted);}
+.call-row .call-btn{font-size:18px;}
+.grp-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px;}
+.grp-actions .mini-btn{flex:1;padding:10px;}
+.grp-lock-toggle{display:flex;gap:8px;align-items:center;font-size:13px;margin:6px 0;}
+/* Verrou (portefeuille, groupes) */
+.lock-card{text-align:center;padding:26px 18px;border:1px solid var(--line);border-radius:16px;background:var(--surface);margin:14px 0;}
+.lock-card .lock-ic{font-size:40px;margin-bottom:6px;}
+.lock-card .primary-btn{margin-top:12px;}
+#s-paiements.locked > *:not(#wallet-lock){display:none !important;}
+.pin-card{max-width:360px;margin:0 auto;}
+.pin-lock{text-align:center;font-size:34px;}
+.pin-dots{display:flex;justify-content:center;gap:14px;margin:8px 0;}
+.pin-dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--gold);display:inline-block;}
+.pin-dots i.on{background:var(--gold);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pin-pad button{font-size:24px;font-weight:700;padding:14px 0;border-radius:14px;border:1px solid var(--line);background:var(--surface2);color:var(--text);cursor:pointer;}
+.pin-pad button:active{background:var(--gold);color:#1A1206;}
+.pin-pad .pin-soft{font-size:15px;color:var(--muted);}
+#call-timer{font-family:'Sora',sans-serif;font-size:22px;font-weight:700;letter-spacing:1px;margin-top:6px;min-height:28px;}
+/* Hors connexion */
+.offline-bar{position:fixed;left:0;right:0;top:0;z-index:9000;background:#3A2A08;color:#FFE3A8;font-size:13px;line-height:1.35;padding:8px 14px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.35);}
+.dm-bubble.dm-pending{opacity:.75;}
+.outbox-box{border:1px dashed var(--gold);border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:13px;}
+.outbox-box .ob-item{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:6px;}
+.outbox-box .ob-item span{flex:1;overflow-wrap:anywhere;}
 .bg-row{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;}
 .bg-sw{width:38px;height:38px;border-radius:10px;border:2px solid var(--line);cursor:pointer;padding:0;flex:0 0 auto;font-size:15px;color:var(--muted);background:var(--surface);}
 .bg-sw.sel{border-color:#fff;box-shadow:0 0 0 2px var(--gold);}
@@ -1304,6 +1345,7 @@ window.eajiLoader = (function () {
         <p class="feed-type" id="imp-status" style="margin:6px 0 0;"></p>
       </div>
       <div class="section-title" style="margin-top:14px;">Publier un contenu</div>
+      <div class="outbox-box" id="outbox-box" style="display:none;"></div>
       <label class="field-label" for="up-type">Type</label>
       <select class="field" id="up-type" onchange="updateUploadAccept()">
         <option value="video_courte">Vidéo courte</option>
@@ -1432,6 +1474,12 @@ window.eajiLoader = (function () {
 
     <!-- PAIEMENTS -->
     <section class="screen" id="s-paiements">
+      <div class="lock-card" id="wallet-lock" style="display:none;">
+        <div class="lock-ic">🔒</div>
+        <b id="wallet-lock-title">Ton portefeuille est protégé</b>
+        <p class="feed-type" id="wallet-lock-text">Entre ton code secret de 5 chiffres pour voir ton solde, tes gains et faire tes retraits, transferts et paiements.</p>
+        <button class="primary-btn" id="wallet-lock-btn" onclick="unlockWallet()">Ouvrir mon portefeuille</button>
+      </div>
       <div class="warn-banner" id="earn-warn" style="display:none;" role="alert"></div>
       <div class="warn-banner level3" id="pay-sec" style="display:none;" role="alert"></div>
       <div class="balance-card">
@@ -1455,6 +1503,43 @@ window.eajiLoader = (function () {
         <p class="balance-label" style="margin-top:4px;font-size:11px;">Les ventes et cadeaux sont disponibles tout de suite. Les gains des vues et abonnés deviennent disponibles le jour du versement, après vérification des vues.</p>
         <p class="balance-label" id="earn-fee" style="margin-top:8px;"></p>
         <p class="balance-label" id="withdraw-status" style="margin-top:10px;"></p>
+      </div>
+
+      <div class="settings-block" style="margin-top:14px;" id="plan-balance-block">
+        <div class="section-title">Mon abonnement et mon solde</div>
+        <p class="feed-type" id="prof-plan" style="margin:-6px 0 6px;">Compte gratuit.</p>
+        <p class="feed-type" style="margin:0 0 10px;">Solde Eaji : <b id="prof-balance">0</b></p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="mini-btn" onclick="goToPaiements('premium')">⭐ Premium / Entreprise</button>
+          <button class="mini-btn" onclick="goToPaiements('solde')">💰 D&eacute;poser sur mon solde</button>
+        </div>
+      </div>
+
+      <div class="settings-block" style="margin-top:14px;" id="payout-block">
+        <div class="section-title">Mode de retrait de tes gains</div>
+        <label class="field-label">Moyen</label>
+        <select class="field" id="payout-method" onchange="updatePayoutFields()">
+          <option value="mobile_money">Mobile money</option>
+          <option value="virement">Virement bancaire</option>
+        </select>
+        <div id="payout-operator-wrap">
+          <label class="field-label">Op&eacute;rateur</label>
+          <select class="field" id="payout-operator">
+            <option value="mpesa">M-Pesa (Vodacom)</option>
+            <option value="orange_money">Orange Money</option>
+            <option value="airtel_money">Airtel Money</option>
+            <option value="afrimoney">AfriMoney (Africell)</option>
+            <option value="mtn_momo">MTN Mobile Money</option>
+            <option value="wave">Wave</option>
+            <option value="moov_money">Moov Money</option>
+            <option value="moncash">MonCash (Digicel)</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <label class="field-label" id="payout-number-label">Num&eacute;ro mobile money</label>
+        <input class="field" id="prof-withdrawal-phone" placeholder="+243..." />
+        <p class="feed-type" id="payout-status" style="margin:-6px 0 10px;"></p>
+        <button class="mini-btn" onclick="savePayoutAccount()">Enregistrer le mode de retrait</button>
       </div>
 
       <div class="settings-block" style="margin-top:14px;" id="kyc-block">
@@ -1581,10 +1666,44 @@ window.eajiLoader = (function () {
       <div id="dm-list-view">
         <div class="section-title" style="margin-top:14px;margin-bottom:6px;">Statuts <small class="feed-type" style="font-weight:400;">· visibles par tous pendant 35 h</small></div>
         <div class="status-row" id="status-row"></div>
-        <div class="section-title" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;">Messages
-          <button class="mini-btn btn-on-gold" onclick="openPicker('group')">👥 Nouveau groupe</button></div>
-        <div id="missed-calls"></div>
-        <div id="dm-list"><p class="feed-empty">Aucune conversation. Touche &laquo;&nbsp;&Eacute;crire&nbsp;&raquo; sur une publication du fil pour &eacute;crire &agrave; son cr&eacute;ateur.</p></div>
+        <!-- Messages en 3 parties : messages, appels, groupes (groupes et contacts du téléphone) -->
+        <div class="msg-tabs" role="tablist">
+          <button class="msg-tab" data-pane="dm" onclick="showMsgPane('dm')">💬 Messages<em class="msg-tab-badge" id="mtab-dm"></em></button>
+          <button class="msg-tab" data-pane="calls" onclick="showMsgPane('calls')">📞 Appels<em class="msg-tab-badge" id="mtab-calls"></em></button>
+          <button class="msg-tab" data-pane="groups" onclick="showMsgPane('groups')">👥 Groupes<em class="msg-tab-badge" id="mtab-groups"></em></button>
+        </div>
+        <div class="msg-pane" id="msg-pane-dm">
+          <div id="missed-calls"></div>
+          <div id="dm-list"><p class="feed-empty">Aucune conversation. Touche &laquo;&nbsp;&Eacute;crire&nbsp;&raquo; sur une publication du fil pour &eacute;crire &agrave; son cr&eacute;ateur.</p></div>
+        </div>
+        <div class="msg-pane" id="msg-pane-calls" style="display:none;">
+          <div id="calls-list"><p class="feed-empty">Aucun appel pour le moment.</p></div>
+        </div>
+        <div class="msg-pane" id="msg-pane-groups" style="display:none;">
+          <div class="lock-card" id="grp-lock" style="display:none;">
+            <div class="lock-ic">🔒</div>
+            <b>Tes groupes sont protégés</b>
+            <p class="feed-type">Entre ton code secret de 5 chiffres pour voir tes groupes et tes contacts.</p>
+            <button class="primary-btn" onclick="unlockGroups()">Entrer mon code secret</button>
+          </div>
+          <div id="grp-body">
+            <div class="grp-actions">
+              <button class="mini-btn btn-on-gold" onclick="findPhoneContacts()">📱 Mes contacts sur Eaji</button>
+              <button class="mini-btn btn-on-gold" onclick="openPicker('group')">👥 Nouveau groupe</button>
+            </div>
+            <div id="contacts-manual" class="settings-block" style="display:none;">
+              <p class="feed-type" style="margin:0 0 8px;">Ton téléphone ne permet pas d'ouvrir le carnet de contacts ici. Écris un ou plusieurs numéros (séparés par une virgule) :</p>
+              <input class="field" id="contacts-numbers" inputmode="tel" placeholder="0812 345 678, +243 850 000 000">
+              <button class="mini-btn" onclick="matchTypedNumbers()">Chercher sur Eaji</button>
+            </div>
+            <p class="feed-type" id="contacts-status" style="margin:6px 0;"></p>
+            <label class="grp-lock-toggle"><input type="checkbox" id="grp-lock-toggle" onchange="toggleGroupsLock(this)"> 🔒 Protéger mes groupes avec mon code secret</label>
+            <div class="section-title" style="margin-top:12px;">Mes contacts sur Eaji</div>
+            <div id="contacts-list"><p class="feed-empty">Touche « 📱 Mes contacts sur Eaji » : tu verras qui, dans ton téléphone, utilise déjà Eaji.</p></div>
+            <div class="section-title" style="margin-top:12px;">Mes groupes</div>
+            <div id="grp-list"><p class="feed-empty">Aucun groupe. Touche « 👥 Nouveau groupe ».</p></div>
+          </div>
+        </div>
       </div>
       <div id="dm-thread-view" style="display:none;">
         <div class="section-title" style="margin-top:14px;display:flex;align-items:center;gap:10px;">
@@ -1629,16 +1748,6 @@ window.eajiLoader = (function () {
         <p class="feed-type" style="margin:-6px 0 10px;">Une question, un problème de paiement, la presse ou un partenariat ? Écris à l'équipe Eaji : elle te répond ici.</p>
         <button class="mini-btn btn-on-gold" id="support-btn" onclick="openSupport()">💬 Contacter l'équipe Eaji <span class="conv-unread" id="support-badge" style="display:none;"></span></button>
         <button class="mini-btn btn-on-gold" id="agent-btn" style="margin-top:8px;" onclick="openQa()">🤖 Eajimmy AI (24 h/24)</button>
-      </div>
-
-      <div class="settings-block">
-        <div class="section-title">Mon abonnement et mon solde</div>
-        <p class="feed-type" id="prof-plan" style="margin:-6px 0 6px;">Compte gratuit.</p>
-        <p class="feed-type" style="margin:0 0 10px;">Solde Eaji : <b id="prof-balance">0</b></p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="mini-btn" onclick="goToPaiements('premium')">⭐ Premium / Entreprise</button>
-          <button class="mini-btn" onclick="goToPaiements('solde')">💰 D&eacute;poser sur mon solde</button>
-        </div>
       </div>
 
       <div class="settings-block">
@@ -1695,36 +1804,12 @@ window.eajiLoader = (function () {
       </div>
 
       <div class="settings-block">
-        <div class="section-title">Mode de retrait de tes gains</div>
-        <label class="field-label">Moyen</label>
-        <select class="field" id="payout-method" onchange="updatePayoutFields()">
-          <option value="mobile_money">Mobile money</option>
-          <option value="virement">Virement bancaire</option>
-        </select>
-        <div id="payout-operator-wrap">
-          <label class="field-label">Op&eacute;rateur</label>
-          <select class="field" id="payout-operator">
-            <option value="mpesa">M-Pesa (Vodacom)</option>
-            <option value="orange_money">Orange Money</option>
-            <option value="airtel_money">Airtel Money</option>
-            <option value="afrimoney">AfriMoney (Africell)</option>
-            <option value="mtn_momo">MTN Mobile Money</option>
-            <option value="wave">Wave</option>
-            <option value="moov_money">Moov Money</option>
-            <option value="moncash">MonCash (Digicel)</option>
-            <option value="autre">Autre</option>
-          </select>
-        </div>
-        <label class="field-label" id="payout-number-label">Num&eacute;ro mobile money</label>
-        <input class="field" id="prof-withdrawal-phone" placeholder="+243..." />
-        <p class="feed-type" id="payout-status" style="margin:-6px 0 10px;"></p>
-        <button class="mini-btn" onclick="savePayoutAccount()">Enregistrer le mode de retrait</button>
-      </div>
-
-      <div class="settings-block">
         <div class="section-title">Confidentialit&eacute;</div>
         <label style="display:flex;gap:10px;align-items:center;font-size:13px;">
           <input type="checkbox" id="pref-subcount" onchange="saveVisibility()"> Afficher publiquement mon nombre d'abonn&eacute;s
+        </label>
+        <label style="display:flex;gap:10px;align-items:center;font-size:13px;margin-top:8px;">
+          <input type="checkbox" id="pref-findable" checked onchange="saveFindable(this.checked)"> Les personnes qui ont mon numéro dans leurs contacts peuvent me trouver sur Eaji
         </label>
         <p class="feed-type" style="margin-top:8px;">Ton profil et tes publications publiques sont visibles par tout le monde, abonn&eacute; ou non, pour qu'on puisse s'abonner. Ton solde reste toujours priv&eacute;.</p>
       </div>
@@ -1754,6 +1839,15 @@ window.eajiLoader = (function () {
         <input class="field" id="pwd-confirm" type="password" placeholder="Confirmer le nouveau mot de passe" />
         <p class="feed-type" id="pwd-status" style="margin:-6px 0 10px;"></p>
         <button class="mini-btn" onclick="changeMyPassword()">Changer le mot de passe</button>
+      </div>
+
+      <div class="settings-block" id="pin-block">
+        <div class="section-title">🔐 Code secret (5 chiffres)</div>
+        <p class="feed-type" id="pin-state" style="margin:-6px 0 10px;">Il protège ton portefeuille et, si tu le veux, tes groupes.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="mini-btn" id="pin-set-btn" onclick="changePin()">Créer mon code secret</button>
+          <button class="mini-btn" onclick="forgotPin()">J'ai oublié mon code</button>
+        </div>
       </div>
 
       <div class="settings-block" id="sessions-block">
@@ -1802,7 +1896,7 @@ window.eajiLoader = (function () {
       </button>
       <button class="tab" data-target="s-paiements">
         <svg class="tab-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/></svg>
-        Paiements
+        Portefeuille
       </button>
       <button class="tab" data-target="s-messages">
         <span class="tab-badge" id="msg-badge" style="display:none;">0</span>
@@ -1819,7 +1913,7 @@ window.eajiLoader = (function () {
 
 <script>
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.10.31b';
+const APP_VERSION = '2026.11.03a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -1829,10 +1923,11 @@ document.querySelectorAll('.tab').forEach(btn=>{
     document.getElementById(btn.dataset.target).classList.add('active');
     document.querySelector('.screens').scrollTop=0;
     // Messages : liste toujours à jour (nouvelles conversations, groupes, appels en cours).
-    if (btn.dataset.target === 's-messages' && typeof loadConversations === 'function' && !dmContactId && !CHAT_GROUP_ID) { loadConversations(); loadStatuses(); }
+    if (btn.dataset.target === 's-messages' && typeof loadConversations === 'function' && !dmContactId && !CHAT_GROUP_ID) { showMsgPane(MSG_PANE); loadStatuses(); }
     // Paiements : statut de vérification d'identité à jour (validé ou refusé par l'équipe entre-temps).
     // Paiements : soldes et vérification d'identité toujours à jour.
-    if (btn.dataset.target === 's-paiements' && typeof loadMoney === 'function') loadMoney();
+    if (btn.dataset.target === 's-paiements' && typeof openWallet === 'function') openWallet();
+    else if (typeof setWalletLocked === 'function' && pinValid && !pinValid() && PIN_STATUS && PIN_STATUS.hasPin) setWalletLocked(true);
   });
 });
 document.querySelectorAll('.chip').forEach(c=>{
@@ -2246,21 +2341,339 @@ function eajiDeviceId() {
 }
 
 // Appel au serveur : renvoie la réponse, ou lève une erreur avec le vrai message du serveur.
-async function apiCall(path, { method = 'GET', body } = {}) {
+// ==== Code secret de 5 chiffres (portefeuille, groupes protégés) ====
+// Le serveur vérifie le code et donne un accès de quelques minutes (gardé seulement en mémoire, jamais sur le téléphone).
+// L'appli se referme quand cet accès expire ou quand elle reste plus d'une minute en arrière-plan.
+let PIN_TOKEN = null, PIN_EXP = 0, PIN_STATUS = null, PIN_RELOCK = null, PIN_HIDDEN_AT = 0, PIN_UI = null;
+const pinValid = () => Boolean(PIN_TOKEN && Date.now() < PIN_EXP);
+async function pinStatus(fresh) {
+  if (!CREATOR_TOKEN) return null;
+  if (PIN_STATUS && !fresh) return PIN_STATUS;
+  PIN_STATUS = await apiCall('/api/pin/status');
+  updatePinBlock();
+  return PIN_STATUS;
+}
+function setPinToken(token, minutes) {
+  PIN_TOKEN = token; PIN_EXP = Date.now() + (Number(minutes) || 10) * 60000 - 5000;
+  PIN_STATUS = { ...(PIN_STATUS || {}), hasPin: true };
+  clearTimeout(PIN_RELOCK); PIN_RELOCK = setTimeout(pinLockNow, PIN_EXP - Date.now());
+  updatePinBlock();
+}
+// Referme le portefeuille et les groupes protégés.
+function pinLockNow() {
+  PIN_TOKEN = null; PIN_EXP = 0; clearTimeout(PIN_RELOCK);
+  if (document.getElementById('s-paiements')?.classList.contains('active')) setWalletLocked(true);
+  if (PIN_STATUS && PIN_STATUS.groupsLocked) {
+    if (MSG_PANE === 'groups') loadGroupsPane();
+    if (CHAT_GROUP_ID || (dmContactId && CONTACT_IDS.has(dmContactId))) closeConversation();
+  }
+}
+let CONTACT_IDS = new Set();
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) PIN_HIDDEN_AT = Date.now();
+  else if (PIN_TOKEN && PIN_HIDDEN_AT && Date.now() - PIN_HIDDEN_AT > 60000) pinLockNow();
+});
+// Demande le code (ou le fait créer). Renvoie true quand c'est bon.
+function askPin(what) {
+  return new Promise(async (resolve) => {
+    let st = null;
+    try { st = await pinStatus(true); } catch (e) { showToast(e.message); return resolve(false); }
+    openPinSheet(st && st.hasPin && what !== 'creer' ? 'verify' : (st && st.hasPin ? 'change' : 'create'), what, resolve);
+  });
+}
+const PIN_TEXT = {
+  verify: { portefeuille: ['Entre ton code secret', 'Pour ouvrir ton portefeuille.'], groupes: ['Entre ton code secret', 'Pour ouvrir tes groupes.'] },
+  'create:new': ['Crée ton code secret', '5 chiffres faciles à retenir pour toi, difficiles à deviner pour les autres. Ne le donne à personne, même à l\'équipe Eaji.'],
+  'create:confirm': ['Confirme ton code secret', 'Tape-le encore une fois.'],
+  'change:old': ['Code secret actuel', 'Tape ton code secret actuel.'],
+  'change:new': ['Nouveau code secret', '5 chiffres. Ne le donne à personne.'],
+  'change:confirm': ['Confirme le nouveau code', 'Tape-le encore une fois.'],
+  'reset:new': ['Nouveau code secret', 'Écris d\'abord le mot de passe de ton compte, puis choisis un nouveau code.'],
+  'reset:confirm': ['Confirme le nouveau code', 'Tape-le encore une fois.'],
+};
+function openPinSheet(mode, what, resolve) {
+  if (PIN_UI && PIN_UI.resolve) PIN_UI.resolve(false);
+  PIN_UI = { mode, what, resolve, step: mode === 'verify' ? 'pin' : mode === 'change' ? 'old' : 'new', digits: '', first: '', old: '' };
+  document.getElementById('pin-pass').value = '';
+  document.getElementById('pin-pass').style.display = mode === 'reset' ? 'block' : 'none';
+  document.getElementById('pin-forgot').style.display = mode === 'verify' || mode === 'change' ? 'block' : 'none';
+  document.getElementById('pin-error').textContent = '';
+  renderPinSheet();
+  document.getElementById('pin-sheet').style.display = 'flex';
+}
+function renderPinSheet() {
+  const u = PIN_UI; if (!u) return;
+  const t = u.mode === 'verify' ? (PIN_TEXT.verify[u.what] || PIN_TEXT.verify.portefeuille) : PIN_TEXT[`${u.mode}:${u.step}`];
+  document.getElementById('pin-title').textContent = i18nT(t[0]);
+  document.getElementById('pin-sub').textContent = i18nT(t[1]);
+  document.querySelectorAll('#pin-dots i').forEach((d, i) => d.classList.toggle('on', i < u.digits.length));
+}
+// 11111, 12345, 54321… : refusés tout de suite (le serveur vérifie aussi).
+function pinWeak(p) {
+  if (/^(\d)\1{4}$/.test(p)) return true;
+  const d = p.split('').map(Number);
+  return d.every((x, i) => i === 0 || x === d[i - 1] + 1) || d.every((x, i) => i === 0 || x === d[i - 1] - 1);
+}
+function pinKey(n) {
+  const u = PIN_UI; if (!u || u.busy || u.digits.length >= 5) return;
+  if (u.mode === 'reset' && !document.getElementById('pin-pass').value) { document.getElementById('pin-error').textContent = i18nT('Écris d\'abord le mot de passe de ton compte.'); return; }
+  u.digits += String(n); document.getElementById('pin-error').textContent = '';
+  renderPinSheet();
+  if (u.digits.length === 5) setTimeout(pinDone, 150);
+}
+function pinBack() { const u = PIN_UI; if (!u || u.busy) return; u.digits = u.digits.slice(0, -1); renderPinSheet(); }
+function pinClose(ok) {
+  const u = PIN_UI; PIN_UI = null;
+  document.getElementById('pin-sheet').style.display = 'none';
+  if (u && u.resolve) u.resolve(Boolean(ok));
+}
+function pinCancel() { pinClose(false); }
+function pinFail(msg, step) { const u = PIN_UI; if (!u) return; u.digits = ''; if (step) u.step = step; renderPinSheet(); document.getElementById('pin-error').textContent = msg; }
+async function pinDone() {
+  const u = PIN_UI; if (!u) return;
+  const code = u.digits;
+  if (u.step === 'old') { u.old = code; u.digits = ''; u.step = 'new'; return renderPinSheet(); }
+  if (u.step === 'new' && pinWeak(code)) return pinFail(i18nT('Code trop facile à deviner (11111, 12345…). Choisis-en un autre.'), 'new');
+  if (u.step === 'new') { u.first = code; u.digits = ''; u.step = 'confirm'; return renderPinSheet(); }
+  if (u.step === 'confirm' && code !== u.first) return pinFail(i18nT('Les deux codes ne sont pas pareils. Recommence.'), 'new');
+  u.busy = true;
+  try {
+    let d;
+    if (u.mode === 'verify') d = await apiCall('/api/pin/verify', { method: 'POST', body: { pin: code } });
+    else if (u.mode === 'reset') d = await apiCall('/api/pin/reset', { method: 'POST', body: { pin: code, password: document.getElementById('pin-pass').value } });
+    else d = await apiCall('/api/pin/set', { method: 'POST', body: { pin: code, ...(u.mode === 'change' ? { currentPin: u.old } : {}) } });
+    u.busy = false;
+    setPinToken(d.token, d.minutes);
+    if (u.mode !== 'verify') showToast(i18nT('🔐 Code secret enregistré. Ne le donne à personne.'));
+    pinClose(true);
+  } catch (e) {
+    u.busy = false;
+    pinFail(e.message, u.mode === 'change' && e.code === 'pin_ancien' ? 'old' : (u.mode === 'verify' ? 'pin' : 'new'));
+  }
+}
+function changePin() { pinStatus(true).then((st) => openPinSheet(st && st.hasPin ? 'change' : 'create', 'portefeuille', null)).catch((e) => showToast(e.message)); }
+function forgotPin() { const cb = PIN_UI && PIN_UI.resolve; if (PIN_UI) { PIN_UI.resolve = null; } openPinSheet('reset', 'portefeuille', cb || null); }
+function updatePinBlock() {
+  const st = PIN_STATUS; if (!st) return;
+  const b = document.getElementById('pin-set-btn'), t = document.getElementById('pin-state'), f = document.getElementById('pref-findable');
+  if (b) b.textContent = i18nT(st.hasPin ? 'Changer mon code secret' : 'Créer mon code secret');
+  if (t) t.textContent = st.hasPin ? i18nT('✅ Code secret actif : il protège ton portefeuille') + (st.groupsLocked ? i18nT(' et tes groupes.') : '.') : i18nT('Il protège ton portefeuille et, si tu le veux, tes groupes.');
+  if (f && typeof st.findable === 'boolean') f.checked = st.findable;
+}
+async function saveFindable(on) {
+  try { await apiCall('/api/phone-contacts/findable', { method: 'POST', body: { on } }); if (PIN_STATUS) PIN_STATUS.findable = on; showToast(i18nT('Préférence enregistrée.')); }
+  catch (e) { showToast(e.message); }
+}
+// Portefeuille : solde, gains, retraits, transferts, paiements et mode de retrait, derrière le code secret.
+function setWalletLocked(on, mode) {
+  const sec = document.getElementById('s-paiements'); if (!sec) return;
+  sec.classList.toggle('locked', Boolean(on));
+  document.getElementById('wallet-lock').style.display = on ? 'block' : 'none';
+  if (!on) return;
+  const create = mode === 'create', offline = mode === 'offline';
+  document.getElementById('wallet-lock-title').textContent = i18nT(create ? 'Protège ton portefeuille' : 'Ton portefeuille est protégé');
+  document.getElementById('wallet-lock-text').textContent = i18nT(create
+    ? 'Crée ton code secret de 5 chiffres : sans lui, personne ne pourra voir ton solde ni retirer ton argent, même avec ton téléphone.'
+    : offline ? 'Connexion Internet nécessaire pour ouvrir le portefeuille.'
+    : 'Entre ton code secret de 5 chiffres pour voir ton solde, tes gains et faire tes retraits, transferts et paiements.');
+  document.getElementById('wallet-lock-btn').textContent = i18nT(create ? 'Créer mon code secret' : 'Ouvrir mon portefeuille');
+  document.getElementById('wallet-lock-btn').style.display = offline ? 'none' : '';
+}
+function refreshWallet() { loadMoney(); loadPayments(); loadPayoutAccount(); }
+async function openWallet() {
+  if (!CREATOR_TOKEN) return;
+  let st = null;
+  try { st = await pinStatus(true); } catch (e) { return setWalletLocked(true, 'offline'); }
+  if (!st.hasPin && window.__eajiSkipPinSetup) { setWalletLocked(false); return refreshWallet(); } // tests automatiques
+  if (!st.hasPin) return setWalletLocked(true, 'create');
+  if (!pinValid()) return setWalletLocked(true);
+  setWalletLocked(false); refreshWallet();
+}
+async function unlockWallet() {
+  if (await askPin(PIN_STATUS && PIN_STATUS.hasPin ? 'portefeuille' : 'creer')) { setWalletLocked(false); refreshWallet(); }
+}
+// Paiement : payer avec le solde ou les gains demande d'ouvrir le portefeuille.
+async function unlockForPayment() {
+  if (!CURRENT_PAYMENT) return;
+  const p = CURRENT_PAYMENT;
+  if (await askPin('portefeuille')) { await loadMoney(); showPaymentSheet(p, null, null); }
+}
+// Données gardées pour le mode hors connexion : on retire celles des groupes et des contacts quand ils deviennent protégés.
+async function offPurgeLocked() {
+  try {
+    const keys = await offTx('cache', 'readonly', (st) => st.getAllKeys());
+    const mine = (keys || []).filter((k) => { const path = String(k).split('|')[1] || ''; return LOCKABLE_GET.test(path) || path === '/api/groups' || path === '/api/conversations'; });
+    if (mine.length) await offTx('cache', 'readwrite', (st) => { mine.forEach((k) => st.delete(k)); return null; });
+  } catch (e) { /* rien à retirer */ }
+}
+
+// ==== Hors connexion ====
+// Les dernières publications, conversations et messages sont gardés sur le téléphone (IndexedDB) : sans Internet,
+// l'appli les affiche. Les publications et messages écrits sans Internet attendent dans une « boîte d'envoi »
+// et partent tout seuls dès que la connexion revient (appli ouverte).
+const OFFLINE_GET = /^\/api\/(feed(\?[^/]*)?|conversations|groups|groups\/[\w-]+(\/messages)?|messages\/[\w-]+|creators\/[\w-]+(\/public)?|my\/content|saves\?kind=\w+|notifications|phone-contacts|calls\/history)$/;
+// Groupes et contacts protégés par le code secret : jamais gardés sur le téléphone.
+const LOCKABLE_GET = /^\/api\/(groups\/|messages\/|phone-contacts)/;
+let OFF_DB = null, OFFLINE_SHOWN = false, OUTBOX = [], OUTBOX_BUSY = false, OFF_WIPED = false;
+function offDb() {
+  if (!OFF_DB) {
+    OFF_DB = new Promise((ok, ko) => {
+      try {
+        const r = indexedDB.open('eaji-hors-connexion', 1);
+        r.onupgradeneeded = () => { const d = r.result; d.createObjectStore('cache', { keyPath: 'k' }); d.createObjectStore('outbox', { keyPath: 'id', autoIncrement: true }); };
+        r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error);
+      } catch (e) { ko(e); }
+    });
+    OFF_DB.catch(() => { OFF_DB = null; });
+  }
+  return OFF_DB;
+}
+async function offTx(store, mode, fn) {
+  const d = await offDb();
+  return new Promise((ok, ko) => {
+    const t = d.transaction(store, mode), r = fn(t.objectStore(store));
+    let out; if (r) r.onsuccess = () => { out = r.result; };
+    t.oncomplete = () => ok(out); t.onerror = () => ko(t.error); t.onabort = () => ko(t.error);
+  });
+}
+const offKey = (path) => `${CREATOR_TOKEN && CREATOR_ID ? CREATOR_ID : 'visiteur'}|${path}`;
+const offGet = (k) => offTx('cache', 'readonly', (st) => st.get(k)).catch(() => null);
+const offPut = (k, data) => (OFF_WIPED ? Promise.resolve() : offTx('cache', 'readwrite', (st) => st.put({ k, data, at: Date.now() })).catch(() => {}));
+const offAll = () => offTx('outbox', 'readonly', (st) => st.getAll()).then((a) => (a || []).filter((x) => x.creatorId === CREATOR_ID)).catch(() => []);
+const offAdd = (item) => offTx('outbox', 'readwrite', (st) => st.add({ ...item, creatorId: CREATOR_ID, at: Date.now(), status: 'attente' }));
+const offDel = (id) => offTx('outbox', 'readwrite', (st) => st.delete(id)).catch(() => {});
+const offSet = (item) => offTx('outbox', 'readwrite', (st) => st.put(item)).catch(() => {});
+async function offWipe() {
+  OFF_WIPED = true; // plus rien n'est gardé pour ce compte (réponses encore en route comprises)
+  try { await offTx('cache', 'readwrite', (st) => st.clear()); await offTx('outbox', 'readwrite', (st) => st.clear()); } catch (e) { /* rien à effacer */ }
+  OUTBOX = [];
+}
+function offlineError() { const e = new Error('Impossible de joindre le serveur. Vérifie ta connexion.'); e.offline = true; return e; }
+const isOfflineErr = (e) => Boolean(e && (e.offline || (e.name === 'TypeError' && /fetch|network|load failed/i.test(e.message || '')) || !navigator.onLine));
+// Bandeau en haut de l'écran.
+function setOffline(on) {
+  OFFLINE_SHOWN = Boolean(on);
+  let bar = document.getElementById('offline-bar');
+  if (on && !bar) { bar = document.createElement('div'); bar.id = 'offline-bar'; bar.className = 'offline-bar'; document.body.appendChild(bar); }
+  if (!bar) return;
+  bar.style.display = on ? 'block' : 'none';
+  if (on) bar.textContent = i18nT("📴 Hors connexion : tu vois ce qui est déjà enregistré sur ton téléphone. Ce que tu publies ou envoies partira tout seul au retour d'Internet.");
+}
+// Boîte d'envoi : affichée dans « Contenu » (et les messages en attente dans leur conversation).
+async function refreshOutbox() {
+  OUTBOX = CREATOR_TOKEN ? await offAll() : [];
+  const box = document.getElementById('outbox-box');
+  if (box) {
+    const waiting = OUTBOX.filter((x) => x.status !== 'echec'), failed = OUTBOX.filter((x) => x.status === 'echec');
+    const label = (x) => x.kind === 'dm' ? i18nT('Message') : i18nT('Publication');
+    const what = (x) => String(x.kind === 'dm' ? x.text : (x.params ? x.params.title : x.body.title) || '').slice(0, 60);
+    box.style.display = OUTBOX.length ? 'block' : 'none';
+    box.innerHTML = (waiting.length ? `<b>${escapeHtml(i18nF("🕓 {0} envoi(s) en attente : ils partiront tout seuls dès le retour d'Internet.", waiting.length))}</b>`
+      + waiting.map((x) => `<div class="ob-item"><span>${escapeHtml(label(x))} · <i translate="no">${escapeHtml(what(x))}</i></span></div>`).join('') : '')
+      + failed.map((x) => `<div class="ob-item"><span>⚠️ ${escapeHtml(label(x))} · <i translate="no">${escapeHtml(what(x))}</i> — ${escapeHtml(i18nF('Pas envoyé : {0}', x.error || ''))}</span>
+        <button class="mini-btn" onclick="retryOutbox(${Number(x.id)})">${escapeHtml(i18nT('Réessayer'))}</button>
+        <button class="mini-btn danger" onclick="dropOutbox(${Number(x.id)})">${escapeHtml(i18nT('Supprimer'))}</button></div>`).join('');
+  }
+  renderDmPending();
+}
+async function retryOutbox(id) { const it = OUTBOX.find((x) => x.id === id); if (!it) return; it.status = 'attente'; it.error = null; await offSet(it); await refreshOutbox(); flushOutbox(); }
+async function dropOutbox(id) { await offDel(id); await refreshOutbox(); }
+async function queueOutbox(item) {
+  try { await offAdd(item); }
+  catch (e) { throw new Error(i18nT('Pas assez de place sur le téléphone pour garder cet envoi en attente.')); }
+  setOffline(true);
+  await refreshOutbox();
+}
+// Envoie ce qui attend, dans l'ordre. S'il n'y a toujours pas d'Internet, on réessaie plus tard.
+async function sendOutboxItem(it) {
+  if (it.kind === 'post_text') {
+    const thumb = await prepareThumb('text', { text: it.body.title, bg: it.body.textBg }).catch(() => null);
+    return apiCall('/api/content', { method: 'POST', body: { ...it.body, ...(thumb || {}) } });
+  }
+  if (it.kind === 'post_media') {
+    const file = new File([it.blob], it.fileName || 'fichier', { type: it.fileType || it.blob.type || '' });
+    const params = { ...it.params };
+    if (params.safetyCheck !== 'ok') { // pas vérifiée sans Internet : vérification maintenant
+      params.safetyCheck = await checkNudity(file);
+      if (params.safetyCheck === 'bloque') throw new Error(NUDITY_BLOCKED_MESSAGE);
+    }
+    return sendMediaPost(params, file);
+  }
+  if (it.kind === 'dm') return apiCall(it.group ? `/api/groups/${it.group}/messages` : `/api/messages/${it.contact}`, { method: 'POST', body: { text: it.text } });
+  return null;
+}
+async function flushOutbox() {
+  if (OUTBOX_BUSY || !CREATOR_TOKEN) return;
+  OUTBOX_BUSY = true;
+  let posts = 0, msgs = 0;
+  try {
+    for (const it of await offAll()) {
+      if (it.status === 'echec') continue;
+      try {
+        await sendOutboxItem(it);
+        await offDel(it.id);
+        if (it.kind === 'dm') msgs++; else posts++;
+      } catch (e) {
+        if (isOfflineErr(e) || e.status === 401 || (e.status >= 500)) break; // toujours pas d'Internet (ou serveur indisponible) : plus tard
+        it.status = 'echec'; it.error = e.message; await offSet(it);
+      }
+    }
+  } finally { OUTBOX_BUSY = false; }
+  await refreshOutbox();
+  if (posts || msgs) {
+    setOffline(false);
+    showToast(i18nF('✅ Tes envois en attente sont partis ({0}).', posts + msgs));
+    if (posts) { if (typeof loadFeed === 'function') loadFeed(); loadMyContent(); }
+    if (msgs) { if (dmContactId || CHAT_GROUP_ID) renderDmThread(true); loadConversations(); }
+  }
+}
+// Messages en attente : bulles grises à la fin de la conversation ouverte.
+function renderDmPending() {
+  const thread = document.getElementById('dm-thread');
+  if (!thread) return;
+  thread.querySelectorAll('.dm-pending').forEach((el) => el.remove());
+  const mine = OUTBOX.filter((x) => x.kind === 'dm' && (CHAT_GROUP_ID ? x.group === CHAT_GROUP_ID : (dmContactId && x.contact === dmContactId && !x.group)));
+  if (!mine.length) return;
+  const empty = thread.querySelector('.feed-empty'); if (empty) empty.remove();
+  thread.insertAdjacentHTML('beforeend', mine.map((x) => `<div class="dm-bubble me dm-pending">${dmTextHtml(x.text)}
+    <div class="dm-meta">${escapeHtml(x.status === 'echec' ? i18nF('Pas envoyé : {0}', x.error || '') : i18nT("🕓 En attente d'Internet"))}</div></div>`).join(''));
+}
+window.addEventListener('offline', () => setOffline(true));
+window.addEventListener('online', () => {
+  setOffline(false);
+  flushOutbox().then(() => { if (CREATOR_TOKEN) { if (typeof loadFeed === 'function') loadFeed(); loadConversations(); } });
+});
+setInterval(() => { if (OUTBOX.some((x) => x.status !== 'echec') && navigator.onLine) flushOutbox(); }, 30000);
+
+async function apiCall(path, { method = 'GET', body, pin = false, _again = false } = {}) {
+  // Fil, conversations, messages, profils : la dernière réponse est gardée sur le téléphone pour le mode hors connexion.
+  const keep = method === 'GET' && OFFLINE_GET.test(path) && !(PIN_STATUS && PIN_STATUS.groupsLocked && LOCKABLE_GET.test(path));
   let res;
   try {
     res = await fetch(`${API_BASE_URL}${path}`, {
       method,
-      headers: { 'Content-Type': 'application/json', 'X-Eaji-Device': eajiDeviceId(), ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}) },
+      headers: { 'Content-Type': 'application/json', 'X-Eaji-Device': eajiDeviceId(), ...(CREATOR_TOKEN ? { Authorization: `Bearer ${CREATOR_TOKEN}` } : {}),
+        ...(pinValid() ? { 'X-Eaji-Pin': PIN_TOKEN } : {}) },
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch (e) {
-    throw new Error('Impossible de joindre le serveur. Vérifie ta connexion.');
+    if (keep) { const c = await offGet(offKey(path)); if (c) { setOffline(true); return c.data; } }
+    if (!navigator.onLine) setOffline(true);
+    throw offlineError();
   }
+  // Serveurs momentanément indisponibles : on montre aussi ce qui est enregistré.
+  if (keep && res.status >= 502 && res.status <= 504) { const c = await offGet(offKey(path)); if (c) return c.data; }
   const data = await res.json().catch(() => ({}));
   // Ce téléphone a été déconnecté à distance par le propriétaire du compte (« Mes connexions »).
   if (res.status === 401 && data.code === 'appareil_deconnecte' && CREATOR_TOKEN) { remoteSignedOut(); throw new Error(data.error); }
-  if (!res.ok) throw new Error(res.status === 401 ? 'Connecte-toi pour faire cette action.' : (data.error || 'Action impossible.'));
+  // Portefeuille ou groupes protégés : code secret demandé (pour une action, ou quand l'écran le demande), puis on refait la demande.
+  if (res.status === 423 && data.code === 'pin_requis') {
+    if (!_again && (method !== 'GET' || pin) && await askPin(data.what === 'groupes' ? 'groupes' : 'portefeuille')) return apiCall(path, { method, body, pin, _again: true });
+    const err = new Error(data.error || 'Code secret demandé.'); err.status = 423; err.pin = data.what || 'portefeuille'; throw err;
+  }
+  if (!res.ok) { const err = new Error(res.status === 401 ? 'Connecte-toi pour faire cette action.' : (data.error || 'Action impossible.')); err.status = res.status; err.code = data.code; throw err; }
+  if (OFFLINE_SHOWN) setOffline(false);
+  if (keep) offPut(offKey(path), data);
   return data;
 }
 
@@ -2342,9 +2755,13 @@ async function publishTextPost(text, visibilityScope) {
   const errorEl = document.getElementById('up-error'), successEl = document.getElementById('up-success'), btn = document.getElementById('up-btn');
   if (!text) { errorEl.textContent = i18nT('Écris le texte de ta publication.'); errorEl.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = i18nT('Envoi en cours…');
+  const body = { contentType: 'publication', title: text, visibilityScope, textBg: UP_TEXT_BG || null };
   try {
+    if (!navigator.onLine) throw offlineError();
     const thumb = await prepareThumb('text', { text, bg: UP_TEXT_BG });
-    const d = await apiCall('/api/content', { method: 'POST', body: { contentType: 'publication', title: text, visibilityScope, textBg: UP_TEXT_BG || null, ...(thumb || {}) } });
+    let d;
+    try { d = await apiCall('/api/content', { method: 'POST', body: { ...body, ...(thumb || {}) } }); }
+    catch (e) { if (!isOfflineErr(e)) throw e; throw offlineError(); }
     successEl.textContent = d.status === 'en_revue'
       ? i18nT('Publication envoyée : elle sera visible après une vérification rapide par l\'équipe Eaji.')
       : i18nT('Publication en ligne !');
@@ -2353,6 +2770,16 @@ async function publishTextPost(text, visibilityScope) {
     if (typeof loadFeed === 'function') loadFeed();
     loadMyContent();
   } catch (e) {
+    if (isOfflineErr(e)) {
+      // Pas d'Internet : la publication attend sur le téléphone et sera publiée toute seule.
+      try {
+        await queueOutbox({ kind: 'post_text', body });
+        successEl.textContent = i18nT("📴 Pas d'Internet : ta publication est en attente. Elle sera publiée toute seule dès le retour de la connexion.");
+        successEl.style.display = 'block';
+        const ta = document.getElementById('up-title'); ta.value = ''; growTa(ta);
+        return;
+      } catch (e2) { e = e2; }
+    }
     errorEl.textContent = e.message === 'Failed to fetch' ? i18nT('Impossible de joindre le serveur. Vérifie ta connexion internet.') : e.message;
     errorEl.style.display = 'block';
   } finally { btn.disabled = false; btn.textContent = i18nT('Publier'); }
@@ -2516,10 +2943,11 @@ async function uploadContent() {
   const salePrice = priceText ? parseFloat(priceText) : null;
   if (priceText && !(salePrice > 0)) { errorEl.textContent = 'Prix de vente invalide.'; errorEl.style.display = 'block'; return; }
 
-  const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CREATOR_TOKEN}` };
   btn.disabled = true;
+  const offline = !navigator.onLine;
   // Photos et vidéos : vérification automatique (nudité, sexe) avant tout envoi.
-  const safetyCheck = await checkNudity(file, (m) => { btn.textContent = m; });
+  // Sans Internet, elle sera faite au moment de l'envoi de la publication en attente.
+  const safetyCheck = offline ? 'non_verifie' : await checkNudity(file, (m) => { btn.textContent = m; });
   if (safetyCheck === 'bloque') {
     btn.disabled = false; btn.textContent = 'Publier';
     errorEl.textContent = NUDITY_BLOCKED_MESSAGE; errorEl.style.display = 'block';
@@ -2531,40 +2959,28 @@ async function uploadContent() {
   const fingerprint = await fileFingerprint(file);
   const original = document.getElementById('up-file').files[0];
   const sourceFingerprint = original && original !== file ? await fileFingerprint(original) : null;
+  const params = { contentType, title, visibilityScope, durationSeconds, mediaWidth: vInfo.width, mediaHeight: vInfo.height, salePrice, safetyCheck,
+    soundContentId: EDITED ? EDITED.soundId : null, aiMarkers,
+    importedFrom: IMPORTED ? IMPORTED.url : null, fingerprint, sourceFingerprint,
+    lyrics: ['musique', 'podcast', 'audio'].includes(contentType) ? (document.getElementById('up-lyrics').value || '').trim() || undefined : undefined };
   btn.textContent = 'Envoi en cours…';
   try {
-    const r1 = await fetch(`${API_BASE_URL}/api/content/upload-url`, {
-      method: 'POST', headers,
-      body: JSON.stringify({ contentType, fileName: file.name, mimeType: file.type, fileSizeBytes: file.size }),
-    });
-    const d1 = await r1.json();
-    if (!r1.ok) throw new Error(d1.error || 'Envoi refusé.');
-
-    await sendFileToStorage(d1, file);
-    // Image d'aperçu pour les liens partagés (ne bloque jamais la publication).
-    const thumbKind = thumbKindOf(contentType, file);
-    const thumb = thumbKind ? await prepareThumb(thumbKind, { file }) : null;
-
-    const r3 = await fetch(`${API_BASE_URL}/api/content`, {
-      method: 'POST', headers,
-      body: JSON.stringify({ ...(thumb || {}), contentType, title, storageUrl: d1.storageKey, visibilityScope, fileSizeBytes: file.size, durationSeconds, mediaWidth: vInfo.width, mediaHeight: vInfo.height, salePrice, safetyCheck,
-        soundContentId: EDITED ? EDITED.soundId : null, aiMarkers,
-        importedFrom: IMPORTED ? IMPORTED.url : null, fingerprint, sourceFingerprint,
-        lyrics: ['musique', 'podcast', 'audio'].includes(contentType) ? (document.getElementById('up-lyrics').value || '').trim() || undefined : undefined }),
-    });
-    const d3 = await r3.json();
-    if (!r3.ok) throw new Error(d3.error || 'Enregistrement impossible.');
-
+    let d3;
+    try { if (offline) throw offlineError(); d3 = await sendMediaPost(params, file); }
+    catch (e) {
+      if (!isOfflineErr(e)) throw e;
+      // Pas d'Internet : la publication (avec son fichier) attend sur le téléphone et sera publiée toute seule.
+      await queueOutbox({ kind: 'post_media', params, blob: file, fileName: file.name, fileType: file.type });
+      successEl.textContent = i18nT("📴 Pas d'Internet : ta publication est en attente. Elle sera publiée toute seule dès le retour de la connexion.");
+      successEl.style.display = 'block';
+      resetUploadForm();
+      return;
+    }
     successEl.textContent = d3.status === 'en_revue'
       ? 'Publication envoyée : elle sera visible après une vérification rapide par l\'équipe Eaji.'
       : 'Publication en ligne !';
     successEl.style.display = 'block';
-    document.getElementById('up-title').value = ''; growTa(document.getElementById('up-title'));
-    document.getElementById('up-file').value = '';
-    document.getElementById('up-price').value = '';
-    document.getElementById('up-lyrics').value = '';
-    document.getElementById('up-duration').textContent = '';
-    EDITED = null; PENDING_SOUND = null; IMPORTED = null; refreshEditButton();
+    resetUploadForm();
     if (typeof loadFeed === 'function') loadFeed();
     loadMyContent();
   } catch (e) {
@@ -2576,6 +2992,38 @@ async function uploadContent() {
     btn.disabled = false;
     btn.textContent = 'Publier';
   }
+}
+function resetUploadForm() {
+  document.getElementById('up-title').value = ''; growTa(document.getElementById('up-title'));
+  document.getElementById('up-file').value = '';
+  document.getElementById('up-price').value = '';
+  document.getElementById('up-lyrics').value = '';
+  document.getElementById('up-duration').textContent = '';
+  EDITED = null; PENDING_SOUND = null; IMPORTED = null; refreshEditButton();
+}
+// Envoi d'une publication avec fichier (photo, vidéo, musique…) : utilisé tout de suite, ou plus tard pour une publication en attente.
+async function sendMediaPost(p, file) {
+  const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CREATOR_TOKEN}` };
+  const net = async (f) => { try { return await f(); } catch (e) { throw isOfflineErr(e) ? offlineError() : e; } };
+  const r1 = await net(() => fetch(`${API_BASE_URL}/api/content/upload-url`, {
+    method: 'POST', headers,
+    body: JSON.stringify({ contentType: p.contentType, fileName: file.name, mimeType: file.type, fileSizeBytes: file.size }),
+  }));
+  const d1 = await r1.json();
+  if (!r1.ok) { const e = new Error(d1.error || 'Envoi refusé.'); e.status = r1.status; throw e; }
+  await net(() => sendFileToStorage(d1, file));
+  // Image d'aperçu pour les liens partagés (ne bloque jamais la publication).
+  const thumbKind = thumbKindOf(p.contentType, file);
+  const thumb = thumbKind ? await prepareThumb(thumbKind, { file }) : null;
+  const r3 = await net(() => fetch(`${API_BASE_URL}/api/content`, {
+    method: 'POST', headers,
+    body: JSON.stringify({ ...(thumb || {}), contentType: p.contentType, title: p.title, storageUrl: d1.storageKey, visibilityScope: p.visibilityScope, fileSizeBytes: file.size,
+      durationSeconds: p.durationSeconds, mediaWidth: p.mediaWidth, mediaHeight: p.mediaHeight, salePrice: p.salePrice, safetyCheck: p.safetyCheck,
+      soundContentId: p.soundContentId, aiMarkers: p.aiMarkers, importedFrom: p.importedFrom, fingerprint: p.fingerprint, sourceFingerprint: p.sourceFingerprint, lyrics: p.lyrics }),
+  }));
+  const d3 = await r3.json();
+  if (!r3.ok) { const e = new Error(d3.error || 'Enregistrement impossible.'); e.status = r3.status; throw e; }
+  return d3;
 }
 
 function renderFeed(items) {
@@ -2590,23 +3038,49 @@ function renderFeed(items) {
   if (VIEWER_PREMIUM && FEED_ADS[0]) fetch(`${API_BASE_URL}/api/business-ads/${FEED_ADS[0].id}/view`, { method: 'POST' }).catch(() => {});
 }
 
-// Titre / texte d'une publication : texte sur son fond pour une publication texte ; « Voir plus » si c'est long.
+// Texte long (publication ou message) : les 200 premiers mots, puis « … » ; toucher le texte ou « Voir plus » affiche tout.
+const CUT_WORDS = 200;
+function cutTextHtml(text) {
+  const s = String(text || ''), re = /\S+/g;
+  let n = 0, end = -1, m;
+  while ((m = re.exec(s))) { n++; if (n === CUT_WORDS) end = re.lastIndex; if (n > CUT_WORDS) break; }
+  if (n <= CUT_WORDS) return { html: escapeHtml(s), cut: false };
+  return { html: `${escapeHtml(s.slice(0, end))}<span class="ft-rest">${escapeHtml(s.slice(end))}</span>`, cut: true };
+}
+function moreBtnHtml() { return `<button class="more-btn" onclick="event.stopPropagation();toggleMoreText(this)">${escapeHtml(i18nT('Voir plus'))}</button>`; }
+// Texte d'un message privé (bulle) : même règle des 200 mots.
+function dmTextHtml(text, style) {
+  const c = cutTextHtml(text);
+  return `<span translate="no"${style ? ` style="${style}"` : ''}${c.cut ? ' class="cut" onclick="toggleCut(this)"' : ''}>${c.html}</span>${c.cut ? moreBtnHtml() : ''}`;
+}
+
+// Titre / texte d'une publication : texte sur son fond pour une publication texte.
 function feedTitleHtml(item) {
   const title = String(item.title || '');
-  const long = title.length > 320 || (title.match(/\n/g) || []).length > 5;
-  const more = long ? `<button class="more-btn" onclick="toggleMoreText(this)">${escapeHtml(i18nT('Voir plus'))}</button>` : '';
+  const c = cutTextHtml(title);
+  const more = c.cut ? moreBtnHtml() : '';
+  const p = `<p class="feed-title${c.cut ? ' cut' : ''}" translate="no"${c.cut ? ' onclick="toggleCut(this)"' : ''}>${c.html}</p>`;
   if (item.content_type === 'publication' && item.text_only) {
     const a = textBgAttrs(item.text_bg);
-    const big = !long && title.length <= 160 && (title.match(/\n/g) || []).length <= 4;
-    return `<div class="tp ${a.cls}${big ? ' tp-big' : ''}" style="${a.style}"><div class="tp-in"><p class="feed-title${long ? ' clamp' : ''}" translate="no">${escapeHtml(title)}</p></div></div>${more}`;
+    const big = !c.cut && title.length <= 160 && (title.match(/\n/g) || []).length <= 4;
+    return `<div class="tp ${a.cls}${big ? ' tp-big' : ''}" style="${a.style}"><div class="tp-in">${p}</div></div>${more}`;
   }
-  return `<p class="feed-title${long ? ' clamp' : ''}" translate="no">${escapeHtml(title)}</p>${more}`;
+  return p + more;
+}
+// Ouvre / referme un texte coupé, et met à jour son bouton « Voir plus / Voir moins ».
+function toggleCut(el) {
+  if (!el) return;
+  try { if (window.getSelection && String(window.getSelection())) return; } catch (e) {} // l'utilisateur sélectionne du texte
+  const open = el.classList.toggle('open');
+  const holder = el.closest('.tp') || el;
+  const btn = holder.nextElementSibling;
+  if (btn && btn.classList.contains('more-btn')) btn.textContent = i18nT(open ? 'Voir moins' : 'Voir plus');
 }
 function toggleMoreText(btn) {
-  const t = btn.previousElementSibling && (btn.previousElementSibling.classList.contains('feed-title') ? btn.previousElementSibling : btn.previousElementSibling.querySelector('.feed-title'));
-  if (!t) return;
-  const open = t.classList.toggle('clamp') === false;
-  btn.textContent = i18nT(open ? 'Voir moins' : 'Voir plus');
+  const prev = btn.previousElementSibling;
+  if (!prev) return;
+  const t = prev.classList.contains('cut') ? prev : prev.querySelector('.cut');
+  if (t) toggleCut(t);
 }
 
 // Carte d'une publication (utilisée dans le fil et sur le profil d'un créateur).
@@ -3142,7 +3616,11 @@ async function resendLoginCode() {
 }
 
 async function logoutCreator() {
+  // Envois encore en attente d'Internet : ils seraient perdus.
+  const waiting = OUTBOX.filter((x) => x.status !== 'echec').length;
+  if (waiting && !window.confirm(i18nF("Tu as {0} envoi(s) en attente d'Internet : ils seront perdus. Te déconnecter quand même ?", waiting))) return;
   await disablePushForThisDevice(); // ce téléphone ne reçoit plus les notifications de ce compte
+  await offWipe(); // publications et messages gardés pour le mode hors connexion : effacés de ce téléphone
   storeClear();
   CREATOR_TOKEN = null;
   CREATOR_ID = 'creator_demo';
@@ -3293,9 +3771,8 @@ async function uploadProfilePhoto(input) {
 // Recharge le profil réel (nom, photo, numéro de retrait, pays) après connexion.
 async function loadProfile() {
   if (!CREATOR_TOKEN || !CREATOR_ID) return;
-  const res = await fetch(`${API_BASE_URL}/api/creators/${CREATOR_ID}`, { headers: { Authorization: `Bearer ${CREATOR_TOKEN}` } });
-  if (!res.ok) return;
-  const p = await res.json();
+  const p = await apiCall(`/api/creators/${CREATOR_ID}`).catch(() => null); // gardé sur le téléphone pour le mode hors connexion
+  if (!p) return;
   if (p.name) document.getElementById('prof-name').value = p.name;
   document.getElementById('prof-city').value = p.city || '';
   if (!p.city) document.getElementById('prof-city').placeholder = 'Ajoute ta ville (obligatoire)';
@@ -3334,6 +3811,8 @@ async function afterLogin() {
   loadAiQuota();
   loadConversations();
   loadFeed();
+  refreshOutbox().then(() => flushOutbox()); // envois restés en attente sur ce téléphone
+  PIN_STATUS = null; PIN_TOKEN = null; pinStatus().catch(() => {});
   loadPayments();
   loadMyContent();
   loadFollowers();
@@ -4355,7 +4834,7 @@ function remoteSignedOut() {
   storeClear();
   CREATOR_TOKEN = null;
   try { alert(i18nT('Ce compte a été déconnecté de cet appareil par son propriétaire.')); } catch (e) {}
-  location.reload();
+  offWipe().finally(() => location.reload()); // rien ne reste de ce compte sur l'appareil
 }
 
 // ==== Nouveau mot de passe obligatoire (après un mot de passe provisoire de l'administrateur) ====
@@ -4443,62 +4922,134 @@ function startDmPolling() {
 }
 
 // ==== Appels audio et vidéo ====
+// L'appel passe par WebRTC. Pour qu'il marche bien sur les réseaux mobiles :
+//  • les « chemins réseau » (candidats ICE) trouvés après le début de l'appel sont envoyés au fur et à mesure à l'autre
+//    téléphone (avant, seuls ceux trouvés en 3 secondes partaient : connexion ratée ou son dans un seul sens) ;
+//  • le son de l'autre personne passe par un élément audio dédié, toujours actif (avant, le haut-parleur fort coupait
+//    cet élément et faisait passer le son par un amplificateur qui, sur certains téléphones, restait muet) ;
+//  • une minuterie montre quand l'autre a décroché et la durée de l'appel.
 let callCalleeOnline = false;
 let callPc = null, callStream = null, callId = null, callKind = 'audio', callRole = null, callPollTimer = null, incomingCall = null;
+let callIceOut = [], callIceTimer = null, callIceSeen = 0, callTimer = null, callConnectedAt = 0, callWatch = null, callAnsweredAt = 0;
 
 async function iceConfig() {
   try { return await apiCall('/api/calls/ice-config'); }
   catch (e) { return { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }; }
 }
-function waitIceGathering(pc) {
+// Premiers chemins réseau (1,5 s au plus) : les suivants partent ensuite au fur et à mesure.
+function waitIceGathering(pc, ms = 1500) {
   return new Promise(resolve => {
     if (pc.iceGatheringState === 'complete') return resolve();
     const done = () => { if (pc.iceGatheringState === 'complete') { pc.removeEventListener('icegatheringstatechange', done); resolve(); } };
     pc.addEventListener('icegatheringstatechange', done);
-    setTimeout(resolve, 3000); // on n'attend pas plus de 3 secondes
+    setTimeout(resolve, ms);
   });
 }
 function showCallOverlay(title, status, kind) {
   document.getElementById('call-title').textContent = title;
   document.getElementById('call-status').textContent = status;
+  document.getElementById('call-timer').textContent = '';
   document.getElementById('call-overlay').style.display = 'flex';
   document.getElementById('call-videos').style.display = kind === 'video' ? 'block' : 'none';
 }
 function setCallButtons(mode) {
   document.getElementById('call-accept').style.display = mode === 'incoming' ? '' : 'none';
   document.getElementById('call-reject').style.display = mode === 'incoming' ? '' : 'none';
+  document.getElementById('call-accept').disabled = false;
   document.getElementById('call-hangup').style.display = mode === 'incoming' ? 'none' : '';
   document.getElementById('call-mute').style.display = mode === 'active' ? '' : 'none';
   document.getElementById('call-speaker').style.display = mode === 'incoming' ? 'none' : '';
 }
 async function openMedia(kind) {
-  try { return await navigator.mediaDevices.getUserMedia({ audio: true, video: kind === 'video' }); }
+  const audio = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+  try { return await navigator.mediaDevices.getUserMedia({ audio, video: kind === 'video' ? { facingMode: 'user' } : false }); }
   catch (e) { throw new Error(kind === 'video' ? 'Autorise l\'accès au micro et à la caméra pour appeler.' : 'Autorise l\'accès au micro pour appeler.'); }
+}
+// Son de l'autre personne : lancé tout de suite ; si le téléphone le bloque, un bouton « Touche ici pour entendre » apparaît.
+function playRemoteAudio(fromTap) {
+  const a = document.getElementById('remote-audio'), btn = document.getElementById('call-sound-btn');
+  if (!a || !a.srcObject) return;
+  a.muted = false; a.volume = 1;
+  const p = a.play();
+  if (p && p.then) p.then(() => { btn.style.display = 'none'; }).catch(() => { btn.style.display = 'block'; });
+  if (fromTap) { try { audioCtx() && audioCtx().resume && audioCtx().resume(); } catch (e) {} }
+}
+function fmtCallTime(sec) { const m = Math.floor(sec / 60), s2 = Math.floor(sec % 60); return `${String(m).padStart(2, '0')}:${String(s2).padStart(2, '0')}`; }
+function startCallTimer() {
+  if (callTimer) return;
+  callConnectedAt = Date.now();
+  const el = document.getElementById('call-timer');
+  const tick = () => { el.textContent = '⏱ ' + fmtCallTime((Date.now() - callConnectedAt) / 1000); };
+  tick(); callTimer = setInterval(tick, 1000);
+}
+// Chemins réseau : envoyés par petits paquets ; ceux de l'autre téléphone sont ajoutés dès qu'ils arrivent.
+function queueIce(c) {
+  callIceOut.push({ candidate: c.candidate, sdpMid: c.sdpMid, sdpMLineIndex: c.sdpMLineIndex });
+  if (!callIceTimer) callIceTimer = setTimeout(flushIce, 400);
+}
+async function flushIce() {
+  callIceTimer = null;
+  if (!callId || !callIceOut.length) { if (callIceOut.length) callIceTimer = setTimeout(flushIce, 400); return; }
+  const batch = callIceOut.splice(0, 30);
+  try { await apiCall(`/api/calls/${callId}/ice`, { method: 'POST', body: { candidates: batch } }); }
+  catch (e) { callIceOut.unshift(...batch); }
+  if (callIceOut.length) callIceTimer = setTimeout(flushIce, 400);
+}
+async function applyRemoteIce(list) {
+  if (!callPc || !callPc.remoteDescription || !Array.isArray(list)) return;
+  for (; callIceSeen < list.length; callIceSeen++) {
+    try { await callPc.addIceCandidate(list[callIceSeen]); } catch (e) { /* chemin inutilisable : ignoré */ }
+  }
 }
 async function buildPeer(kind) {
   const pc = new RTCPeerConnection(await iceConfig());
   callStream.getTracks().forEach(t => pc.addTrack(t, callStream));
+  pc.onicecandidate = (e) => { if (e.candidate && e.candidate.candidate) queueIce(e.candidate); };
   pc.ontrack = (e) => {
-    const remote = document.getElementById('remote-video');
-    if (remote.srcObject !== e.streams[0]) remote.srcObject = e.streams[0];
+    const stream = e.streams[0] || new MediaStream([e.track]);
+    const audio = document.getElementById('remote-audio'), video = document.getElementById('remote-video');
+    if (audio.srcObject !== stream) audio.srcObject = stream;
+    if (video.srcObject !== stream) video.srcObject = stream; // l'image seulement (muette : le son passe par l'élément audio)
+    playRemoteAudio(false);
     if (SPEAKER_ON) applySpeaker();
   };
-  pc.onconnectionstatechange = () => {
-    if (pc.connectionState === 'connected') document.getElementById('call-status').textContent = 'En communication';
-    if (pc.connectionState === 'failed') {
-      document.getElementById('call-status').textContent = 'Connexion impossible sur ce réseau.';
+  const onState = () => {
+    const st = pc.connectionState || pc.iceConnectionState;
+    const ice = pc.iceConnectionState;
+    if (st === 'connected' || ice === 'connected' || ice === 'completed') {
+      document.getElementById('call-status').textContent = i18nT('En communication');
+      clearTimeout(callWatch); callWatch = null;
+      startCallTimer(); playRemoteAudio(false);
+    } else if (st === 'disconnected' || ice === 'disconnected') {
+      document.getElementById('call-status').textContent = i18nT('Réseau faible : reconnexion…');
+    } else if (st === 'failed' || ice === 'failed') {
+      document.getElementById('call-status').textContent = i18nT('Connexion impossible sur ce réseau. Réessaie avec une meilleure connexion.');
       setTimeout(() => hangUp(), 2500);
     }
   };
+  pc.onconnectionstatechange = onState;
+  pc.oniceconnectionstatechange = onState;
   if (kind === 'video') document.getElementById('local-video').srcObject = callStream;
   return pc;
+}
+// Après « décroché » : si la connexion n'arrive pas, on le dit (puis on abandonne au bout de 45 s).
+function watchConnection() {
+  clearTimeout(callWatch);
+  callAnsweredAt = Date.now();
+  callWatch = setTimeout(function step() {
+    if (!callPc || callTimer) return;
+    const waited = (Date.now() - callAnsweredAt) / 1000;
+    if (waited >= 45) { document.getElementById('call-status').textContent = i18nT('Connexion impossible sur ce réseau. Réessaie avec une meilleure connexion.'); setTimeout(() => hangUp(), 2500); return; }
+    document.getElementById('call-status').textContent = i18nT('Connexion difficile… vérifie ta connexion Internet.');
+    callWatch = setTimeout(step, 5000);
+  }, 15000);
 }
 
 async function startCall(kind) {
   if (CHAT_GROUP_ID) return startGroupCall(); // dans un groupe : appel vocal de groupe
   if (!dmContactId || callPc) return;
   const name = document.getElementById('dm-title').textContent;
-  callKind = kind; callRole = 'caller';
+  callKind = kind; callRole = 'caller'; callIceOut = []; callIceSeen = 0;
   showCallOverlay(name, 'Préparation de l\'appel…', kind); setCallButtons('calling');
   try {
     callStream = await openMedia(kind);
@@ -4508,6 +5059,7 @@ async function startCall(kind) {
     const d = await apiCall('/api/calls', { method: 'POST', body: { calleeId: dmContactId, kind, offer: callPc.localDescription.sdp } });
     callId = d.callId;
     callCalleeOnline = d.calleeOnline;
+    flushIce(); // chemins trouvés pendant l'envoi de l'appel
   } catch (e) { showToast(e.message); return cleanupCall(); }
   // En ligne : son téléphone va sonner tout de suite. Hors ligne : il reçoit une notification.
   document.getElementById('call-status').textContent = callCalleeOnline
@@ -4522,14 +5074,17 @@ async function startCall(kind) {
     if (c.status === 'accepted' && c.answer_sdp && !callPc.currentRemoteDescription) {
       stopRingtone();
       await callPc.setRemoteDescription({ type: 'answer', sdp: c.answer_sdp });
-      document.getElementById('call-status').textContent = 'Connexion…';
+      document.getElementById('call-status').textContent = i18nT('A décroché · connexion…');
       setCallButtons('active');
-    } else if (['rejected', 'missed', 'ended'].includes(c.status)) {
+      watchConnection();
+    }
+    if (c.status === 'accepted') await applyRemoteIce(c.ice);
+    else if (['rejected', 'missed', 'ended'].includes(c.status)) {
       const msg = { rejected: 'Appel refusé.', missed: 'Pas de réponse.', ended: 'Appel terminé.' }[c.status];
-      document.getElementById('call-status').textContent = msg;
+      document.getElementById('call-status').textContent = msg + (callTimer ? ' (' + fmtCallTime((Date.now() - callConnectedAt) / 1000) + ')' : '');
       setTimeout(cleanupCall, 1500); clearInterval(callPollTimer);
     }
-  }, 1500);
+  }, 1000);
 }
 
 // Vérifie régulièrement les appels entrants (quand l'app est ouverte).
@@ -4544,27 +5099,31 @@ async function checkIncomingCall() {
   try {
     const { call } = await apiCall('/api/calls/incoming');
     if (!call || incomingCall || callPc) return;
-    incomingCall = call; callId = call.id; callKind = call.kind; callRole = 'callee';
+    incomingCall = call; callId = call.id; callKind = call.kind; callRole = 'callee'; callIceOut = []; callIceSeen = 0;
     showCallOverlay(call.caller_name, call.kind === 'video' ? 'Appel vidéo entrant…' : 'Appel audio entrant…', call.kind);
     setCallButtons('incoming');
     startRingtone('entrant'); // sonne et vibre jusqu'à ce qu'on décroche ou refuse
     notifyIncomingCall(call);
-    // l'appelant a peut-être raccroché entre-temps
+    // L'appelant a peut-être raccroché ; après « Décrocher », on reçoit aussi ses chemins réseau.
     callPollTimer = setInterval(async () => {
       try {
         const c = (await apiCall(`/api/calls/${callId}`)).call;
-        if (['missed', 'ended'].includes(c.status) && !callPc) { stopRingtone(); document.getElementById('call-status').textContent = 'Appel manqué.'; setTimeout(cleanupCall, 1200); }
-        if (c.status === 'ended' && callPc) { document.getElementById('call-status').textContent = 'Appel terminé.'; setTimeout(cleanupCall, 1200); }
+        if (['missed', 'ended'].includes(c.status) && !callPc) { stopRingtone(); document.getElementById('call-status').textContent = 'Appel manqué.'; setTimeout(cleanupCall, 1200); clearInterval(callPollTimer); return; }
+        if (c.status === 'accepted' && !callPc && !ACCEPTING) { stopRingtone(); document.getElementById('call-status').textContent = i18nT('Répondu sur un autre appareil.'); setTimeout(cleanupCall, 1500); clearInterval(callPollTimer); return; }
+        if (c.status === 'ended' && callPc) { document.getElementById('call-status').textContent = 'Appel terminé.' + (callTimer ? ' (' + fmtCallTime((Date.now() - callConnectedAt) / 1000) + ')' : ''); setTimeout(cleanupCall, 1200); clearInterval(callPollTimer); return; }
+        if (callPc) await applyRemoteIce(c.ice);
       } catch (e) {}
-    }, 2000);
+    }, 1000);
   } catch (e) { /* réseau momentanément indisponible */ }
 }
 
+let ACCEPTING = false;
 async function acceptCall() {
-  if (!incomingCall) return;
+  if (!incomingCall || ACCEPTING) return;
+  ACCEPTING = true;
+  document.getElementById('call-accept').disabled = true;
   stopRingtone();
-  setCallButtons('active');
-  document.getElementById('call-status').textContent = 'Connexion…';
+  document.getElementById('call-status').textContent = i18nT('Connexion…');
   try {
     callStream = await openMedia(callKind);
     callPc = await buildPeer(callKind);
@@ -4572,7 +5131,13 @@ async function acceptCall() {
     await callPc.setLocalDescription(await callPc.createAnswer());
     await waitIceGathering(callPc);
     await apiCall(`/api/calls/${callId}/answer`, { method: 'POST', body: { answer: callPc.localDescription.sdp } });
-  } catch (e) { showToast(e.message); hangUp(); }
+    setCallButtons('active');
+    flushIce();
+    watchConnection();
+  } catch (e) {
+    document.getElementById('call-status').textContent = e.message;
+    setTimeout(() => hangUp(), 1800);
+  } finally { ACCEPTING = false; }
 }
 async function rejectCall() {
   if (callId) apiCall(`/api/calls/${callId}/reject`, { method: 'POST' }).catch(() => {});
@@ -4592,14 +5157,19 @@ function toggleMute() {
 function cleanupCall() {
   stopRingtone();
   resetSpeaker();
-  clearInterval(callPollTimer);
+  clearInterval(callPollTimer); clearInterval(callTimer); clearTimeout(callIceTimer); clearTimeout(callWatch);
+  callTimer = null; callIceTimer = null; callWatch = null; callIceOut = []; callIceSeen = 0; callConnectedAt = 0;
   try { callPc?.close(); } catch (e) {}
   callStream?.getTracks().forEach(t => t.stop());
-  callPc = null; callStream = null; callId = null; incomingCall = null; callRole = null;
+  callPc = null; callStream = null; callId = null; incomingCall = null; callRole = null; ACCEPTING = false;
+  document.getElementById('remote-audio').srcObject = null;
   document.getElementById('remote-video').srcObject = null;
   document.getElementById('local-video').srcObject = null;
+  document.getElementById('call-sound-btn').style.display = 'none';
+  document.getElementById('call-timer').textContent = '';
   document.getElementById('call-mute').textContent = '🎙️ Micro';
   document.getElementById('call-overlay').style.display = 'none';
+  if (MSG_PANE === 'calls' && document.getElementById('s-messages')?.classList.contains('active')) setTimeout(loadCallHistory, 800);
 }
 
 // ==== Paiements : historique réel et demande de retrait ====
@@ -4788,6 +5358,13 @@ async function showPaymentSheet(p, numbers, methods) {
   document.getElementById('pay-earn-box').style.display = earnOk ? 'block' : 'none';
   if (earnOk) document.getElementById('pay-earn-info').textContent = i18nF('Gains disponibles : {0} — paiement immédiat.', formatMoney(earn, 'USD'));
   if (!CURRENT_PAYMENT || CURRENT_PAYMENT.id !== p.id) return;
+  // Portefeuille fermé (code secret) : on propose de l'ouvrir pour payer avec le solde ou les gains.
+  if (methods.walletLocked && p.purpose !== 'depot') {
+    document.getElementById('pay-balance-box').style.display = 'block';
+    document.getElementById('pay-balance-btn').disabled = true;
+    document.getElementById('pay-balance-info').innerHTML = `${escapeHtml(i18nT('🔒 Ton portefeuille est fermé : ouvre-le avec ton code secret pour payer avec ton solde ou tes gains.'))}
+      <button class="mini-btn" style="margin-top:6px;" onclick="unlockForPayment()">${escapeHtml(i18nT('Ouvrir mon portefeuille'))}</button>`;
+  }
   PAY_METHODS = methods;
   const mm = methods.mobileMoney;
   document.getElementById('pay-mm-box').style.display = mm ? 'block' : 'none';
@@ -4800,7 +5377,7 @@ async function showPaymentSheet(p, numbers, methods) {
   }
   document.getElementById('pay-cp-box').style.display = methods.cinetpay ? 'block' : 'none';
   document.getElementById('pay-card-box').style.display = methods.card ? 'block' : 'none';
-  document.getElementById('pay-none').style.display = !mm && !methods.card && !methods.cinetpay && !enough && !earnOk ? 'block' : 'none';
+  document.getElementById('pay-none').style.display = !mm && !methods.card && !methods.cinetpay && !enough && !earnOk && !methods.walletLocked ? 'block' : 'none';
   // Directement au formulaire : le numéro mobile money est prêt à être confirmé.
   if (mm) setTimeout(() => { const ph = document.getElementById('pay-mm-phone'); if (ph && document.getElementById('pay-sheet').style.display === 'flex') ph.focus(); }, 80);
   // Un paiement en ligne déjà lancé : on reprend l'attente.
@@ -8999,19 +9576,62 @@ function fmtSize(n) {
   return n + ' o';
 }
 
+// ==== Messages en 3 parties : 💬 Messages · 📞 Appels · 👥 Groupes (groupes et contacts du téléphone) ====
+let MSG_PANE = (() => { try { return localStorage.getItem('eaji_msg_pane') || 'dm'; } catch (e) { return 'dm'; } })();
+const MSG_BADGES = { dm: 0, calls: 0, groups: 0 };
+function setMsgBadge(pane, n) {
+  MSG_BADGES[pane] = n;
+  const el = document.getElementById('mtab-' + pane);
+  if (el) { el.textContent = n > 99 ? '99+' : String(n); el.classList.toggle('on', n > 0); }
+}
+function showMsgPane(pane) {
+  MSG_PANE = ['dm', 'calls', 'groups'].includes(pane) ? pane : 'dm';
+  try { localStorage.setItem('eaji_msg_pane', MSG_PANE); } catch (e) {}
+  document.querySelectorAll('.msg-tab').forEach((b) => b.classList.toggle('sel', b.dataset.pane === MSG_PANE));
+  ['dm', 'calls', 'groups'].forEach((x) => { const el = document.getElementById('msg-pane-' + x); if (el) el.style.display = x === MSG_PANE ? 'block' : 'none'; });
+  if (MSG_PANE === 'calls') loadCallHistory();
+  if (MSG_PANE === 'groups') loadGroupsPane();
+  if (MSG_PANE === 'dm') loadConversations();
+}
+// Appels manqués : compteur sur la partie « Appels » ; vus quand on ouvre cette partie.
 async function loadMissedCalls() {
-  const box = document.getElementById('missed-calls');
-  if (!box || !CREATOR_TOKEN) return;
+  if (!CREATOR_TOKEN) return;
   try {
     const d = await apiCall('/api/calls-missed');
-    box.innerHTML = d.calls.slice(0, 5).map(c => `<div class="missed-row">
-      <span style="font-size:20px;">${c.kind === 'video' ? '🎥' : '📞'}</span>
-      <div class="grow"><b style="color:var(--coral);">Appel manqué</b> de ${escapeHtml(c.caller_name)}<div class="feed-type">${new Date(c.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</div></div>
-      <button class="mini-btn" data-name="${escapeHtml(c.caller_name)}" onclick="openConversation('${escapeHtml(c.caller_id)}', this.dataset.name)">Rappeler</button></div>`).join('');
-    // Vus seulement quand l'écran Messages est vraiment ouvert (sinon le compteur disparaîtrait tout seul au démarrage).
-    const onMessages = document.getElementById('s-messages')?.classList.contains('active') && !document.hidden;
-    if (d.unseen && onMessages) { await apiCall('/api/calls-missed/seen', { method: 'POST' }).catch(() => {}); refreshUnread(); }
-  } catch (e) { box.innerHTML = ''; }
+    setMsgBadge('calls', d.unseen || 0);
+    const onCalls = document.getElementById('s-messages')?.classList.contains('active') && !document.hidden && MSG_PANE === 'calls';
+    if (d.unseen && onCalls) { await apiCall('/api/calls-missed/seen', { method: 'POST' }).catch(() => {}); setMsgBadge('calls', 0); refreshUnread(); }
+  } catch (e) { /* hors connexion */ }
+}
+// Journal des appels : entrants, sortants, manqués, refusés, avec la durée.
+async function loadCallHistory() {
+  const box = document.getElementById('calls-list');
+  if (!box || !CREATOR_TOKEN) return;
+  loadMissedCalls();
+  try {
+    const d = await apiCall('/api/calls/history');
+    const when = (t) => new Date(t).toLocaleString(I18N.lang || 'fr', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const RES = {
+      repondu: (c) => (c.outgoing ? i18nT('↗ Appel sortant') : i18nT('↙ Appel entrant')) + ' · ' + fmtCallTime(c.durationSeconds),
+      en_cours: () => i18nT('📞 En cours'),
+      manque: () => i18nT('✗ Appel manqué'),
+      sans_reponse: () => i18nT('↗ Sans réponse'),
+      refuse: (c) => (c.outgoing ? i18nT('↗ Refusé par la personne') : i18nT('↙ Appel refusé')),
+      sonne: () => i18nT('🔔 Ça sonne…'),
+    };
+    box.innerHTML = d.calls.map((c) => `<div class="call-row${c.result === 'manque' ? ' missed' : ''}">
+        ${avatarHtml(c.otherName, c.otherPhotoUrl)}
+        <div class="grow"><b translate="no">${escapeHtml(c.otherName)}</b>
+          <span class="call-dir">${c.kind === 'video' ? '🎥 ' : '📞 '}${escapeHtml((RES[c.result] || RES.sonne)(c))} · ${escapeHtml(when(c.at))}</span></div>
+        <button class="call-btn" title="${escapeHtml(i18nT('Appel audio'))}" data-name="${escapeHtml(c.otherName)}" onclick="callBack('${escapeHtml(c.otherId)}', this.dataset.name, 'audio')">📞</button>
+        <button class="call-btn" title="${escapeHtml(i18nT('Appel vidéo'))}" data-name="${escapeHtml(c.otherName)}" onclick="callBack('${escapeHtml(c.otherId)}', this.dataset.name, 'video')">🎥</button>
+      </div>`).join('') || `<p class="feed-empty">${escapeHtml(i18nT('Aucun appel pour le moment.'))}</p>`;
+  } catch (e) { box.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`; }
+}
+// Rappeler depuis le journal : la conversation s'ouvre et l'appel part.
+function callBack(id, name, kind) {
+  openConversation(id, name);
+  setTimeout(() => startCall(kind === 'video' ? 'video' : 'audio'), 350);
 }
 
 async function loadConversations() {
@@ -9020,24 +9640,108 @@ async function loadConversations() {
   loadMissedCalls();
   try {
     const [dms, groups] = await Promise.all([apiCall('/api/conversations'), apiCall('/api/groups').catch(() => ({ groups: [] }))]);
-    const rows = [
-      ...groups.groups.map(g => ({ at: g.last_at || '', html: `
+    // 💬 Messages : les conversations, sauf celles avec les contacts du téléphone (rangées dans « Groupes »).
+    const mine = dms.conversations.filter((c) => !c.isContact);
+    CONTACT_IDS = new Set(dms.conversations.filter((c) => c.isContact).map((c) => c.other_id));
+    setMsgBadge('dm', mine.reduce((n, c) => n + (c.unread || 0), 0));
+    listEl.innerHTML = mine.map((c) => `
+        <div class="conv-item conv-row${c.unread ? ' unread' : ''}" style="position:relative;" onclick="openConversation('${escapeHtml(c.other_id)}', this.dataset.name)" data-name="${escapeHtml(c.other_name)}">
+          ${avatarHtml(c.other_name, c.otherPhotoUrl)}${c.online ? '<i class="conv-online" title="En ligne"></i>' : ''}
+          <div class="grow"><b>${escapeHtml(c.other_name)}${c.unread ? ` <em class="conv-unread">${c.unread}</em>` : ''}</b><span>${c.last_mine ? (c.last_read ? '<i class="dm-ticks read">✓✓</i> ' : '<i class="dm-ticks">✓</i> ') : ''}${escapeHtml(c.last_text || '')}</span></div>
+        </div>`).join('') ||
+      '<p class="feed-empty">Aucune conversation. Touche « Écrire » sur une publication du fil, ou va dans « 👥 Groupes » pour écrire à tes contacts.</p>';
+    renderGroupList(groups);
+    const contactUnread = dms.conversations.filter((c) => c.isContact).reduce((n, c) => n + (c.unread || 0), 0);
+    setMsgBadge('groups', contactUnread + (groups.groups || []).reduce((n, g) => n + (g.unread || 0), 0));
+  } catch (e) {
+    listEl.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
+  }
+}
+function renderGroupList(groups) {
+  const el = document.getElementById('grp-list');
+  if (!el || !groups) return;
+  el.innerHTML = (groups.groups || []).map((g) => `
         <div class="conv-item conv-row${g.unread ? ' unread' : ''}" onclick="openGroup('${escapeHtml(g.id)}')">
           <span class="chat-av group">👥</span>
           <div class="grow"><b>${escapeHtml(g.name)}</b> <small style="color:var(--muted);">· ${g.members} membres</small>${g.unread ? `<em class="conv-unread">${g.unread}</em>` : ''}
             <span>${g.active_call ? '📞 Appel en cours — touche pour rejoindre' : escapeHtml(g.last_audio ? '🎤 Message vocal' : (g.last_text || (g.last_file ? '📎 ' + g.last_file : '')))}</span></div>
-        </div>` })),
-      ...dms.conversations.map(c => ({ at: c.created_at || '', html: `
-        <div class="conv-item conv-row${c.unread ? ' unread' : ''}" style="position:relative;" onclick="openConversation('${escapeHtml(c.other_id)}', this.dataset.name)" data-name="${escapeHtml(c.other_name)}">
-          ${avatarHtml(c.other_name, c.otherPhotoUrl)}${c.online ? '<i class="conv-online" title="En ligne"></i>' : ''}
-          <div class="grow"><b>${escapeHtml(c.other_name)}${c.unread ? ` <em class="conv-unread">${c.unread}</em>` : ''}</b><span>${c.last_mine ? (c.last_read ? '<i class="dm-ticks read">✓✓</i> ' : '<i class="dm-ticks">✓</i> ') : ''}${escapeHtml(c.last_text || '')}</span></div>
-        </div>` })),
-    ].sort((a, b) => new Date(b.at) - new Date(a.at));
-    listEl.innerHTML = rows.map(r => r.html).join('') ||
-      '<p class="feed-empty">Aucune conversation. Touche « Écrire » sur une publication, ou crée un groupe.</p>';
-  } catch (e) {
-    listEl.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
+        </div>`).join('') || `<p class="feed-empty">${escapeHtml(i18nT('Aucun groupe. Touche « 👥 Nouveau groupe ».'))}</p>`;
+}
+// 👥 Groupes : verrou (code secret), contacts du téléphone qui utilisent Eaji, groupes.
+async function loadGroupsPane() {
+  if (!CREATOR_TOKEN) return;
+  const st = await pinStatus().catch(() => null);
+  const locked = Boolean(st && st.hasPin && st.groupsLocked && !pinValid());
+  document.getElementById('grp-lock').style.display = locked ? 'block' : 'none';
+  document.getElementById('grp-body').style.display = locked ? 'none' : 'block';
+  document.getElementById('grp-lock-toggle').checked = Boolean(st && st.groupsLocked);
+  if (locked) return;
+  loadPhoneContacts();
+  try { renderGroupList(await apiCall('/api/groups')); } catch (e) { /* hors connexion */ }
+}
+async function unlockGroups() {
+  if (await askPin('groupes')) loadGroupsPane();
+}
+async function loadPhoneContacts() {
+  const el = document.getElementById('contacts-list');
+  try {
+    const d = await apiCall('/api/phone-contacts', { pin: true });
+    d.contacts.forEach((c) => CONTACT_IDS.add(c.id));
+    el.innerHTML = d.contacts.map((c) => `
+        <div class="conv-item conv-row${c.unread ? ' unread' : ''}" style="position:relative;">
+          ${avatarHtml(c.name, c.photoUrl)}${c.online ? '<i class="conv-online" title="En ligne"></i>' : ''}
+          <div class="grow" data-name="${escapeHtml(c.name)}" onclick="openConversation('${escapeHtml(c.id)}', this.dataset.name)"><b translate="no">${escapeHtml(c.name)}${c.unread ? ` <em class="conv-unread">${c.unread}</em>` : ''}</b>
+            <span>${escapeHtml(c.last || i18nT('Contact sur Eaji · touche pour écrire'))}</span></div>
+          <button class="call-btn" title="${escapeHtml(i18nT('Appel audio'))}" data-name="${escapeHtml(c.name)}" onclick="callBack('${escapeHtml(c.id)}', this.dataset.name, 'audio')">📞</button>
+        </div>`).join('') || `<p class="feed-empty">${escapeHtml(i18nT('Touche « 📱 Mes contacts sur Eaji » : tu verras qui, dans ton téléphone, utilise déjà Eaji.'))}</p>`;
+  } catch (e) { if (!e.pin) el.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`; }
+}
+// Carnet de contacts du téléphone (Android / Chrome) ; sinon, on écrit les numéros.
+async function findPhoneContacts() {
+  const status = document.getElementById('contacts-status');
+  if (!('contacts' in navigator) || !navigator.contacts || typeof navigator.contacts.select !== 'function') {
+    document.getElementById('contacts-manual').style.display = 'block';
+    document.getElementById('contacts-numbers').focus();
+    return;
   }
+  let picked = [];
+  try { picked = await navigator.contacts.select(['name', 'tel'], { multiple: true }); }
+  catch (e) { status.textContent = i18nT('Accès aux contacts refusé.'); return; }
+  const phones = [];
+  picked.forEach((c) => (c.tel || []).forEach((t) => phones.push(t)));
+  if (!phones.length) { status.textContent = i18nT('Aucun numéro choisi.'); return; }
+  await matchPhones(phones);
+}
+async function matchTypedNumbers() {
+  const phones = document.getElementById('contacts-numbers').value.split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean);
+  if (!phones.length) return showToast(i18nT('Écris au moins un numéro.'));
+  await matchPhones(phones);
+}
+async function matchPhones(phones) {
+  const status = document.getElementById('contacts-status');
+  status.textContent = i18nT('Recherche sur Eaji…');
+  try {
+    const d = await apiCall('/api/phone-contacts/match', { method: 'POST', body: { phones: phones.slice(0, 500) } });
+    status.textContent = d.found.length ? i18nF('✅ {0} contact(s) trouvé(s) sur Eaji.', d.found.length) : i18nT('Aucun de ces numéros n\'utilise encore Eaji. Invite-les avec « 🔗 Partager Eaji ».');
+    document.getElementById('contacts-numbers').value = '';
+    loadPhoneContacts();
+  } catch (e) { status.textContent = e.message; }
+}
+async function toggleGroupsLock(box) {
+  const on = box.checked;
+  box.checked = !on; // remis seulement si c'est fait
+  const st = await pinStatus().catch(() => null);
+  if (!st) return;
+  if (!st.hasPin && !(await askPin('creer'))) return;
+  try {
+    let d;
+    try { d = await apiCall('/api/pin/groups-lock', { method: 'POST', body: { on } }); }
+    catch (e) { if (!e.pin || !(await askPin('groupes'))) throw e; d = await apiCall('/api/pin/groups-lock', { method: 'POST', body: { on } }); }
+    PIN_STATUS = { ...(PIN_STATUS || {}), groupsLocked: d.groupsLocked };
+    box.checked = d.groupsLocked;
+    if (d.groupsLocked) offPurgeLocked();
+    showToast(d.groupsLocked ? i18nT('🔒 Tes groupes sont maintenant protégés par ton code secret.') : i18nT('Tes groupes ne sont plus protégés.'));
+  } catch (e) { showToast(e.message); }
 }
 
 function showThread(title) {
@@ -9065,7 +9769,7 @@ function openConversation(creatorId, name) {
 
 async function openGroup(groupId) {
   if (!CREATOR_TOKEN) return;
-  try { CHAT_GROUP_INFO = await apiCall(`/api/groups/${groupId}`); }
+  try { CHAT_GROUP_INFO = await apiCall(`/api/groups/${groupId}`, { pin: true }); }
   catch (e) { return showToast(e.message); }
   dmContactId = null;
   CHAT_GROUP_ID = groupId;
@@ -9079,6 +9783,7 @@ function closeConversation() {
   document.getElementById('dm-thread-view').style.display = 'none';
   document.getElementById('dm-list-view').style.display = 'block';
   loadConversations();
+  if (MSG_PANE === 'groups') loadGroupsPane(); // contacts et groupes à jour (messages lus)
 }
 
 function fileBubble(m) {
@@ -9106,7 +9811,7 @@ async function renderDmThread(force) {
   const thread = document.getElementById('dm-thread');
   if (!dmContactId && !CHAT_GROUP_ID) { thread.innerHTML = ''; return; }
   try {
-    const data = await apiCall(CHAT_GROUP_ID ? `/api/groups/${CHAT_GROUP_ID}/messages` : `/api/messages/${dmContactId}`);
+    const data = await apiCall(CHAT_GROUP_ID ? `/api/groups/${CHAT_GROUP_ID}/messages` : `/api/messages/${dmContactId}`, { pin: force === true });
     const msgs = data.messages || [];
     // En ligne / vu à…
     const pres = document.getElementById('dm-presence');
@@ -9129,8 +9834,8 @@ async function renderDmThread(force) {
       }
       const body = m.audioUrl
         ? `🎤 Message vocal<audio controls preload="none" src="${escapeHtml(m.audioUrl)}"></audio>`
-        : m.shared ? sharedCardHtml(m) + (m.text ? `<div style="margin-top:4px;" translate="no">${escapeHtml(m.text)}</div>` : '')
-        : (m.file_name ? fileBubble(m) + (m.text ? `<div style="margin-top:4px;" translate="no">${escapeHtml(m.text)}</div>` : '') : `<span translate="no">${escapeHtml(m.text)}</span>`);
+        : m.shared ? sharedCardHtml(m) + (m.text ? `<div style="margin-top:4px;">${dmTextHtml(m.text)}</div>` : '')
+        : (m.file_name ? fileBubble(m) + (m.text ? `<div style="margin-top:4px;">${dmTextHtml(m.text)}</div>` : '') : dmTextHtml(m.text));
       // ✓ envoyé · ✓✓ bleu = lu
       const ticks = mine && kind === 'dm' ? (m.read_at ? '<span class="dm-ticks read" title="Lu">✓✓</span>' : '<span class="dm-ticks" title="Envoyé">✓</span>') : '';
       return `<div class="dm-bubble ${mine ? 'me' : 'them'}" data-mid="${escapeHtml(String(m.id))}">
@@ -9139,9 +9844,14 @@ async function renderDmThread(force) {
         <button class="dm-fwd" title="Options" onclick="openMsgMenu('${kind}', '${escapeHtml(String(m.id))}')">⋯</button>
       </div>`;
     }).join('') || '<p class="feed-empty">Écris le premier message.</p>';
+    renderDmPending();
     thread.scrollIntoView({ block: 'end' });
   } catch (e) {
-    thread.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
+    thread.innerHTML = e.pin
+      ? `<div class="lock-card"><div class="lock-ic">🔒</div><b>${escapeHtml(e.message)}</b><br><button class="primary-btn" onclick="askPin('groupes').then((ok) => ok && renderDmThread(true))">${escapeHtml(i18nT('Entrer mon code secret'))}</button></div>`
+      : `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
+    dmSignature = '';
+    renderDmPending();
   }
 }
 
@@ -9195,10 +9905,19 @@ async function sendDm() {
   const text = input.value.trim();
   if (!text || (!dmContactId && !CHAT_GROUP_ID)) return;
   if (wordCount(text) > 2000) return showToast(i18nT('Message trop long : 2 000 mots au maximum.'));
-  try { await postChatMessage({ text }); }
-  catch (e) { return showToast(e.message); }
+  let queued = false;
+  try {
+    if (!navigator.onLine) throw offlineError();
+    await postChatMessage({ text });
+  } catch (e) {
+    if (!isOfflineErr(e)) return showToast(e.message);
+    // Pas d'Internet : le message attend sur le téléphone et partira tout seul.
+    try { await queueOutbox({ kind: 'dm', group: CHAT_GROUP_ID || null, contact: CHAT_GROUP_ID ? null : dmContactId, text }); queued = true; }
+    catch (e2) { return showToast(e2.message); }
+  }
   input.value = '';
   growTa(input);
+  if (queued) { showToast(i18nT("📴 Pas d'Internet : ton message partira tout seul dès le retour de la connexion.")); return; }
   renderDmThread(true);
 }
 
@@ -10999,7 +11718,7 @@ function boostElement(el, on) {
   const existing = BOOSTS.get(el);
   if (!on) {
     if (existing) { try { existing.out.disconnect(); existing.src.disconnect(); } catch (e) {} BOOSTS.delete(el); }
-    el.muted = el.id === 'local-video';
+    el.muted = el.id === 'local-video' || el.id === 'remote-video'; // la vidéo est muette : le son passe par l'élément audio
     el.volume = 1;
     return;
   }
@@ -11014,7 +11733,7 @@ function boostElement(el, on) {
     const comp = ctx.createDynamicsCompressor(); // évite que le son sature
     src.connect(gain); gain.connect(comp); comp.connect(ctx.destination);
     BOOSTS.set(el, { src, out: comp, stream: el.srcObject });
-    el.muted = true; // le son passe par l'amplificateur
+    // L'élément reste actif : sur certains téléphones, l'amplificateur seul restait muet (on n'entendait plus l'autre).
   } catch (e) { /* ce téléphone ne permet pas l'amplification : le volume normal reste actif */ }
 }
 async function chooseSpeakerOutput(el, on) {
@@ -11027,7 +11746,7 @@ async function chooseSpeakerOutput(el, on) {
   } catch (e) {}
 }
 function speakerTargets() {
-  return [document.getElementById('remote-video'), ...document.querySelectorAll('#gcall-audios audio')];
+  return [document.getElementById('remote-audio'), ...document.querySelectorAll('#gcall-audios audio')];
 }
 function applySpeaker() {
   speakerTargets().forEach((el) => { boostElement(el, SPEAKER_ON); chooseSpeakerOutput(el, SPEAKER_ON); });
@@ -11218,9 +11937,12 @@ window.addEventListener('load', async () => {
       <div class="zone-sub">${list.length} pays · ${paid ? (paid === list.length ? 'tous monétisés' : paid + ' avec monétisation') : 'compte gratuit, sans monétisation'}</div></div><div class="check"></div></div>`;
   }).join('');
 
+  if (!navigator.onLine) setOffline(true);
   if (CREATOR_TOKEN) {
     // Session déjà ouverte (rechargement de page) : on saute directement dans l'app.
     CREATOR_ID = storeGet('eaji_creator_id') || CREATOR_ID;
+    refreshOutbox().then(() => { if (navigator.onLine) flushOutbox(); }); // envois restés en attente
+    pinStatus().catch(() => {}); // code secret : portefeuille et groupes protégés
     document.getElementById('onboarding-screen').style.display = 'none';
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-shell').style.display = 'flex';
@@ -11252,6 +11974,23 @@ window.addEventListener('load', async () => {
 
 </script>
 <div class="toast" id="toast"></div>
+<div class="sheet pin-sheet" id="pin-sheet" onclick="if (event.target === this) pinCancel()">
+  <div class="sheet-card pin-card">
+    <div class="pin-lock">🔐</div>
+    <div class="section-title" id="pin-title" style="margin:0 0 4px;color:var(--text);text-align:center;">Code secret</div>
+    <p class="feed-type" id="pin-sub" style="text-align:center;margin:0 0 12px;"></p>
+    <input class="field" id="pin-pass" type="password" autocomplete="current-password" placeholder="Mot de passe de ton compte" style="display:none;">
+    <div class="pin-dots" id="pin-dots"><i></i><i></i><i></i><i></i><i></i></div>
+    <p class="form-error" id="pin-error" style="text-align:center;min-height:18px;margin:6px 0;"></p>
+    <div class="pin-pad">
+      <button onclick="pinKey(1)">1</button><button onclick="pinKey(2)">2</button><button onclick="pinKey(3)">3</button>
+      <button onclick="pinKey(4)">4</button><button onclick="pinKey(5)">5</button><button onclick="pinKey(6)">6</button>
+      <button onclick="pinKey(7)">7</button><button onclick="pinKey(8)">8</button><button onclick="pinKey(9)">9</button>
+      <button class="pin-soft" onclick="pinCancel()">Annuler</button><button onclick="pinKey(0)">0</button><button class="pin-soft" onclick="pinBack()">⌫</button>
+    </div>
+    <button class="mini-btn" id="pin-forgot" style="width:100%;margin-top:10px;" onclick="forgotPin()">J'ai oublié mon code</button>
+  </div>
+</div>
 <div class="reel" id="reel" style="display:none;">
   <div class="reel-scroll" id="reel-scroll"></div>
   <div class="reel-cm" id="reel-cm" style="display:none;" onclick="if (event.target === this) closeReelComments()">
@@ -11841,8 +12580,12 @@ window.addEventListener('load', async () => {
 <div class="call-overlay" id="call-overlay">
   <div class="call-title" id="call-title"></div>
   <div class="call-status" id="call-status"></div>
+  <div id="call-timer"></div>
+  <!-- Le son de l'autre personne passe par cet élément (toujours actif, même pour un appel audio). -->
+  <audio id="remote-audio" autoplay playsinline></audio>
+  <button id="call-sound-btn" class="mini-btn" style="display:none;margin:8px auto;" onclick="playRemoteAudio(true)">🔊 Touche ici pour entendre</button>
   <div class="call-videos" id="call-videos">
-    <video id="remote-video" autoplay playsinline></video>
+    <video id="remote-video" autoplay playsinline muted></video>
     <video id="local-video" autoplay playsinline muted></video>
   </div>
   <div class="call-actions">
