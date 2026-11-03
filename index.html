@@ -788,6 +788,16 @@ textarea.grow-ta{resize:none;overflow-y:auto;line-height:1.45;min-height:46px;fo
 .call-row.missed b{color:var(--coral);}
 .call-row .call-dir{font-size:12px;color:var(--muted);}
 .call-row .call-btn{font-size:18px;}
+/* Contacts sur Eaji : en haut, aux couleurs de l'application ; les autres contacts du téléphone en bas, en gris. */
+.ct-eaji{background:linear-gradient(135deg,rgba(240,166,60,.14),rgba(69,199,181,.10)) padding-box,linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,var(--gold),var(--teal)) border-box !important;border:2px solid transparent !important;border-radius:14px;}
+.ct-eaji b{color:var(--gold);}
+.ct-eaji .call-btn{color:var(--gold);border:1px solid rgba(240,166,60,.6);border-radius:10px;}
+.ct-eaji .chat-av{box-shadow:0 0 0 2px var(--gold),0 0 0 4px rgba(69,199,181,.55);}
+.ct-other{opacity:.8;}
+.ct-other .chat-av{color:var(--muted);filter:grayscale(1);}
+.ct-other b{color:var(--muted);font-weight:600;}
+.ct-invite{flex-shrink:0;border-color:var(--teal) !important;color:var(--teal) !important;}
+.ct-others-title{color:var(--muted);}
 .grp-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px;}
 .grp-actions .mini-btn{flex:1;padding:10px;}
 .grp-lock-toggle{display:flex;gap:8px;align-items:center;font-size:13px;margin:6px 0;}
@@ -1698,10 +1708,14 @@ window.eajiLoader = (function () {
             </div>
             <p class="feed-type" id="contacts-status" style="margin:6px 0;"></p>
             <label class="grp-lock-toggle"><input type="checkbox" id="grp-lock-toggle" onchange="toggleGroupsLock(this)"> 🔒 Protéger mes groupes avec mon code secret</label>
-            <div class="section-title" style="margin-top:12px;">Mes contacts sur Eaji</div>
+            <div class="section-title" style="margin-top:12px;"><span>Mes contacts sur Eaji</span><span id="contacts-eaji-n"></span></div>
             <div id="contacts-list"><p class="feed-empty">Touche « 📱 Mes contacts sur Eaji » : tu verras qui, dans ton téléphone, utilise déjà Eaji.</p></div>
             <div class="section-title" style="margin-top:12px;">Mes groupes</div>
             <div id="grp-list"><p class="feed-empty">Aucun groupe. Touche « 👥 Nouveau groupe ».</p></div>
+            <div class="section-title" style="margin-top:12px;">📞 Appels avec mes contacts</div>
+            <div id="grp-calls-list"></div>
+            <div class="section-title ct-others-title" id="contacts-others-title" style="margin-top:12px;display:none;"><span>Pas encore sur Eaji</span><span id="contacts-others-n"></span></div>
+            <div id="contacts-others"></div>
           </div>
         </div>
       </div>
@@ -1913,7 +1927,7 @@ window.eajiLoader = (function () {
 
 <script>
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.03a';
+const APP_VERSION = '2026.11.03b';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -2545,6 +2559,7 @@ const offDel = (id) => offTx('outbox', 'readwrite', (st) => st.delete(id)).catch
 const offSet = (item) => offTx('outbox', 'readwrite', (st) => st.put(item)).catch(() => {});
 async function offWipe() {
   OFF_WIPED = true; // plus rien n'est gardé pour ce compte (réponses encore en route comprises)
+  try { Object.keys(localStorage).filter((k) => k.startsWith('eaji_contacts_autres|')).forEach((k) => localStorage.removeItem(k)); } catch (e) {}
   try { await offTx('cache', 'readwrite', (st) => st.clear()); await offTx('outbox', 'readwrite', (st) => st.clear()); } catch (e) { /* rien à effacer */ }
   OUTBOX = [];
 }
@@ -9594,14 +9609,38 @@ function showMsgPane(pane) {
   if (MSG_PANE === 'dm') loadConversations();
 }
 // Appels manqués : compteur sur la partie « Appels » ; vus quand on ouvre cette partie.
+// Les appels manqués des contacts du téléphone comptent dans « 👥 Groupes » (ils ne sortent pas de Groupes).
+let MISSED_GROUPS = 0;
 async function loadMissedCalls() {
   if (!CREATOR_TOKEN) return;
   try {
     const d = await apiCall('/api/calls-missed');
     setMsgBadge('calls', d.unseen || 0);
+    const grpDiff = (d.unseenGroups || 0) - MISSED_GROUPS;
+    MISSED_GROUPS = d.unseenGroups || 0;
+    if (grpDiff) setMsgBadge('groups', Math.max(0, MSG_BADGES.groups + grpDiff));
     const onCalls = document.getElementById('s-messages')?.classList.contains('active') && !document.hidden && MSG_PANE === 'calls';
     if (d.unseen && onCalls) { await apiCall('/api/calls-missed/seen', { method: 'POST' }).catch(() => {}); setMsgBadge('calls', 0); refreshUnread(); }
   } catch (e) { /* hors connexion */ }
+}
+// Lignes du journal des appels (partie « 📞 Appels » et appels avec les contacts dans « 👥 Groupes »).
+function renderCallRows(box, calls, empty) {
+  const when = (t) => new Date(t).toLocaleString(I18N.lang || 'fr', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const RES = {
+    repondu: (c) => (c.outgoing ? i18nT('↗ Appel sortant') : i18nT('↙ Appel entrant')) + ' · ' + fmtCallTime(c.durationSeconds),
+    en_cours: () => i18nT('📞 En cours'),
+    manque: () => i18nT('✗ Appel manqué'),
+    sans_reponse: () => i18nT('↗ Sans réponse'),
+    refuse: (c) => (c.outgoing ? i18nT('↗ Refusé par la personne') : i18nT('↙ Appel refusé')),
+    sonne: () => i18nT('🔔 Ça sonne…'),
+  };
+  box.innerHTML = calls.map((c) => `<div class="call-row${c.result === 'manque' ? ' missed' : ''}">
+        ${avatarHtml(c.otherName, c.otherPhotoUrl)}
+        <div class="grow"><b translate="no">${escapeHtml(c.otherName)}</b>
+          <span class="call-dir">${c.kind === 'video' ? '🎥 ' : '📞 '}${escapeHtml((RES[c.result] || RES.sonne)(c))} · ${escapeHtml(when(c.at))}</span></div>
+        <button class="call-btn" title="${escapeHtml(i18nT('Appel audio'))}" data-name="${escapeHtml(c.otherName)}" onclick="callBack('${escapeHtml(c.otherId)}', this.dataset.name, 'audio')">📞</button>
+        <button class="call-btn" title="${escapeHtml(i18nT('Appel vidéo'))}" data-name="${escapeHtml(c.otherName)}" onclick="callBack('${escapeHtml(c.otherId)}', this.dataset.name, 'video')">🎥</button>
+      </div>`).join('') || `<p class="feed-empty">${escapeHtml(empty)}</p>`;
 }
 // Journal des appels : entrants, sortants, manqués, refusés, avec la durée.
 async function loadCallHistory() {
@@ -9609,24 +9648,22 @@ async function loadCallHistory() {
   if (!box || !CREATOR_TOKEN) return;
   loadMissedCalls();
   try {
-    const d = await apiCall('/api/calls/history');
-    const when = (t) => new Date(t).toLocaleString(I18N.lang || 'fr', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-    const RES = {
-      repondu: (c) => (c.outgoing ? i18nT('↗ Appel sortant') : i18nT('↙ Appel entrant')) + ' · ' + fmtCallTime(c.durationSeconds),
-      en_cours: () => i18nT('📞 En cours'),
-      manque: () => i18nT('✗ Appel manqué'),
-      sans_reponse: () => i18nT('↗ Sans réponse'),
-      refuse: (c) => (c.outgoing ? i18nT('↗ Refusé par la personne') : i18nT('↙ Appel refusé')),
-      sonne: () => i18nT('🔔 Ça sonne…'),
-    };
-    box.innerHTML = d.calls.map((c) => `<div class="call-row${c.result === 'manque' ? ' missed' : ''}">
-        ${avatarHtml(c.otherName, c.otherPhotoUrl)}
-        <div class="grow"><b translate="no">${escapeHtml(c.otherName)}</b>
-          <span class="call-dir">${c.kind === 'video' ? '🎥 ' : '📞 '}${escapeHtml((RES[c.result] || RES.sonne)(c))} · ${escapeHtml(when(c.at))}</span></div>
-        <button class="call-btn" title="${escapeHtml(i18nT('Appel audio'))}" data-name="${escapeHtml(c.otherName)}" onclick="callBack('${escapeHtml(c.otherId)}', this.dataset.name, 'audio')">📞</button>
-        <button class="call-btn" title="${escapeHtml(i18nT('Appel vidéo'))}" data-name="${escapeHtml(c.otherName)}" onclick="callBack('${escapeHtml(c.otherId)}', this.dataset.name, 'video')">🎥</button>
-      </div>`).join('') || `<p class="feed-empty">${escapeHtml(i18nT('Aucun appel pour le moment.'))}</p>`;
+    const d = await apiCall('/api/calls/history'); // sans les appels avec les contacts du téléphone (ils restent dans Groupes)
+    renderCallRows(box, d.calls, i18nT('Aucun appel pour le moment.'));
   } catch (e) { box.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`; }
+}
+// 👥 Groupes : appels avec mes contacts du téléphone (manqués vus quand on les regarde ici).
+async function loadContactCalls() {
+  const box = document.getElementById('grp-calls-list');
+  if (!box || !CREATOR_TOKEN) return;
+  try {
+    const d = await apiCall('/api/calls/history?space=groups', { pin: true });
+    renderCallRows(box, d.calls.slice(0, 30), i18nT('Aucun appel avec tes contacts.'));
+    if (MISSED_GROUPS && document.getElementById('s-messages')?.classList.contains('active') && !document.hidden) {
+      await apiCall('/api/calls-missed/seen', { method: 'POST', body: { space: 'groups' } }).catch(() => {});
+      setMsgBadge('groups', Math.max(0, MSG_BADGES.groups - MISSED_GROUPS)); MISSED_GROUPS = 0; refreshUnread();
+    }
+  } catch (e) { if (!e.pin) box.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`; }
 }
 // Rappeler depuis le journal : la conversation s'ouvre et l'appel part.
 function callBack(id, name, kind) {
@@ -9652,7 +9689,7 @@ async function loadConversations() {
       '<p class="feed-empty">Aucune conversation. Touche « Écrire » sur une publication du fil, ou va dans « 👥 Groupes » pour écrire à tes contacts.</p>';
     renderGroupList(groups);
     const contactUnread = dms.conversations.filter((c) => c.isContact).reduce((n, c) => n + (c.unread || 0), 0);
-    setMsgBadge('groups', contactUnread + (groups.groups || []).reduce((n, g) => n + (g.unread || 0), 0));
+    setMsgBadge('groups', contactUnread + MISSED_GROUPS + (groups.groups || []).reduce((n, g) => n + (g.unread || 0), 0));
   } catch (e) {
     listEl.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`;
   }
@@ -9677,24 +9714,53 @@ async function loadGroupsPane() {
   document.getElementById('grp-lock-toggle').checked = Boolean(st && st.groupsLocked);
   if (locked) return;
   loadPhoneContacts();
+  loadContactCalls();
   try { renderGroupList(await apiCall('/api/groups')); } catch (e) { /* hors connexion */ }
 }
 async function unlockGroups() {
   if (await askPin('groupes')) loadGroupsPane();
 }
+// Contacts du téléphone qui n'utilisent pas encore Eaji : gardés seulement sur ce téléphone (jamais envoyés au serveur pour être gardés).
+const OTHERS_KEY = () => 'eaji_contacts_autres|' + (CREATOR_ID || '');
+function othersGet() { try { const a = JSON.parse(localStorage.getItem(OTHERS_KEY()) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function othersSet(list) { try { localStorage.setItem(OTHERS_KEY(), JSON.stringify(list.slice(0, 500))); } catch (e) {} }
+const telDigits = (t) => String(t || '').replace(/[^0-9]/g, '').slice(-9);
+const byName = (a, b) => String(a || '').localeCompare(String(b || ''), I18N.lang || 'fr', { sensitivity: 'base' });
 async function loadPhoneContacts() {
   const el = document.getElementById('contacts-list');
   try {
     const d = await apiCall('/api/phone-contacts', { pin: true });
     d.contacts.forEach((c) => CONTACT_IDS.add(c.id));
-    el.innerHTML = d.contacts.map((c) => `
-        <div class="conv-item conv-row${c.unread ? ' unread' : ''}" style="position:relative;">
-          ${avatarHtml(c.name, c.photoUrl)}${c.online ? '<i class="conv-online" title="En ligne"></i>' : ''}
+    const list = d.contacts.slice().sort((a, b) => byName(a.name, b.name)); // ordre alphabétique
+    el.innerHTML = list.map((c) => `
+        <div class="conv-item conv-row ct-eaji${c.unread ? ' unread' : ''}" style="position:relative;">
+          ${avatarHtml(c.name, c.photoUrl, 42)}${c.online ? '<i class="conv-online" title="En ligne"></i>' : ''}
           <div class="grow" data-name="${escapeHtml(c.name)}" onclick="openConversation('${escapeHtml(c.id)}', this.dataset.name)"><b translate="no">${escapeHtml(c.name)}${c.unread ? ` <em class="conv-unread">${c.unread}</em>` : ''}</b>
             <span>${escapeHtml(c.last || i18nT('Contact sur Eaji · touche pour écrire'))}</span></div>
           <button class="call-btn" title="${escapeHtml(i18nT('Appel audio'))}" data-name="${escapeHtml(c.name)}" onclick="callBack('${escapeHtml(c.id)}', this.dataset.name, 'audio')">📞</button>
         </div>`).join('') || `<p class="feed-empty">${escapeHtml(i18nT('Touche « 📱 Mes contacts sur Eaji » : tu verras qui, dans ton téléphone, utilise déjà Eaji.'))}</p>`;
+    document.getElementById('contacts-eaji-n').textContent = list.length ? ` · ${list.length}` : '';
   } catch (e) { if (!e.pin) el.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`; }
+  renderOtherContacts();
+}
+// En bas : les autres contacts du téléphone (pas encore sur Eaji), avec « Inviter ».
+function renderOtherContacts() {
+  const box = document.getElementById('contacts-others');
+  if (!box) return;
+  const list = othersGet().sort((a, b) => byName(a.n || a.t, b.n || b.t));
+  document.getElementById('contacts-others-title').style.display = list.length ? '' : 'none';
+  document.getElementById('contacts-others-n').textContent = list.length ? ` · ${list.length}` : '';
+  box.innerHTML = list.map((c) => `
+        <div class="conv-item conv-row ct-other">
+          ${avatarHtml(c.n || '#', null, 36)}
+          <div class="grow"><b translate="no">${escapeHtml(c.n || c.t)}</b><span translate="no">${escapeHtml(c.n ? c.t : '')}</span></div>
+          <button class="mini-btn ct-invite" data-tel="${escapeHtml(c.t)}" onclick="inviteContact(this.dataset.tel)">${escapeHtml(i18nT('📨 Inviter'))}</button>
+        </div>`).join('');
+}
+function inviteContact(tel) {
+  const text = i18nT('Rejoins-moi sur Eaji : https://eaji.org');
+  const num = String(tel || '').replace(/[^0-9+]/g, '');
+  location.href = `sms:${num}?&body=${encodeURIComponent(text)}`;
 }
 // Carnet de contacts du téléphone (Android / Chrome) ; sinon, on écrit les numéros.
 async function findPhoneContacts() {
@@ -9707,22 +9773,29 @@ async function findPhoneContacts() {
   let picked = [];
   try { picked = await navigator.contacts.select(['name', 'tel'], { multiple: true }); }
   catch (e) { status.textContent = i18nT('Accès aux contacts refusé.'); return; }
-  const phones = [];
-  picked.forEach((c) => (c.tel || []).forEach((t) => phones.push(t)));
+  const phones = [], names = [];
+  picked.forEach((c) => (c.tel || []).forEach((t) => { phones.push(t); names.push(String((c.name || [])[0] || '').trim()); }));
   if (!phones.length) { status.textContent = i18nT('Aucun numéro choisi.'); return; }
-  await matchPhones(phones);
+  await matchPhones(phones, names);
 }
 async function matchTypedNumbers() {
   const phones = document.getElementById('contacts-numbers').value.split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean);
   if (!phones.length) return showToast(i18nT('Écris au moins un numéro.'));
   await matchPhones(phones);
 }
-async function matchPhones(phones) {
+async function matchPhones(phones, names = []) {
   const status = document.getElementById('contacts-status');
   status.textContent = i18nT('Recherche sur Eaji…');
   try {
     const d = await apiCall('/api/phone-contacts/match', { method: 'POST', body: { phones: phones.slice(0, 500) } });
-    status.textContent = d.found.length ? i18nF('✅ {0} contact(s) trouvé(s) sur Eaji.', d.found.length) : i18nT('Aucun de ces numéros n\'utilise encore Eaji. Invite-les avec « 🔗 Partager Eaji ».');
+    // Les numéros qui ne sont pas sur Eaji restent sur ce téléphone, en bas de la liste (pour les inviter).
+    const onEaji = new Set();
+    d.found.forEach((f) => (f.indexes || []).forEach((i) => onEaji.add(telDigits(phones[i]))));
+    const others = new Map(othersGet().map((c) => [telDigits(c.t), c]));
+    phones.slice(0, 500).forEach((t, i) => { const k = telDigits(t); if (k.length >= 6 && !onEaji.has(k)) others.set(k, { n: names[i] || (others.get(k) || {}).n || '', t: String(t).trim() }); });
+    onEaji.forEach((k) => others.delete(k));
+    othersSet([...others.values()]);
+    status.textContent = d.found.length ? i18nF('✅ {0} contact(s) trouvé(s) sur Eaji.', d.found.length) : i18nT('Aucun de ces numéros n\'utilise encore Eaji. Ils sont en bas de la liste : touche « 📨 Inviter ».');
     document.getElementById('contacts-numbers').value = '';
     loadPhoneContacts();
   } catch (e) { status.textContent = e.message; }
@@ -9761,6 +9834,13 @@ function openConversation(creatorId, name) {
   if (!CREATOR_TOKEN) return showToast('Connecte-toi pour envoyer un message.');
   CHAT_GROUP_ID = null; CHAT_GROUP_INFO = null;
   dmContactId = creatorId;
+  // Conversation avec un contact du téléphone : elle reste dans « 👥 Groupes » (on y revient en fermant).
+  if (CONTACT_IDS.has(creatorId) && MSG_PANE !== 'groups') {
+    MSG_PANE = 'groups';
+    try { localStorage.setItem('eaji_msg_pane', MSG_PANE); } catch (e) {}
+    document.querySelectorAll('.msg-tab').forEach((b) => b.classList.toggle('sel', b.dataset.pane === MSG_PANE));
+    ['dm', 'calls', 'groups'].forEach((x) => { const el = document.getElementById('msg-pane-' + x); if (el) el.style.display = x === MSG_PANE ? 'block' : 'none'; });
+  }
   document.getElementById('dm-call-video').style.display = '';
   document.getElementById('dm-group-info').style.display = 'none';
   showThread(name || 'Conversation');
