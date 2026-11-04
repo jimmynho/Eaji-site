@@ -77,6 +77,10 @@ h1,h2,h3,.num{font-family:'Sora',sans-serif;}
 .section-title{font-size:15px;font-weight:600;margin:26px 0 12px;}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .stat-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;}
+.stat-click{cursor:pointer;}
+.stat-click:active{transform:scale(.98);}
+.stat-hint{font-size:12px;color:var(--gold);margin-top:4px;}
+.liker-row{cursor:pointer;}
 .stat-card .label{font-size:12px;color:var(--muted);margin:0 0 6px;}
 .stat-card .val{font-size:20px;font-weight:700;margin:0;}
 
@@ -1886,7 +1890,7 @@ window.eajiLoader = (function () {
       <div class="section-title" style="margin-top:24px;">Statistiques</div>
       <div class="stat-grid">
         <div class="stat-card"><p class="label">Abonn&eacute;s</p><p class="val" id="prof-stat-subs">0</p></div>
-        <div class="stat-card"><p class="label">J'aime re&ccedil;us</p><p class="val" id="prof-stat-likes">0</p></div>
+        <div class="stat-card stat-click" role="button" tabindex="0" onclick="openLikers()"><p class="label">J'aime re&ccedil;us</p><p class="val" id="prof-stat-likes">0</p><p class="stat-hint">Voir qui a aimé ›</p></div>
       </div>
 
       <div class="section-title" style="margin-top:24px;">Informations du compte</div>
@@ -1936,7 +1940,7 @@ window.eajiLoader = (function () {
 
 <script>
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.04a';
+const APP_VERSION = '2026.11.04b';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -1949,6 +1953,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
     if (btn.dataset.target === 's-messages' && typeof loadConversations === 'function' && !dmContactId && !CHAT_GROUP_ID) { showMsgPane(MSG_PANE); loadStatuses(); }
     // Paiements : statut de vérification d'identité à jour (validé ou refusé par l'équipe entre-temps).
     // Paiements : soldes et vérification d'identité toujours à jour.
+    if (btn.dataset.target === 's-profil' && typeof refreshLikesStat === 'function') refreshLikesStat();
     if (btn.dataset.target === 's-paiements' && typeof openWallet === 'function') openWallet();
     else if (typeof setWalletLocked === 'function' && pinValid && !pinValid() && PIN_STATUS && PIN_STATUS.hasPin) setWalletLocked(true);
   });
@@ -3820,9 +3825,41 @@ async function loadProfile() {
     document.getElementById('info-content').textContent = contentTypeLabel(p.primaryContentType);
   }
   if (p.verificationStatus) document.getElementById('info-verif').textContent = verifs[p.verificationStatus] || p.verificationStatus;
+  if (p.likesReceived != null) setLikesStat(p.likesReceived);
   // Le solde affiché est celui des gains réels (voir loadMoney).
   if (p.photoUrl) setAvatarImage(p.photoUrl);
   else if (p.name) document.querySelectorAll('.avatar, #avatar-edit').forEach((el) => { el.textContent = p.name[0].toUpperCase(); });
+}
+
+// ==== J'aime reçus : le total, et qui a aimé mes publications ====
+function setLikesStat(n) { const el = document.getElementById('prof-stat-likes'); if (el) el.textContent = Number(n || 0).toLocaleString('fr-FR'); }
+let LIKERS_BEFORE = null;
+async function openLikers(more = false) {
+  const sheet = document.getElementById('likers-sheet'), box = document.getElementById('likers-list'), btn = document.getElementById('likers-more');
+  sheet.style.display = 'flex';
+  if (!more) { LIKERS_BEFORE = null; box.innerHTML = `<p class="feed-empty">${escapeHtml(i18nT('Chargement…'))}</p>`; }
+  btn.style.display = 'none';
+  try {
+    const d = await apiCall('/api/creators/me/likes' + (LIKERS_BEFORE ? '?before=' + encodeURIComponent(LIKERS_BEFORE) : ''));
+    setLikesStat(d.total);
+    document.getElementById('likers-title').textContent = i18nF('❤️ {0} j\'aime reçus', Number(d.total).toLocaleString('fr-FR'));
+    const when = (t) => new Date(t).toLocaleString(I18N.lang || 'fr', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const rows = d.likes.map((l) => `<div class="conv-item conv-row liker-row" data-id="${escapeHtml(l.creatorId)}" onclick="closeLikers();openCreatorProfile(this.dataset.id)">
+        ${avatarHtml(l.name, l.photoUrl, 40)}
+        <div class="grow"><b translate="no">${escapeHtml(l.name)}</b>
+          <span>❤️ ${escapeHtml(i18nT('a aimé'))} « ${escapeHtml(l.title || contentTypeLabel(l.contentType))} » · ${escapeHtml(when(l.at))}</span></div>
+      </div>`).join('');
+    if (!more) box.innerHTML = rows || `<p class="feed-empty">${escapeHtml(i18nT('Personne n\'a encore aimé tes publications. Publie et partage tes vidéos !'))}</p>`;
+    else box.insertAdjacentHTML('beforeend', rows);
+    if (d.likes.length) LIKERS_BEFORE = d.likes[d.likes.length - 1].at;
+    btn.style.display = d.more ? '' : 'none';
+  } catch (e) { if (!more) box.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`; }
+}
+function closeLikers() { document.getElementById('likers-sheet').style.display = 'none'; }
+// Le total se met à jour chaque fois qu'on ouvre le Profil.
+async function refreshLikesStat() {
+  if (!CREATOR_TOKEN || !CREATOR_ID) return;
+  try { const d = await apiCall('/api/creators/me/likes'); setLikesStat(d.total); } catch (e) { /* hors connexion */ }
 }
 
 // ==== Après connexion : tout charger dans le bon ordre ====
@@ -12178,6 +12215,14 @@ window.addEventListener('load', async () => {
     <p class="feed-type" id="picker-count" style="margin:10px 0;">0 sélectionné(s)</p>
     <button class="primary-btn" id="picker-btn" onclick="confirmPicker()">Valider</button>
     <button class="mini-btn" style="width:100%;margin-top:8px;padding:10px;" onclick="closePicker()">Annuler</button>
+  </div>
+</div>
+<div class="sheet" id="likers-sheet" onclick="if (event.target === this) closeLikers()">
+  <div class="sheet-card">
+    <div class="section-title" style="margin:0 0 10px;color:var(--text);" id="likers-title">❤️ J'aime reçus</div>
+    <div id="likers-list"></div>
+    <button class="mini-btn" id="likers-more" style="width:100%;margin-top:10px;padding:10px;display:none;" onclick="openLikers(true)">Voir plus</button>
+    <button class="primary-btn" style="margin-top:10px;" onclick="closeLikers()">Fermer</button>
   </div>
 </div>
 <div class="sheet" id="ginfo" onclick="if (event.target === this) closeGroupInfo()">
