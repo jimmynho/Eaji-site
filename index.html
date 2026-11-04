@@ -799,7 +799,11 @@ textarea.grow-ta{resize:none;overflow-y:auto;line-height:1.45;min-height:46px;fo
 .ct-invite{flex-shrink:0;border-color:var(--teal) !important;color:var(--teal) !important;}
 .ct-others-title{color:var(--muted);}
 .grp-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px;}
-.grp-actions .mini-btn{flex:1;padding:10px;}
+.grp-actions .mini-btn{flex:1;padding:10px;min-width:30%;}
+.ct-acts{display:flex;gap:4px;flex-shrink:0;margin-left:auto;}
+.ct-acts .call-btn{padding:6px 7px;font-size:16px;}
+.vcf-help{font-size:12px;margin:0 0 6px;}
+.vcf-help summary{cursor:pointer;opacity:.85;}
 .grp-lock-toggle{display:flex;gap:8px;align-items:center;font-size:13px;margin:6px 0;}
 /* Verrou (portefeuille, groupes) */
 .lock-card{text-align:center;padding:26px 18px;border:1px solid var(--line);border-radius:16px;background:var(--surface);margin:14px 0;}
@@ -1697,10 +1701,17 @@ window.eajiLoader = (function () {
             <button class="primary-btn" onclick="unlockGroups()">Entrer mon code secret</button>
           </div>
           <div id="grp-body">
-            <div class="grp-actions">
+            <div class="section-title" style="margin-top:2px;"><span>Mes contacts sur Eaji</span><span id="contacts-eaji-n"></span></div>
+            <div id="contacts-list"><p class="feed-empty">Touche « 📱 Mes contacts sur Eaji » : tu verras qui, dans ton téléphone, utilise déjà Eaji.</p></div>
+            <div class="grp-actions" style="margin-top:10px;">
               <button class="mini-btn btn-on-gold" onclick="findPhoneContacts()">📱 Mes contacts sur Eaji</button>
+              <button class="mini-btn btn-on-gold" onclick="document.getElementById('vcf-input').click()">📂 Tout mon carnet</button>
               <button class="mini-btn btn-on-gold" onclick="openPicker('group')">👥 Nouveau groupe</button>
             </div>
+            <input type="file" id="vcf-input" accept=".vcf,text/vcard,text/x-vcard,text/directory" style="display:none;" onchange="importVcf(this)">
+            <details class="vcf-help"><summary>Tous mes contacts d'un coup ?</summary>
+              <p class="feed-type">Dans l'application Contacts du téléphone : menu ⋮ → Gérer les contacts (ou Paramètres) → Exporter → fichier .vcf. Puis touche « 📂 Tout mon carnet » et choisis ce fichier. Eaji trouve tout de suite tous tes contacts qui l'utilisent.</p>
+            </details>
             <div id="contacts-manual" class="settings-block" style="display:none;">
               <p class="feed-type" style="margin:0 0 8px;">Ton téléphone ne permet pas d'ouvrir le carnet de contacts ici. Écris un ou plusieurs numéros (séparés par une virgule) :</p>
               <input class="field" id="contacts-numbers" inputmode="tel" placeholder="0812 345 678, +243 850 000 000">
@@ -1708,8 +1719,6 @@ window.eajiLoader = (function () {
             </div>
             <p class="feed-type" id="contacts-status" style="margin:6px 0;"></p>
             <label class="grp-lock-toggle"><input type="checkbox" id="grp-lock-toggle" onchange="toggleGroupsLock(this)"> 🔒 Protéger mes groupes avec mon code secret</label>
-            <div class="section-title" style="margin-top:12px;"><span>Mes contacts sur Eaji</span><span id="contacts-eaji-n"></span></div>
-            <div id="contacts-list"><p class="feed-empty">Touche « 📱 Mes contacts sur Eaji » : tu verras qui, dans ton téléphone, utilise déjà Eaji.</p></div>
             <div class="section-title" style="margin-top:12px;">Mes groupes</div>
             <div id="grp-list"><p class="feed-empty">Aucun groupe. Touche « 👥 Nouveau groupe ».</p></div>
             <div class="section-title" style="margin-top:12px;">📞 Appels avec mes contacts</div>
@@ -1927,7 +1936,7 @@ window.eajiLoader = (function () {
 
 <script>
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.03b';
+const APP_VERSION = '2026.11.04a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -9715,6 +9724,7 @@ async function loadGroupsPane() {
   if (locked) return;
   loadPhoneContacts();
   loadContactCalls();
+  recheckOtherContacts();
   try { renderGroupList(await apiCall('/api/groups')); } catch (e) { /* hors connexion */ }
 }
 async function unlockGroups() {
@@ -9723,7 +9733,7 @@ async function unlockGroups() {
 // Contacts du téléphone qui n'utilisent pas encore Eaji : gardés seulement sur ce téléphone (jamais envoyés au serveur pour être gardés).
 const OTHERS_KEY = () => 'eaji_contacts_autres|' + (CREATOR_ID || '');
 function othersGet() { try { const a = JSON.parse(localStorage.getItem(OTHERS_KEY()) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
-function othersSet(list) { try { localStorage.setItem(OTHERS_KEY(), JSON.stringify(list.slice(0, 500))); } catch (e) {} }
+function othersSet(list) { try { localStorage.setItem(OTHERS_KEY(), JSON.stringify(list.slice(0, 3000))); } catch (e) {} }
 const telDigits = (t) => String(t || '').replace(/[^0-9]/g, '').slice(-9);
 const byName = (a, b) => String(a || '').localeCompare(String(b || ''), I18N.lang || 'fr', { sensitivity: 'base' });
 async function loadPhoneContacts() {
@@ -9737,7 +9747,11 @@ async function loadPhoneContacts() {
           ${avatarHtml(c.name, c.photoUrl, 42)}${c.online ? '<i class="conv-online" title="En ligne"></i>' : ''}
           <div class="grow" data-name="${escapeHtml(c.name)}" onclick="openConversation('${escapeHtml(c.id)}', this.dataset.name)"><b translate="no">${escapeHtml(c.name)}${c.unread ? ` <em class="conv-unread">${c.unread}</em>` : ''}</b>
             <span>${escapeHtml(c.last || i18nT('Contact sur Eaji · touche pour écrire'))}</span></div>
-          <button class="call-btn" title="${escapeHtml(i18nT('Appel audio'))}" data-name="${escapeHtml(c.name)}" onclick="callBack('${escapeHtml(c.id)}', this.dataset.name, 'audio')">📞</button>
+          <span class="ct-acts" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}">
+            <button class="call-btn" title="${escapeHtml(i18nT('Appel audio'))}" onclick="callBack(this.parentNode.dataset.id, this.parentNode.dataset.name, 'audio')">📞</button>
+            <button class="call-btn" title="${escapeHtml(i18nT('Appel vidéo'))}" onclick="callBack(this.parentNode.dataset.id, this.parentNode.dataset.name, 'video')">🎥</button>
+            <button class="call-btn" title="${escapeHtml(i18nT('Envoyer un fichier'))}" onclick="sendFileToContact(this.parentNode.dataset.id, this.parentNode.dataset.name)">📎</button>
+          </span>
         </div>`).join('') || `<p class="feed-empty">${escapeHtml(i18nT('Touche « 📱 Mes contacts sur Eaji » : tu verras qui, dans ton téléphone, utilise déjà Eaji.'))}</p>`;
     document.getElementById('contacts-eaji-n').textContent = list.length ? ` · ${list.length}` : '';
   } catch (e) { if (!e.pin) el.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`; }
@@ -9756,6 +9770,62 @@ function renderOtherContacts() {
           <div class="grow"><b translate="no">${escapeHtml(c.n || c.t)}</b><span translate="no">${escapeHtml(c.n ? c.t : '')}</span></div>
           <button class="mini-btn ct-invite" data-tel="${escapeHtml(c.t)}" onclick="inviteContact(this.dataset.tel)">${escapeHtml(i18nT('📨 Inviter'))}</button>
         </div>`).join('');
+}
+// 📎 Envoyer un fichier à un contact : ouvre sa conversation et le choix du fichier (photo, vidéo, document, audio).
+function sendFileToContact(id, name) {
+  openConversation(id, name);
+  document.getElementById('dm-file').click();
+}
+// 📂 Tout le carnet de contacts d'un coup : fichier .vcf exporté depuis l'application Contacts du téléphone.
+function vcfDecodeQP(v) {
+  const bytes = []; const t = v.replace(/=\r?\n/g, '');
+  for (let i = 0; i < t.length; i++) {
+    if (t[i] === '=' && /^[0-9A-F]{2}$/i.test(t.substr(i + 1, 2))) { bytes.push(parseInt(t.substr(i + 1, 2), 16)); i += 2; } else bytes.push(t.charCodeAt(i) & 255);
+  }
+  try { return new TextDecoder('utf-8').decode(new Uint8Array(bytes)); } catch (e) { return t; }
+}
+function parseVcf(text) {
+  const out = [];
+  // Lignes pliées (qui commencent par un espace) recollées ; les lignes « quoted-printable » finies par « = » continuent à la suivante.
+  const raw = String(text).replace(/\r\n|\r/g, '\n').replace(/\n[ \t]/g, '').split('\n');
+  const lines = [];
+  for (let i = 0; i < raw.length; i++) {
+    let l = raw[i];
+    if (/^[^:]*QUOTED-PRINTABLE[^:]*:/i.test(l)) while (l.endsWith('=') && i + 1 < raw.length) l = l.slice(0, -1) + raw[++i];
+    lines.push(l);
+  }
+  let cur = null;
+  for (const line of lines) {
+    if (/^BEGIN:VCARD/i.test(line)) { cur = { n: '', tels: [] }; continue; }
+    if (/^END:VCARD/i.test(line)) { if (cur) cur.tels.forEach((t) => out.push({ n: cur.n, t })); cur = null; continue; }
+    if (!cur) continue;
+    const i = line.indexOf(':'); if (i < 0) continue;
+    const key = line.slice(0, i).toUpperCase(), val0 = line.slice(i + 1);
+    const val = /ENCODING=QUOTED-PRINTABLE/.test(key) ? vcfDecodeQP(val0) : val0.replace(/\\([,;\\])/g, '$1');
+    const prop = key.split(';')[0].replace(/^ITEM\d+\./, '');
+    if (prop === 'FN' && val.trim()) cur.n = val.trim();
+    else if (prop === 'N' && !cur.n) cur.n = val.split(';').filter(Boolean).reverse().join(' ').trim();
+    else if (prop === 'TEL') { const t = val.replace(/^tel:/i, '').trim(); if (t) cur.tels.push(t); }
+  }
+  return out;
+}
+async function importVcf(input) {
+  const f = input.files && input.files[0]; input.value = '';
+  if (!f) return;
+  const status = document.getElementById('contacts-status');
+  if (f.size > 20 * 1024 * 1024) { status.textContent = i18nT('Fichier trop gros.'); return; }
+  const list = parseVcf(await f.text());
+  if (!list.length) { status.textContent = i18nT('Aucun numéro trouvé dans ce fichier. Choisis le fichier .vcf exporté par l\'application Contacts.'); return; }
+  await matchPhones(list.map((c) => c.t), list.map((c) => c.n));
+}
+// Une fois par jour : les contacts « pas encore sur Eaji » qui viennent de s'inscrire montent tout seuls en haut.
+async function recheckOtherContacts() {
+  const k = 'eaji_contacts_verif|' + (CREATOR_ID || '');
+  let last = 0; try { last = Number(localStorage.getItem(k)) || 0; } catch (e) {}
+  const others = othersGet();
+  if (!others.length || Date.now() - last < 24 * 3600 * 1000) return;
+  try { localStorage.setItem(k, String(Date.now())); } catch (e) {}
+  await matchPhones(others.map((c) => c.t), others.map((c) => c.n), { quiet: true });
 }
 function inviteContact(tel) {
   const text = i18nT('Rejoins-moi sur Eaji : https://eaji.org');
@@ -9783,22 +9853,30 @@ async function matchTypedNumbers() {
   if (!phones.length) return showToast(i18nT('Écris au moins un numéro.'));
   await matchPhones(phones);
 }
-async function matchPhones(phones, names = []) {
+async function matchPhones(phones, names = [], { quiet = false } = {}) {
   const status = document.getElementById('contacts-status');
-  status.textContent = i18nT('Recherche sur Eaji…');
+  if (!quiet) status.textContent = i18nT('Recherche sur Eaji…');
   try {
-    const d = await apiCall('/api/phone-contacts/match', { method: 'POST', body: { phones: phones.slice(0, 500) } });
+    // Le carnet entier peut avoir des milliers de numéros : envoyés par paquets de 500 (les numéros ne sont pas gardés).
+    const MAXN = 3000, onEaji = new Set(), ids = new Set();
+    const all = phones.slice(0, MAXN);
+    for (let s0 = 0; s0 < all.length; s0 += 500) {
+      const part = all.slice(s0, s0 + 500);
+      if (!quiet && all.length > 500) status.textContent = i18nF('Recherche sur Eaji… {0} / {1}', Math.min(s0 + 500, all.length), all.length);
+      const d = await apiCall('/api/phone-contacts/match', { method: 'POST', body: { phones: part } });
+      d.found.forEach((f) => { ids.add(f.id); (f.indexes || []).forEach((i) => onEaji.add(telDigits(part[i]))); });
+    }
     // Les numéros qui ne sont pas sur Eaji restent sur ce téléphone, en bas de la liste (pour les inviter).
-    const onEaji = new Set();
-    d.found.forEach((f) => (f.indexes || []).forEach((i) => onEaji.add(telDigits(phones[i]))));
     const others = new Map(othersGet().map((c) => [telDigits(c.t), c]));
-    phones.slice(0, 500).forEach((t, i) => { const k = telDigits(t); if (k.length >= 6 && !onEaji.has(k)) others.set(k, { n: names[i] || (others.get(k) || {}).n || '', t: String(t).trim() }); });
+    all.forEach((t, i) => { const k = telDigits(t); if (k.length >= 6 && !onEaji.has(k)) others.set(k, { n: names[i] || (others.get(k) || {}).n || '', t: String(t).trim() }); });
     onEaji.forEach((k) => others.delete(k));
     othersSet([...others.values()]);
+    const d = { found: [...ids] };
+    if (quiet && !d.found.length) return;
     status.textContent = d.found.length ? i18nF('✅ {0} contact(s) trouvé(s) sur Eaji.', d.found.length) : i18nT('Aucun de ces numéros n\'utilise encore Eaji. Ils sont en bas de la liste : touche « 📨 Inviter ».');
     document.getElementById('contacts-numbers').value = '';
     loadPhoneContacts();
-  } catch (e) { status.textContent = e.message; }
+  } catch (e) { if (!quiet) status.textContent = e.message; }
 }
 async function toggleGroupsLock(box) {
   const on = box.checked;
