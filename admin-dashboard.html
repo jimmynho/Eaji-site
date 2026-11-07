@@ -280,7 +280,9 @@ mark.watch{background:#FFD43B;color:#1A1206;border-radius:3px;padding:0 2px;font
       <input class="field" id="na-name" placeholder="Nom complet" />
       <label class="field-label">T&eacute;l&eacute;phone (sert &agrave; se connecter)</label>
       <input class="field" id="na-phone" placeholder="+243..." />
-      <label class="field-label">Mot de passe initial (8 caract&egrave;res minimum, &agrave; lui transmettre)</label>
+      <label class="field-label">Email (il y recevra son code de connexion)</label>
+      <input class="field" id="na-email" type="email" placeholder="nom@gmail.com" />
+      <label class="field-label">Mot de passe initial (12 caract&egrave;res minimum, lettres et chiffres, &agrave; lui transmettre)</label>
       <input class="field" id="na-password" type="password" />
       <label class="field-label">T&acirc;ches autoris&eacute;es</label>
       <label style="display:block;font-size:13px;margin:4px 0;"><input type="checkbox" class="na-perm" value="moderer_contenu" checked> Retirer les contenus signal&eacute;s</label>
@@ -293,7 +295,7 @@ mark.watch{background:#FFD43B;color:#1A1206;border-radius:3px;padding:0 2px;font
     <div class="section-title" style="margin-top:24px;">Administrateurs</div>
     <p class="login-hint" id="admins-msg" style="margin:0 0 12px;text-align:left;"></p>
     <table id="admins-table">
-      <tr><th>Nom</th><th>R&ocirc;le</th><th>T&eacute;l&eacute;phone(s)</th><th>T&acirc;ches</th><th>Statut</th></tr>
+      <tr><th>Nom</th><th>R&ocirc;le</th><th>T&eacute;l&eacute;phone(s)</th><th>T&acirc;ches</th><th>Statut</th><th></th></tr>
     </table>
   </section>
 
@@ -760,16 +762,13 @@ async function checkCredentials(){
     document.getElementById('step-credentials').style.display = 'none';
     document.getElementById('step-2fa').style.display = 'block';
     document.getElementById('login-webauthn').style.display = PENDING_WEBAUTHN && window.PublicKeyCredential ? 'block' : 'none';
-    if (data.principal) {
-      // Administrateur principal : code par email (jamais affiché), sauf panne de l'email.
-      document.getElementById('login-dev-hint').textContent = data.devCode
-        ? `${data.message} ${data.devCode}`
-        : (data.message || 'Code envoyé.') + (data.needsSetup ? ' Ajoute ton email et ton empreinte dans l\'onglet Sécurité.' : '');
-    } else {
-      document.getElementById('login-dev-hint').textContent = data.devCode
-        ? `Mode test — code : ${data.devCode}`
-        : 'Un code a été envoyé.';
-    }
+    // Le code n'est jamais affiché à l'écran : email, SMS, empreinte, ou clé de secours (ADMIN_RECOVERY_KEY).
+    const otp = document.getElementById('admin-otp');
+    const keyOnly = data.needsRecoveryKey || data.passkeyRequired;
+    otp.placeholder = keyOnly ? 'Clé de secours' : '123456';
+    otp.type = keyOnly ? 'password' : 'text';
+    document.getElementById('login-dev-hint').textContent = (data.message || 'Un code a été envoyé.')
+      + (data.principal && data.needsSetup && !data.needsRecoveryKey ? ' Ajoute ton email et ton empreinte dans l\'onglet Sécurité.' : '');
   } catch (e) {
     errorEl.textContent = e.message;
     errorEl.style.display = 'block';
@@ -930,7 +929,9 @@ async function changePassword(){
     return;
   }
   try {
-    await adminApi('/api/admin/auth/change-password', { method: 'POST', body: { currentPassword: current, newPassword: next } });
+    const r = await adminApi('/api/admin/auth/change-password', { method: 'POST', body: { currentPassword: current, newPassword: next } });
+    // Les autres connexions sont coupées : celle-ci continue avec son nouveau jeton.
+    if (r && r.token) { ADMIN_TOKEN = r.token; if (sessionStorage.getItem('eaji_admin_token')) sessionStorage.setItem('eaji_admin_token', r.token); }
   } catch (e) {
     errorEl.textContent = e.message;
     errorEl.style.display = 'block';
@@ -2504,7 +2505,9 @@ async function loadAdmins(){
     t.innerHTML = t.rows[0].outerHTML + admins.map(a => `
       <tr><td>${escapeHtml(a.name)}</td><td>${a.role === 'admin_principal' ? 'Principal' : 'Secondaire'}</td>
       <td>${escapeHtml(a.phones || '')}</td><td>${a.role === 'admin_principal' ? 'Toutes' : escapeHtml(a.permissions || 'Aucune')}</td>
-      <td><span class="badge ${a.status === 'actif' ? 'ok' : 'wait'}">${escapeHtml(a.status)}</span></td></tr>`).join('');
+      <td><span class="badge ${a.status === 'actif' ? 'ok' : 'wait'}">${escapeHtml(a.status)}</span>${a.has_email ? '' : '<div class="small">⚠️ pas d\'email</div>'}</td>
+      <td>${a.role === 'admin_principal' ? '' : `<button class="btn" data-id="${escapeHtml(a.id)}" onclick="setAdminEmail(this.dataset.id)">Email de connexion</button>
+        <button class="btn ${a.status === 'actif' ? 'remove' : 'approve'}" data-id="${escapeHtml(a.id)}" data-st="${a.status === 'actif' ? 'suspendu' : 'actif'}" onclick="setAdminStatus(this.dataset.id, this.dataset.st)">${a.status === 'actif' ? 'Suspendre' : 'Réactiver'}</button>`}</td></tr>`).join('');
     msg.textContent = '';
   } catch (e) { msg.textContent = e.message; }
 }
@@ -2517,6 +2520,7 @@ async function addAdmin(){
     name: document.getElementById('na-name').value.trim(),
     phone: normalizePhone(document.getElementById('na-phone').value),
     password: document.getElementById('na-password').value,
+    email: document.getElementById('na-email').value.trim(),
     permissions: [...document.querySelectorAll('.na-perm:checked')].map(c => c.value),
   };
   try {
@@ -2525,8 +2529,19 @@ async function addAdmin(){
     errorEl.textContent = e.message; errorEl.style.display = 'block'; return;
   }
   successEl.style.display = 'block';
-  ['na-name', 'na-phone', 'na-password'].forEach(id => document.getElementById(id).value = '');
+  ['na-name', 'na-phone', 'na-email', 'na-password'].forEach(id => document.getElementById(id).value = '');
   loadAdmins();
+}
+async function setAdminEmail(id) {
+  const email = prompt('Email de connexion de cet administrateur (il y recevra son code) :');
+  if (!email) return;
+  try { await adminApi(`/api/admin/${id}/email`, { method: 'POST', body: { email } }); loadAdmins(); }
+  catch (e) { document.getElementById('admins-msg').textContent = e.message; }
+}
+async function setAdminStatus(id, status) {
+  if (status === 'suspendu' && !confirm('Suspendre cet administrateur ? Il est déconnecté tout de suite.')) return;
+  try { await adminApi(`/api/admin/${id}/status`, { method: 'POST', body: { status } }); loadAdmins(); }
+  catch (e) { document.getElementById('admins-msg').textContent = e.message; }
 }
 
 async function loadFinances(){

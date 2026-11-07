@@ -1196,7 +1196,7 @@ window.eajiLoader = (function () {
       <!-- Nouveau mot de passe automatique : nom complet + numéro (ou email) + date de naissance -->
       <div class="ar-box" id="ar-box">
         <div class="section-title" style="margin:0 0 4px;">🔑 Nouveau mot de passe automatique</div>
-        <p class="avatar-edit-label" style="margin:0 0 10px;text-align:left;">&Eacute;cris les informations de ton compte, comme &agrave; l'inscription. Si elles sont correctes, tu re&ccedil;ois tout de suite un nouveau mot de passe.</p>
+        <p class="avatar-edit-label" style="margin:0 0 10px;text-align:left;">&Eacute;cris les informations de ton compte, comme &agrave; l'inscription. Si elles sont correctes, un nouveau mot de passe est envoy&eacute; &agrave; l'email de ton compte (jamais affich&eacute; &agrave; l'&eacute;cran, pour ta s&eacute;curit&eacute;).</p>
         <label class="field-label">Nom complet (comme &agrave; l'inscription)</label>
         <input class="field" id="ar-name" autocomplete="name" placeholder="Jimmy Komba" />
         <label class="field-label">Num&eacute;ro de t&eacute;l&eacute;phone ou email du compte</label>
@@ -1940,7 +1940,7 @@ window.eajiLoader = (function () {
 
 <script>
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.04b';
+const APP_VERSION = '2026.11.05a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -3631,7 +3631,9 @@ function showLoginCode(data, identifier, isResend) {
   } else {
     box.style.display = 'none';
     otp.value = '';
-    hint.textContent = data.smsSent
+    hint.textContent = data.channel === 'appareil'
+      ? i18nF('Code envoyé en notification sur ton autre appareil connecté à Eaji ({0}). Ouvre Eaji sur cet appareil pour le lire. Tu ne l\'as plus ? Touche « Mot de passe oublié ».', data.device || '')
+      : data.smsSent
       ? i18nT('Code envoyé par SMS. Il arrive en quelques secondes.')
       : i18nF('Code envoyé par email à {0}. Il arrive en quelques secondes.', data.emailTo || identifier);
   }
@@ -4184,9 +4186,9 @@ function arLoginNow() {
 // ==== « Posez votre question » : aide automatique pour se connecter et créer son compte ====
 const QA = [
   { q: "J'ai oublié mon mot de passe", k: ['oubli', 'mot de passe', 'password', 'forgot', 'reset', 'reinitialis', 'mdp', 'perdu', 'lost', 'contrasena', 'senha', 'nenosiri', 'passwort'],
-    a: "Appuie sur « Mot de passe oublié ? ». Dans « Nouveau mot de passe automatique », écris ton nom complet (comme à l'inscription), ton numéro ou ton email, et ta date de naissance. Si tout est correct, tu reçois tout de suite un nouveau mot de passe : à l'écran si tu as écrit ton numéro, par email si tu as écrit ton email. Ensuite, choisis ton propre mot de passe." },
+    a: "Appuie sur « Mot de passe oublié ? ». Dans « Nouveau mot de passe automatique », écris ton nom complet (comme à l'inscription), ton numéro ou ton email, et ta date de naissance. Si tout est correct, un nouveau mot de passe est envoyé à l'email de ton compte (jamais à l'écran, pour ta sécurité). Sans email, ta demande va à l'administrateur Eaji. Ensuite, choisis ton propre mot de passe." },
   { q: 'Je ne reçois pas le code de confirmation', k: ['code', 'recu', 'recoi', 'arrive', 'sms', 'spam', 'confirmation', 'otp', 'verification', 'chiffres', 'receive', 'codigo'],
-    a: "Si tu te connectes avec ton email, le code part par email : regarde aussi dans les spams et attends une minute. Sinon, connecte-toi avec ton numéro de téléphone : le code s'affiche directement à l'écran. Tu peux aussi appuyer sur « Recevoir un nouveau code »." },
+    a: "Sur un téléphone déjà connecté à ton compte, le code s'affiche à l'écran. Sur un nouvel appareil, il part par email (regarde aussi dans les spams) ou en notification sur ton autre téléphone connecté à Eaji. Tu peux aussi appuyer sur « Recevoir un nouveau code »." },
   { q: '« Aucun compte avec ce numéro »', k: ['aucun compte', 'introuvable', 'indicatif', 'not found', 'no account', 'existe pas', 'numero', 'number', 'numéro'],
     a: "Écris ton numéro avec l'indicatif du pays, par exemple +243 812 345 678, ou essaie avec l'email de ton compte. Si tu n'as jamais créé de compte, appuie sur « Créer mon compte »." },
   { q: '« Mot de passe incorrect »', k: ['mot de passe incorrect', 'incorrect', 'faux', 'wrong', 'invalide', 'majuscule', 'errone', 'mauvais'],
