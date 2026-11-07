@@ -14,6 +14,16 @@
   "dir": "ltr",
   "categories": ["social", "entertainment", "video"],
   "prefer_related_applications": false,
+  "related_applications": [
+    { "platform": "play", "id": "org.eaji.app", "url": "https://play.google.com/store/apps/details?id=org.eaji.app" }
+  ],
+  "screenshots": [
+    { "src": "capture-1-decouvrir.jpg", "sizes": "1080x1920", "type": "image/jpeg", "form_factor": "narrow", "label": "Découvre les publications de la communauté" },
+    { "src": "capture-2-messages.jpg", "sizes": "1080x1920", "type": "image/jpeg", "form_factor": "narrow", "label": "Messages, appels et groupes" },
+    { "src": "capture-3-conversation.jpg", "sizes": "1080x1920", "type": "image/jpeg", "form_factor": "narrow", "label": "Discute avec tes contacts" },
+    { "src": "capture-4-eajimmy-ai.jpg", "sizes": "1080x1920", "type": "image/jpeg", "form_factor": "narrow", "label": "Eajimmy AI : aide, montages et photo qui parle" },
+    { "src": "capture-large-decouvrir.jpg", "sizes": "1920x1080", "type": "image/jpeg", "form_factor": "wide", "label": "Eaji sur ordinateur" }
+  ],
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
