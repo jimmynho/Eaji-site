@@ -1941,7 +1941,7 @@ window.eajiLoader = (function () {
 
 <script>
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.05b';
+const APP_VERSION = '2026.11.07a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -3721,6 +3721,9 @@ async function verifyLoginCode() {
       } catch (fe) {
         if (fe && /invalid-verification-code|missing-verification-code/.test(fe.code || '')) throw new Error(i18nT('Ce code ne correspond pas. Vérifie les 6 chiffres.'));
         if (fe && /code-expired/.test(fe.code || '')) { eajiLoader.hide(); await resendLoginCode(); return; }
+        // Autre problème de Firebase : le code part tout de suite autrement (personne n'est bloqué).
+        FB_LOGIN.confirm = null; eajiLoader.hide();
+        if (LOGIN_PENDING) { await requestLoginCode(LOGIN_PENDING.identifier, LOGIN_PENDING.password, true, { skipFirebase: true }); return; }
         throw new Error(i18nT('La vérification du code par SMS a échoué. Réessaie.'));
       }
       res = await fetch(`${API_BASE_URL}/api/auth/login/verify-firebase`, {
