@@ -2443,7 +2443,8 @@ async function loadSystemStatus(){
       item(d.pawapay, `Mobile money pawaPay${d.pawapay ? (d.pawapayLive ? ' (argent réel)' : ' (test)') : ' (à brancher)'}`, 'PAWAPAY_TOKEN et PAWAPAY_ENV=production sur Railway'),
       item(d.paypal, `Carte / PayPal${d.paypal ? (d.paypalLive ? ' (argent réel)' : ' (test)') : ' (à brancher)'}`, 'PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_ENV=production'),
       item(d.turn.working, `Relais d'appels TURN${d.turn.provider ? ' (' + d.turn.provider + ')' : ' (à brancher)'}`, 'CF_TURN_KEY_ID et CF_TURN_KEY_API_TOKEN (Cloudflare)'),
-      item(d.sms, `SMS${d.sms ? '' : ' (codes affichés à l\'écran)'}`, 'TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER'),
+      item(d.firebase || d.sms, d.firebase ? `SMS Firebase (${d.firebaseMax} par jour au plus)` : d.sms ? 'SMS Twilio' : 'SMS Firebase (à brancher : codes par email ou notification)',
+        'FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_APP_ID sur Railway et Render'),
       item(d.storage, 'Stockage des fichiers'), item(d.email, 'E-mails'),
     ].join(' ');
     box.style.display = '';
