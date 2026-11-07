@@ -186,6 +186,10 @@ select.field{appearance:none;}
 .settings-block .section-title{margin:0 0 12px;}
 .mini-btn{background:none;border:1px solid var(--line);color:var(--text);border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer;}
 .mini-btn.danger{border-color:var(--coral);color:var(--coral);}
+/* Appli du Play Store : pas d'achats numériques en attendant Google Play Billing (règle de Google). */
+.play-store .play-hide,.play-store .plan-row,.play-store .live-gift-row,.play-store .gift-box,.play-store .earn-actions,.play-store .feed-action[onclick^="openGift"]{display:none!important;}
+.delacc-list{margin:0 0 10px;padding-left:18px;font-size:13px;color:var(--muted);}
+.delacc-check{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:4px 0 10px;}
 .list-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;}
 .list-row:last-child{border-bottom:none;}
 .list-row .grow{flex:1;min-width:0;}
@@ -1436,6 +1440,7 @@ window.eajiLoader = (function () {
         <b>Comment la r&eacute;mun&eacute;ration est calcul&eacute;e&nbsp;:</b> d&egrave;s 1 000 abonn&eacute;s v&eacute;rifi&eacute;s et 1 000 vues cumul&eacute;es, tu touches 2&nbsp;$ (ou &eacute;quivalent 2&euro;/5000&nbsp;FC) par tranche de 1 000 abonn&eacute;s, en croissance continue. Tout le monde peut ouvrir un compte&nbsp;; les gains sont r&eacute;serv&eacute;s aux cr&eacute;ateurs des pays monétis&eacute;s.
       </div>
 
+      <div class="play-hide">
       <div class="section-title" style="margin-top:24px;">Espace publicitaire</div>
       <p class="feed-type" style="margin:-6px 0 14px;">Rends tes articles visibles aupr&egrave;s des abonn&eacute;s et non-abonn&eacute;s.</p>
       <div class="zone-list" id="ad-tiers">
@@ -1488,6 +1493,7 @@ window.eajiLoader = (function () {
       <input class="field" id="bad-file" type="file" accept="image/*,video/*">
       <p class="form-error" id="bad-error"></p>
       <button class="primary-btn" id="bad-btn" onclick="createBusinessAd()">Cr&eacute;er l'annonce et payer</button>
+      </div>
       <div class="settings-block" id="my-ads" style="margin-top:14px;"></div>
     </section>
 
@@ -1628,7 +1634,7 @@ window.eajiLoader = (function () {
         </div>
       </div>
 
-      <div class="settings-block">
+      <div class="settings-block play-hide">
         <div class="section-title">Soutenir Eaji (don)</div>
         <p class="feed-type" style="margin:-6px 0 10px;">Ton don aide Eaji &agrave; payer les cr&eacute;ateurs et &agrave; grandir.</p>
         <div class="phone-row">
@@ -1640,9 +1646,9 @@ window.eajiLoader = (function () {
       <div class="settings-block">
         <div class="section-title">Mon solde Eaji</div>
         <p class="pay-amount" id="wallet-balance" style="margin:0 0 2px;">0</p>
-        <p class="feed-type" style="margin:0 0 10px;">D&eacute;pose de l'argent une fois, puis paie <b>tout de suite</b> les cadeaux, les vid&eacute;os, les achats, le Premium et la publicit&eacute;, sans attendre de v&eacute;rification. <span id="wallet-fees"></span></p>
-        <input class="field" id="wallet-amount" inputmode="decimal" placeholder="Montant en dollars (ex : 10)">
-        <button class="mini-btn" onclick="walletDeposit()">D&eacute;poser sur mon solde</button>
+        <p class="feed-type play-hide" style="margin:0 0 10px;">D&eacute;pose de l'argent une fois, puis paie <b>tout de suite</b> les cadeaux, les vid&eacute;os, les achats, le Premium et la publicit&eacute;, sans attendre de v&eacute;rification. <span id="wallet-fees"></span></p>
+        <input class="field play-hide" id="wallet-amount" inputmode="decimal" placeholder="Montant en dollars (ex : 10)">
+        <button class="mini-btn play-hide" onclick="walletDeposit()">D&eacute;poser sur mon solde</button>
         <div id="wallet-box" style="display:none;margin-top:12px;">
           <input class="field" id="wallet-to" placeholder="Email ou num&eacute;ro du destinataire (pour envoyer)">
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -1900,9 +1906,15 @@ window.eajiLoader = (function () {
         <div class="info-row"><span class="k">Contenu principal</span><span id="info-content">&ndash;</span></div>
         <div class="info-row"><span class="k">V&eacute;rification</span><span class="verif" id="info-verif">&ndash;</span></div>
       </div>
-      <button class="primary-btn" id="install-btn" style="margin-top:20px;" onclick="installApp()">📲 Installer Eaji sur mon t&eacute;l&eacute;phone</button>
+      <button class="primary-btn play-hide" id="install-btn" style="margin-top:20px;" onclick="installApp()">📲 Installer Eaji sur mon t&eacute;l&eacute;phone</button>
       <p class="avatar-edit-label" style="margin-top:14px;text-align:center;"><a href="conditions.html" target="_blank" rel="noopener" style="color:var(--on-gold);">Conditions d'utilisation</a> · <a href="confidentialite.html" target="_blank" rel="noopener" style="color:var(--on-gold);">Confidentialit&eacute;</a></p>
       <button class="primary-btn" style="margin-top:12px;background:var(--surface2);color:var(--text);border:1px solid var(--line);" onclick="logoutCreator()">Se d&eacute;connecter</button>
+      <div class="settings-block" id="delacc-block" style="margin-top:18px;">
+        <div class="section-title">🗑️ Supprimer mon compte</div>
+        <p class="feed-type" id="delacc-state" style="margin:-6px 0 10px;">Ton compte et toutes tes données seront effacés.</p>
+        <button class="mini-btn danger" id="delacc-btn" onclick="openDeleteAccount()">Supprimer mon compte</button>
+        <button class="mini-btn" id="delacc-cancel" style="display:none;" onclick="cancelAccountDeletion()">Annuler la suppression</button>
+      </div>
           <p class="feed-type" style="text-align:center;margin:18px 0 6px;">Version de l'application : <b id="app-version"></b></p>
     </section>
 
@@ -1940,8 +1952,16 @@ window.eajiLoader = (function () {
 </div>
 
 <script>
+// Appli installée depuis le Play Store (package org.eaji.app) : Google interdit d'y vendre Premium, vidéos,
+// cadeaux, etc. hors de son système de paiement. On cache ces achats dans l'appli Play Store seulement ;
+// le site eaji.org reste identique.
+const PLAY_APP = (() => {
+  const fromPlay = /^android-app:\/\/org\.eaji\.app(\/|$)/.test(document.referrer || '') || /[?&]src=play(&|$)/.test(location.search);
+  try { if (fromPlay) sessionStorage.setItem('eaji_play', '1'); return sessionStorage.getItem('eaji_play') === '1'; } catch (e) { return fromPlay; }
+})();
+if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.07a';
+const APP_VERSION = '2026.11.07b';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -3957,6 +3977,7 @@ async function afterLogin() {
   startNotifications();
   resumePendingLinks();
   loadSessions();
+  loadDeletionState(true);
 }
 
 // ==== Profil public d'un créateur (point 6) ====
@@ -5814,7 +5835,7 @@ async function loadMoney() {
       <div class="list-row"><div class="grow">${escapeHtml(p.description)}
         <div class="sub">${escapeHtml(p.reference)} · ${escapeHtml(formatMoney(p.amountLocal, p.currency))} · ${new Date(p.createdAt).toLocaleDateString('fr-FR')}${p.adminNote && p.status === 'refuse' ? ' · ' + escapeHtml(p.adminNote) : ''}</div></div>
         <span class="pay-state ${escapeHtml(p.status)}">${p.nonReel ? escapeHtml(i18nT('Non réel (retiré)')) : escapeHtml(PAYMENT_STATUS[p.status] || p.status)}</span>
-        ${p.status === 'en_attente' ? `<button class="mini-btn" onclick="reopenPayment('${escapeHtml(p.id)}')">Payer</button>` : ''}
+        ${p.status === 'en_attente' ? `<button class="mini-btn play-hide" onclick="reopenPayment('${escapeHtml(p.id)}')">Payer</button>` : ''}
       </div>`).join('') || '<p class="feed-type">Aucun paiement pour le moment.</p>';
   } catch (e) { /* hors ligne */ }
 }
@@ -5970,7 +5991,7 @@ async function loadMyAds() {
     box.innerHTML = ads.map((a) => `
       <div class="list-row"><div class="grow">${escapeHtml(a.company)}
         <div class="sub">${escapeHtml(labels[a.status] || a.status)}${a.ends_at && a.status === 'actif' ? " jusqu'au " + new Date(a.ends_at).toLocaleDateString('fr-FR') : ''} · ${escapeHtml(adTargetLabel(a))} · ${Number(a.impressions)} vues · ${Number(a.clicks)} clics</div></div>
-        ${a.status === 'en_attente' ? `<button class="mini-btn" onclick="startPayment('annonce', { targetId: '${escapeHtml(a.id)}' })">Payer</button>` : ''}
+        ${a.status === 'en_attente' ? `<button class="mini-btn play-hide" onclick="startPayment('annonce', { targetId: '${escapeHtml(a.id)}' })">Payer</button>` : ''}
       </div>`).join('');
   } catch (e) { /* hors ligne */ }
 }
@@ -6012,6 +6033,7 @@ function adClick(id) {
 function renderLock(item) {
   if (!item.locked) return '';
   const what = item.for_sale ? 'Contenu à vendre' : `Vidéo de ${durationLabel(item.duration_seconds)}`;
+  if (PLAY_APP) return `<div class="lock-box"><div>🔒 ${escapeHtml(i18nT(what))}</div><div class="feed-type" style="margin:4px 0 0;">${escapeHtml(i18nT("Ce contenu n'est pas disponible dans cette version de l'application."))}</div></div>`;
   return `
     <div class="lock-box">
       <div>🔒 ${escapeHtml(what)} · <b>${escapeHtml(priceLabel(item.price))}</b></div>
@@ -9455,6 +9477,12 @@ function openContentFromHash() {
   const u = /^#u-([0-9a-f-]{36})$/i.exec(h);
   if (u) { history.replaceState(null, '', location.pathname + location.search); if (CREATOR_TOKEN) return openCreatorProfile(u[1]); try { sessionStorage.setItem('eaji_pending_profile', u[1]); } catch (e) {} return; }
   if (h === '#annoncer') return openAdvertise();
+  if (h === '#supprimer-compte') {
+    history.replaceState(null, '', location.pathname + location.search);
+    if (CREATOR_TOKEN) return openDeleteAccount();
+    try { sessionStorage.setItem('eaji_pending_delete', '1'); } catch (e) {}
+    return;
+  }
   const q = /^#qr-login=([0-9a-f-]{36})\.([\w-]{20,})$/i.exec(h);
   if (q) { history.replaceState(null, '', location.pathname + location.search); return confirmComputerLogin(q[1], q[2]); }
 }
@@ -9463,6 +9491,8 @@ function resumePendingLinks() {
   let qr = null, prof = null;
   try { qr = sessionStorage.getItem('eaji_pending_qr'); prof = sessionStorage.getItem('eaji_pending_profile'); sessionStorage.removeItem('eaji_pending_qr'); sessionStorage.removeItem('eaji_pending_profile'); } catch (e) {}
   let adv = null; try { adv = sessionStorage.getItem('eaji_pending_adv'); sessionStorage.removeItem('eaji_pending_adv'); } catch (e) {}
+  let del = null; try { del = sessionStorage.getItem('eaji_pending_delete'); sessionStorage.removeItem('eaji_pending_delete'); } catch (e) {}
+  if (del) { setTimeout(openDeleteAccount, 900); return; }
   if (adv) { setTimeout(openAdvertise, 900); return; }
   if (qr) { const [id, secret] = qr.split('.'); setTimeout(() => confirmComputerLogin(id, secret), 800); }
   else if (prof) setTimeout(() => openCreatorProfile(prof), 800);
@@ -12237,8 +12267,65 @@ window.addEventListener('load', async () => {
   loadProfile().catch(() => {});
   loadConversations();
   loadPayments();
+  if (CREATOR_TOKEN) loadDeletionState(true);
   await realData;
 });
+
+// ==== Supprimer mon compte (demandé par Google pour le Play Store) ====
+const delaccDate = (t) => { try { return new Date(t).toLocaleDateString(I18N.lang || 'fr', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return String(t).slice(0, 10); } };
+async function loadDeletionState(ask) {
+  if (!CREATOR_TOKEN) return;
+  let d; try { d = await apiCall('/api/creators/me/deletion'); } catch (e) { return; }
+  const st = document.getElementById('delacc-state'), go = document.getElementById('delacc-btn'), no = document.getElementById('delacc-cancel');
+  if (d.scheduledAt) {
+    st.textContent = i18nF("⚠️ Ton compte sera supprimé le {0}. Tu peux encore changer d'avis.", delaccDate(d.scheduledAt));
+    go.style.display = 'none'; no.style.display = '';
+    let seen = null; try { seen = sessionStorage.getItem('eaji_delacc_seen'); sessionStorage.setItem('eaji_delacc_seen', '1'); } catch (e) {}
+    if (ask && !seen && window.confirm(i18nF('Ton compte doit être supprimé le {0}. Veux-tu annuler la suppression et garder ton compte ?', delaccDate(d.scheduledAt)))) cancelAccountDeletion();
+  } else {
+    st.textContent = i18nT('Ton compte et toutes tes données seront effacés.');
+    go.style.display = ''; no.style.display = 'none';
+  }
+}
+function openDeleteAccount() {
+  if (!CREATOR_TOKEN) return showToast(i18nT("Connecte-toi d'abord à ton compte."));
+  const pt = document.querySelector('.tab[data-target="s-profil"]'); if (pt) pt.click();
+  document.getElementById('delacc-pwd').value = '';
+  document.getElementById('delacc-ok').checked = false;
+  document.getElementById('delacc-error').textContent = '';
+  document.getElementById('delacc-go').disabled = false;
+  document.getElementById('delacc-sheet').style.display = 'flex';
+}
+function closeDeleteAccount() { document.getElementById('delacc-sheet').style.display = 'none'; }
+async function confirmDeleteAccount() {
+  const err = document.getElementById('delacc-error'), btn = document.getElementById('delacc-go');
+  const password = document.getElementById('delacc-pwd').value;
+  err.textContent = '';
+  if (!password) { err.textContent = i18nT('Tape ton mot de passe.'); return; }
+  if (!document.getElementById('delacc-ok').checked) { err.textContent = i18nT('Coche la case pour confirmer.'); return; }
+  btn.disabled = true;
+  let d;
+  try { d = await apiCall('/api/creators/me/deletion', { method: 'POST', body: { password } }); }
+  catch (e) { err.textContent = e.message; btn.disabled = false; return; }
+  window.alert(i18nF("Ton compte sera supprimé le {0}. Tu es déconnecté de tous tes appareils. Tu as changé d'avis ? Reconnecte-toi avant cette date et appuie sur « Annuler la suppression ».", delaccDate(d.scheduledAt)));
+  try { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
+  try { await offWipe(); } catch (e) {}
+  storeClear();
+  CREATOR_TOKEN = null;
+  location.reload();
+}
+async function cancelAccountDeletion() {
+  try { await apiCall('/api/creators/me/deletion/cancel', { method: 'POST' }); showToast(i18nT('Suppression annulée : ton compte est conservé.')); }
+  catch (e) { return showToast(e.message); }
+  loadDeletionState(false);
+}
+// Appli du Play Store : les achats numériques sont bloqués (même par un autre chemin), sans renvoyer ailleurs.
+if (PLAY_APP) {
+  const noBuy = () => { showToast(i18nT("Les achats ne sont pas encore disponibles dans cette version de l'application.")); };
+  ['startPayment', 'reopenPayment', 'buyPremium', 'unlockContent', 'openGift', 'sendGift', 'sendCustomGift', 'sendLiveGift', 'sendCustomLiveGift',
+    'giftFromEarnings', 'walletDeposit', 'donate', 'subscribeAd', 'createBusinessAd', 'advBuy', 'payWithEarnings', 'payWithBalance', 'payMobileMoney', 'payCinetPay', 'payByCard']
+    .forEach((n) => { if (typeof window[n] === 'function') window[n] = noBuy; });
+}
 
 </script>
 <div class="toast" id="toast"></div>
@@ -12288,6 +12375,24 @@ window.addEventListener('load', async () => {
     <p class="feed-type" id="picker-count" style="margin:10px 0;">0 sélectionné(s)</p>
     <button class="primary-btn" id="picker-btn" onclick="confirmPicker()">Valider</button>
     <button class="mini-btn" style="width:100%;margin-top:8px;padding:10px;" onclick="closePicker()">Annuler</button>
+  </div>
+</div>
+<div class="sheet" id="delacc-sheet" onclick="if (event.target === this) closeDeleteAccount()">
+  <div class="sheet-card">
+    <div class="section-title" style="margin:0 0 10px;color:var(--text);">🗑️ Supprimer mon compte</div>
+    <p class="feed-type" style="margin:0 0 6px;">Seront effacés :</p>
+    <ul class="delacc-list">
+      <li>ton profil, ta photo et tes abonnés</li>
+      <li>tes publications, commentaires, j'aime et statuts</li>
+      <li>tes messages, groupes et appels</li>
+      <li>ton portefeuille : l'argent qui reste dessus et tes gains seront perdus (retire-les avant)</li>
+    </ul>
+    <p class="feed-type" style="margin:0 0 10px;">Tu seras déconnecté de tous tes appareils. Le compte est effacé définitivement 30 jours après ta demande : d'ici là, reconnecte-toi et appuie sur « Annuler la suppression » si tu changes d'avis.</p>
+    <input class="field" id="delacc-pwd" type="password" placeholder="Ton mot de passe" autocomplete="current-password" />
+    <label class="delacc-check"><input type="checkbox" id="delacc-ok"> <span>J'ai compris : mon compte et mes données seront supprimés.</span></label>
+    <p class="form-error" id="delacc-error"></p>
+    <button class="primary-btn" id="delacc-go" style="background:var(--coral);color:#fff;" onclick="confirmDeleteAccount()">Supprimer mon compte</button>
+    <button class="mini-btn" style="width:100%;margin-top:8px;padding:10px;" onclick="closeDeleteAccount()">Annuler</button>
   </div>
 </div>
 <div class="sheet" id="likers-sheet" onclick="if (event.target === this) closeLikers()">
