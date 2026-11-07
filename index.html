@@ -1241,6 +1241,7 @@ window.eajiLoader = (function () {
       <label class="field-label">Code de v&eacute;rification</label>
       <input class="field" id="login-otp" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" maxlength="8" style="font-size:22px;letter-spacing:6px;text-align:center;" onkeydown="if(event.key==='Enter')verifyLoginCode()" />
       <p class="avatar-edit-label" id="login-dev-hint" style="margin:-8px 0 14px;"></p>
+      <div id="fb-recaptcha"></div>
       <p class="form-error" id="login-error-2">Code invalide.</p>
       <button class="primary-btn" id="otp-btn" onclick="verifyLoginCode()">Valider et entrer</button>
       <button class="secondary-btn" id="otp-resend-btn" onclick="resendLoginCode()" style="margin-top:10px;">Recevoir un nouveau code</button>
@@ -1940,7 +1941,7 @@ window.eajiLoader = (function () {
 
 <script>
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.05a';
+const APP_VERSION = '2026.11.05b';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -3581,7 +3582,7 @@ async function loginCreator() {
   return requestLoginCode(email, password, false);
 }
 
-async function requestLoginCode(identifier, password, isResend) {
+async function requestLoginCode(identifier, password, isResend, { skipFirebase = false } = {}) {
   const errorEl = document.getElementById(isResend ? 'login-error-2' : 'login-error-1');
   const loginBtn = document.getElementById('login-btn');
   const resendBtn = document.getElementById('otp-resend-btn');
@@ -3592,11 +3593,12 @@ async function requestLoginCode(identifier, password, isResend) {
     const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Eaji-Device': eajiDeviceId() },
-      body: JSON.stringify({ identifier, password, countryCode: MY_COUNTRY }),
+      body: JSON.stringify({ identifier, password, countryCode: MY_COUNTRY, ...(skipFirebase ? { skipFirebase: true } : {}) }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || i18nT('Connexion impossible pour le moment. Réessaie.'));
     LOGIN_PENDING = { identifier, password };
+    FB_LOGIN.confirm = null;
     PENDING_LOGIN_ID = data.creatorId;
     document.getElementById('login-error-1').style.display = 'none';
     document.getElementById('login-error-2').style.display = 'none';
@@ -3628,6 +3630,12 @@ function showLoginCode(data, identifier, isResend) {
       + (data.emailFailed ? i18nT("L'email n'a pas pu être envoyé pour le moment : voici ton code.") + ' ' : '')
       + (data.emailed ? i18nF('Il a aussi été envoyé par email à {0}.', data.emailTo || identifier) + ' ' : '')
       + i18nF('Valable {0} minutes.', data.expiresInMinutes || 30);
+  } else if (data.channel === 'firebase') {
+    // SMS envoyé par Firebase (Google) : c'est cette page qui le demande.
+    box.style.display = 'none';
+    otp.value = '';
+    hint.textContent = i18nT('Envoi du SMS…');
+    startFirebaseSms(data, identifier);
   } else {
     box.style.display = 'none';
     otp.value = '';
@@ -3639,6 +3647,44 @@ function showLoginCode(data, identifier, isResend) {
   }
   document.getElementById('login-spam-hint').style.display = data.emailed && !data.devCode ? '' : 'none';
   setTimeout(() => (data.devCode ? document.getElementById('otp-btn') : otp).focus(), 50);
+}
+
+// ==== SMS du code de connexion avec Firebase (Google) ====
+const FB_LOGIN = { confirm: null, auth: null, cfg: undefined };
+const FB_SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
+const maskPhone = (p) => String(p || '').replace(/^(\+\d{3})\d+(\d{3})$/, '$1 ••• ••• $2');
+async function firebaseAuth() {
+  if (FB_LOGIN.auth) return FB_LOGIN.auth;
+  if (FB_LOGIN.cfg === undefined) {
+    const r = await fetch(`${API_BASE_URL}/api/auth/firebase-config`).then((x) => x.json()).catch(() => ({}));
+    FB_LOGIN.cfg = r.enabled ? r.config : null;
+  }
+  if (!FB_LOGIN.cfg) throw new Error('firebase-off');
+  const appMod = await import(FB_SDK + 'firebase-app.js');
+  const authMod = await import(FB_SDK + 'firebase-auth.js');
+  const fbApp = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(FB_LOGIN.cfg);
+  const auth = authMod.getAuth(fbApp);
+  auth.languageCode = I18N.lang || 'fr'; // le SMS de Google arrive dans la langue de l'appli
+  FB_LOGIN.auth = auth; FB_LOGIN.mod = authMod;
+  return auth;
+}
+async function startFirebaseSms(data, identifier) {
+  const hint = document.getElementById('login-dev-hint');
+  try {
+    const auth = await firebaseAuth();
+    const M = FB_LOGIN.mod;
+    if (FB_LOGIN.verifier) { try { FB_LOGIN.verifier.clear(); } catch (e) {} }
+    document.getElementById('fb-recaptcha').innerHTML = '';
+    FB_LOGIN.verifier = new M.RecaptchaVerifier(auth, 'fb-recaptcha', { size: 'invisible' });
+    FB_LOGIN.confirm = await M.signInWithPhoneNumber(auth, data.firebasePhone, FB_LOGIN.verifier);
+    hint.textContent = i18nF('Code envoyé par SMS au {0}. Il arrive en quelques secondes.', maskPhone(data.firebasePhone));
+    document.getElementById('login-otp').focus();
+  } catch (e) {
+    // Firebase indisponible (réseau, limite de Google…) : le code part autrement, sans rien demander.
+    console.warn('SMS Firebase impossible :', e && (e.code || e.message));
+    FB_LOGIN.confirm = null;
+    if (LOGIN_PENDING) await requestLoginCode(LOGIN_PENDING.identifier, LOGIN_PENDING.password, true, { skipFirebase: true });
+  }
 }
 
 async function resendLoginCode() {
@@ -3664,11 +3710,31 @@ async function verifyLoginCode() {
   eajiLoader.show(); // petite animation « Eaji » en passant à l'application
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/login/verify-2fa`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Eaji-Device': eajiDeviceId() },
-      body: JSON.stringify({ creatorId: PENDING_LOGIN_ID, code }),
-    });
+    let res;
+    if (FB_LOGIN.confirm) {
+      // Code du SMS Firebase : Google le vérifie, puis le serveur vérifie le jeton de Google.
+      let idToken;
+      try {
+        const cred = await FB_LOGIN.confirm.confirm(code);
+        idToken = await cred.user.getIdToken();
+        FB_LOGIN.auth && FB_LOGIN.auth.signOut().catch(() => {});
+      } catch (fe) {
+        if (fe && /invalid-verification-code|missing-verification-code/.test(fe.code || '')) throw new Error(i18nT('Ce code ne correspond pas. Vérifie les 6 chiffres.'));
+        if (fe && /code-expired/.test(fe.code || '')) { eajiLoader.hide(); await resendLoginCode(); return; }
+        throw new Error(i18nT('La vérification du code par SMS a échoué. Réessaie.'));
+      }
+      res = await fetch(`${API_BASE_URL}/api/auth/login/verify-firebase`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Eaji-Device': eajiDeviceId() },
+        body: JSON.stringify({ creatorId: PENDING_LOGIN_ID, idToken }),
+      });
+    } else {
+      res = await fetch(`${API_BASE_URL}/api/auth/login/verify-2fa`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Eaji-Device': eajiDeviceId() },
+        body: JSON.stringify({ creatorId: PENDING_LOGIN_ID, code }),
+      });
+    }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       // Code plus valable : on en crée tout de suite un nouveau, sans rien demander.
@@ -3683,6 +3749,7 @@ async function verifyLoginCode() {
     }
     const tempPassword = LOGIN_PENDING ? LOGIN_PENDING.password : '';
     LOGIN_PENDING = null;
+    FB_LOGIN.confirm = null;
 
     CREATOR_TOKEN = data.token;
     CREATOR_ID = PENDING_LOGIN_ID;
@@ -8901,6 +8968,7 @@ function showForgotForm() {
   document.getElementById('ar-result').style.display = 'none';
 }
 function backToLogin() {
+  FB_LOGIN.confirm = null;
   document.getElementById('login-step-forgot').style.display = 'none';
   document.getElementById('login-step-2fa').style.display = 'none';
   document.getElementById('login-step-credentials').style.display = 'block';
