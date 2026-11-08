@@ -519,6 +519,7 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
 .dob-row select{flex:1;min-width:0;padding-left:10px;padding-right:6px;}
 .dob-row select[id$="-m"]{flex:1.8;}
 .ar-box{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:14px;text-align:left;}
+.ar-ch{width:100%;margin-top:8px;text-align:left;}
 .ar-pass{font-size:24px;font-weight:800;letter-spacing:2px;text-align:center;background:rgba(46,196,182,.12);border:2px dashed var(--teal);border-radius:12px;padding:12px;margin:8px 0;user-select:all;-webkit-user-select:all;}
 .qa-log{max-height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin:6px 0 10px;}
 .qa-msg{padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-line;max-width:88%;}
@@ -1200,15 +1201,23 @@ window.eajiLoader = (function () {
       <!-- Nouveau mot de passe automatique : nom complet + numéro (ou email) + date de naissance -->
       <div class="ar-box" id="ar-box">
         <div class="section-title" style="margin:0 0 4px;">🔑 Nouveau mot de passe automatique</div>
-        <p class="avatar-edit-label" style="margin:0 0 10px;text-align:left;">&Eacute;cris les informations de ton compte, comme &agrave; l'inscription. Si elles sont correctes, un nouveau mot de passe est envoy&eacute; &agrave; l'email de ton compte (jamais affich&eacute; &agrave; l'&eacute;cran, pour ta s&eacute;curit&eacute;).</p>
+        <p class="avatar-edit-label" style="margin:0 0 10px;text-align:left;">&Eacute;cris les informations de ton compte, comme &agrave; l'inscription. Si elles sont correctes, tu choisis o&ugrave; recevoir ton mot de passe provisoire : email, SMS, WhatsApp, ton autre t&eacute;l&eacute;phone&hellip;</p>
         <label class="field-label">Nom complet (comme &agrave; l'inscription)</label>
         <input class="field" id="ar-name" autocomplete="name" placeholder="Jimmy Komba" />
         <label class="field-label">Num&eacute;ro de t&eacute;l&eacute;phone ou email du compte</label>
         <input class="field" id="ar-id" type="text" autocapitalize="off" placeholder="0812 345 678 ou toi@exemple.com" />
         <label class="field-label">Date de naissance</label>
         <div class="dob-row" id="ar-dob" data-dob></div>
-        <button class="primary-btn" id="ar-btn" onclick="autoResetPassword()">Recevoir mon nouveau mot de passe</button>
+        <button class="primary-btn" id="ar-btn" onclick="autoResetPassword()">Continuer</button>
         <p class="avatar-edit-label" id="ar-status" style="margin-top:10px;"></p>
+        <div id="ar-channels" style="display:none;"></div>
+        <div id="ar-fb" style="display:none;">
+          <label class="field-label">Code re&ccedil;u par SMS (6 chiffres)</label>
+          <input class="field" id="ar-fb-code" inputmode="numeric" maxlength="6" placeholder="123456" />
+          <button class="primary-btn" id="ar-fb-btn" onclick="arFbVerify()">Valider le code</button>
+        </div>
+        <div id="ar-recaptcha"></div>
+        <button class="primary-btn" id="ar-goto" style="display:none;margin-top:8px;" onclick="arGoLogin()">J'ai re&ccedil;u le mot de passe : me connecter</button>
         <div id="ar-result" style="display:none;">
           <div class="ar-pass" id="ar-pass" translate="no"></div>
           <button class="secondary-btn" onclick="arCopy()">📋 Copier le mot de passe</button>
@@ -1961,7 +1970,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.07b';
+const APP_VERSION = '2026.11.08a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -4240,26 +4249,107 @@ function dobValue(id) {
 document.querySelectorAll('[data-dob]').forEach(dobBuild);
 
 // ==== Nouveau mot de passe automatique (nom complet + numéro ou email + date de naissance) ====
-let AR_PASS = '';
+let AR_PASS = '', AR_TICKET = null, AR_CHANNELS = [], AR_FB = null;
+const AR_ICON = { email: '📧', sms: '💬', whatsapp: '🟢', appareil: '📲', ecran: '🖥️', admin: '🙋' };
+function arLabel(c) {
+  if (c.id === 'email') return i18nF('Par email ({0})', c.label);
+  if (c.id === 'sms') return i18nF('Par SMS ({0})', c.label);
+  if (c.id === 'whatsapp') return i18nF('Sur WhatsApp ({0})', c.label);
+  if (c.id === 'appareil') return i18nT('En notification sur mon autre téléphone connecté à Eaji');
+  if (c.id === 'ecran') return i18nT('Afficher ici, sur ce téléphone');
+  return i18nT("Demander à l'administrateur Eaji");
+}
+function arReset() {
+  AR_PASS = ''; AR_FB = null;
+  ['ar-result', 'ar-fb', 'ar-goto'].forEach((id) => { document.getElementById(id).style.display = 'none'; });
+}
 async function autoResetPassword() {
-  const status = document.getElementById('ar-status'), result = document.getElementById('ar-result');
+  const status = document.getElementById('ar-status');
   const name = document.getElementById('ar-name').value.trim(), identifier = document.getElementById('ar-id').value.trim();
   const birthDate = dobValue('ar-dob');
-  result.style.display = 'none'; AR_PASS = '';
+  arReset(); AR_TICKET = null;
+  document.getElementById('ar-channels').style.display = 'none';
   status.style.color = 'var(--coral)';
   if (!name || !identifier || !birthDate) { status.textContent = i18nT('Remplis les trois cases : nom complet, numéro de téléphone (ou email) et date de naissance.'); return; }
   const btn = document.getElementById('ar-btn'); btn.disabled = true;
   try {
-    const d = await apiCall('/api/auth/auto-reset', { method: 'POST', body: { name, identifier, birthDate, countryCode: MY_COUNTRY } });
+    const d = await apiCall('/api/auth/auto-reset', { method: 'POST', body: { name, identifier, birthDate, countryCode: MY_COUNTRY, choose: true } });
     status.style.color = 'var(--teal)';
-    status.textContent = i18nT(d.message || '');
-    if (d.password) {
-      AR_PASS = d.password;
-      document.getElementById('ar-pass').textContent = d.password;
-      result.style.display = 'block';
+    if (d.channels) {
+      AR_TICKET = d.ticket; AR_CHANNELS = d.channels;
+      status.textContent = i18nT('Informations correctes. Où veux-tu recevoir ton mot de passe provisoire ?');
+      const box = document.getElementById('ar-channels');
+      box.innerHTML = d.channels.map((c, i) => `<button class="secondary-btn ar-ch" data-ch="${escapeHtml(c.id)}" onclick="arSend(${i})">${AR_ICON[c.id] || '•'} ${escapeHtml(arLabel(c))}</button>`).join('');
+      box.style.display = 'block';
+    } else {
+      status.textContent = i18nT(d.message || '');
     }
   } catch (e) { status.textContent = e.message; }
   finally { btn.disabled = false; }
+}
+async function arSend(i) {
+  const c = AR_CHANNELS[i], status = document.getElementById('ar-status');
+  if (!c || !AR_TICKET) return;
+  arReset();
+  document.querySelectorAll('#ar-channels button').forEach((b) => { b.disabled = true; });
+  status.style.color = 'var(--muted)'; status.textContent = i18nT('Envoi en cours…');
+  try {
+    const d = await apiCall('/api/auth/auto-reset/send', { method: 'POST', body: { ticket: AR_TICKET, channel: c.id, identifier: document.getElementById('ar-id').value.trim(), countryCode: MY_COUNTRY } });
+    const M = {
+      email: () => i18nF('Ton mot de passe provisoire a été envoyé par email à {0}. Regarde aussi dans les spams. Il est valable 30 minutes.', c.label),
+      sms: () => d.firebase ? i18nF('Code envoyé par SMS au {0}. Tape-le ci-dessous : il arrive en quelques secondes.', c.label) : i18nF('Ton mot de passe provisoire a été envoyé par SMS au {0}. Il est valable 30 minutes.', c.label),
+      whatsapp: () => i18nF('Ton mot de passe provisoire a été envoyé sur WhatsApp au {0}. Il est valable 30 minutes.', c.label),
+    };
+    status.style.color = 'var(--teal)'; status.textContent = M[c.id] ? M[c.id]() : i18nT(d.message || '');
+    if (d.firebase) {
+      try { await arFbStart(d.firebasePhone); }
+      catch (fe) { console.warn('SMS Firebase impossible :', fe && (fe.code || fe.message)); status.style.color = 'var(--coral)'; status.textContent = i18nT("Le SMS n'a pas pu partir. Choisis un autre moyen."); }
+    } else if (d.password) {
+      AR_PASS = d.password;
+      document.getElementById('ar-pass').textContent = d.password;
+      document.getElementById('ar-result').style.display = 'block';
+    } else if (!d.toAdmin) {
+      document.getElementById('ar-goto').style.display = 'block';
+    }
+  } catch (e) {
+    status.style.color = 'var(--coral)'; status.textContent = e.message;
+    if (/expir/i.test(e.message)) { document.getElementById('ar-channels').style.display = 'none'; AR_TICKET = null; }
+  } finally { document.querySelectorAll('#ar-channels button').forEach((b) => { b.disabled = false; }); }
+}
+async function arFbStart(phone) {
+  const auth = await firebaseAuth(), M = FB_LOGIN.mod;
+  if (FB_LOGIN.arVerifier) { try { FB_LOGIN.arVerifier.clear(); } catch (e) {} }
+  document.getElementById('ar-recaptcha').innerHTML = '';
+  FB_LOGIN.arVerifier = new M.RecaptchaVerifier(auth, 'ar-recaptcha', { size: 'invisible' });
+  AR_FB = await M.signInWithPhoneNumber(auth, phone, FB_LOGIN.arVerifier);
+  document.getElementById('ar-fb-code').value = '';
+  document.getElementById('ar-fb').style.display = 'block';
+  document.getElementById('ar-fb-code').focus();
+}
+async function arFbVerify() {
+  const status = document.getElementById('ar-status'), code = document.getElementById('ar-fb-code').value.trim();
+  if (!AR_FB) return;
+  if (!/^\d{6}$/.test(code)) { status.style.color = 'var(--coral)'; status.textContent = i18nT('Ce code ne correspond pas. Vérifie les 6 chiffres.'); return; }
+  const btn = document.getElementById('ar-fb-btn'); btn.disabled = true;
+  try {
+    let idToken;
+    try { const cred = await AR_FB.confirm(code); idToken = await cred.user.getIdToken(); FB_LOGIN.auth && FB_LOGIN.auth.signOut().catch(() => {}); }
+    catch (fe) { throw new Error(/invalid-verification-code|missing-verification-code/.test((fe && fe.code) || '') ? i18nT('Ce code ne correspond pas. Vérifie les 6 chiffres.') : i18nT('La vérification du code par SMS a échoué. Réessaie.')); }
+    const d = await apiCall('/api/auth/auto-reset/firebase', { method: 'POST', body: { ticket: AR_TICKET, idToken } });
+    status.style.color = 'var(--teal)'; status.textContent = i18nT(d.message || '');
+    document.getElementById('ar-fb').style.display = 'none';
+    AR_PASS = d.password;
+    document.getElementById('ar-pass').textContent = d.password;
+    document.getElementById('ar-result').style.display = 'block';
+  } catch (e) { status.style.color = 'var(--coral)'; status.textContent = e.message; }
+  finally { btn.disabled = false; }
+}
+// Mot de passe reçu ailleurs (email, SMS, WhatsApp, autre téléphone) : retour à la connexion, numéro déjà rempli.
+function arGoLogin() {
+  document.getElementById('login-email').value = document.getElementById('ar-id').value.trim();
+  document.getElementById('login-password').value = '';
+  backToLogin();
+  setTimeout(() => { const f = document.getElementById('login-password'); if (f) f.focus(); }, 100);
 }
 function arCopy() {
   if (!AR_PASS) return;
@@ -4277,7 +4367,7 @@ function arLoginNow() {
 // ==== « Posez votre question » : aide automatique pour se connecter et créer son compte ====
 const QA = [
   { q: "J'ai oublié mon mot de passe", k: ['oubli', 'mot de passe', 'password', 'forgot', 'reset', 'reinitialis', 'mdp', 'perdu', 'lost', 'contrasena', 'senha', 'nenosiri', 'passwort'],
-    a: "Appuie sur « Mot de passe oublié ? ». Dans « Nouveau mot de passe automatique », écris ton nom complet (comme à l'inscription), ton numéro ou ton email, et ta date de naissance. Si tout est correct, un nouveau mot de passe est envoyé à l'email de ton compte (jamais à l'écran, pour ta sécurité). Sans email, ta demande va à l'administrateur Eaji. Ensuite, choisis ton propre mot de passe." },
+    a: "Appuie sur « Mot de passe oublié ? ». Dans « Nouveau mot de passe automatique », écris ton nom complet (comme à l'inscription), ton numéro ou ton email, et ta date de naissance, puis « Continuer ». Si tout est correct, choisis où recevoir ton mot de passe provisoire : par email, par SMS, sur WhatsApp, en notification sur ton autre téléphone connecté à Eaji, ou à l'écran (seulement sur un téléphone déjà utilisé avec ton compte). Connecte-toi avec, puis choisis ton propre mot de passe." },
   { q: 'Je ne reçois pas le code de confirmation', k: ['code', 'recu', 'recoi', 'arrive', 'sms', 'spam', 'confirmation', 'otp', 'verification', 'chiffres', 'receive', 'codigo'],
     a: "Sur un téléphone déjà connecté à ton compte, le code s'affiche à l'écran. Sur un nouvel appareil, il part par email (regarde aussi dans les spams) ou en notification sur ton autre téléphone connecté à Eaji. Tu peux aussi appuyer sur « Recevoir un nouveau code »." },
   { q: '« Aucun compte avec ce numéro »', k: ['aucun compte', 'introuvable', 'indicatif', 'not found', 'no account', 'existe pas', 'numero', 'number', 'numéro'],
