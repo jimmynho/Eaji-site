@@ -284,18 +284,29 @@ mark.watch{background:#FFD43B;color:#1A1206;border-radius:3px;padding:0 2px;font
       <input class="field" id="na-email" type="email" placeholder="nom@gmail.com" />
       <label class="field-label">Mot de passe initial (12 caract&egrave;res minimum, lettres et chiffres, &agrave; lui transmettre)</label>
       <input class="field" id="na-password" type="password" />
-      <label class="field-label">T&acirc;ches autoris&eacute;es</label>
-      <label style="display:block;font-size:13px;margin:4px 0;"><input type="checkbox" class="na-perm" value="moderer_contenu" checked> Retirer les contenus signal&eacute;s</label>
-      <label style="display:block;font-size:13px;margin:4px 0;"><input type="checkbox" class="na-perm" value="gerer_comptes_utilisateurs"> G&eacute;rer les comptes (suspendre / r&eacute;activer)</label>
-      <label style="display:block;font-size:13px;margin:4px 0 14px;"><input type="checkbox" class="na-perm" value="repondre_signalements"> R&eacute;pondre aux signalements</label>
+      <label class="field-label">Poste (ex. : Mod&eacute;rateur, Service client, Responsable publicit&eacute;)</label>
+      <input class="field" id="na-title" maxlength="80" placeholder="Intitul&eacute; du poste" />
+      <label class="field-label">T&acirc;ches confi&eacute;es (coche tout ce qu'il pourra faire)</label>
+      <div id="na-tasks" style="margin:0 0 6px;"></div>
+      <p class="small" style="margin:0 0 14px;color:var(--muted);">L'argent (paiements, retraits, revenus, tarifs, r&eacute;mun&eacute;ration), les sauvegardes, la gestion des administrateurs et la lecture des messages priv&eacute;s restent r&eacute;serv&eacute;s &agrave; l'administrateur principal.</p>
       <p class="login-error" id="na-error"></p>
       <p class="login-error" id="na-success" style="display:none;color:var(--teal);">Administrateur ajout&eacute;.</p>
       <button class="login-btn" onclick="addAdmin()">Ajouter</button>
     </div>
+    <div id="admin-edit" style="display:none;max-width:420px;margin-top:20px;padding:14px;border:1px solid var(--line);border-radius:14px;">
+      <div class="section-title" style="margin-top:0;">Modifier le poste et les t&acirc;ches de <span id="ae-name"></span></div>
+      <label class="field-label">Poste</label>
+      <input class="field" id="ae-title" maxlength="80" placeholder="Intitul&eacute; du poste" />
+      <label class="field-label">T&acirc;ches confi&eacute;es</label>
+      <div id="ae-tasks"></div>
+      <p class="login-error" id="ae-error"></p>
+      <button class="login-btn" onclick="saveAdminTasks()">Enregistrer</button>
+      <button class="btn" style="margin-top:8px;" onclick="document.getElementById('admin-edit').style.display='none'">Annuler</button>
+    </div>
     <div class="section-title" style="margin-top:24px;">Administrateurs</div>
     <p class="login-hint" id="admins-msg" style="margin:0 0 12px;text-align:left;"></p>
     <table id="admins-table">
-      <tr><th>Nom</th><th>R&ocirc;le</th><th>T&eacute;l&eacute;phone(s)</th><th>T&acirc;ches</th><th>Statut</th><th></th></tr>
+      <tr><th>Nom</th><th>Poste</th><th>T&eacute;l&eacute;phone(s)</th><th>T&acirc;ches</th><th>Statut</th><th></th></tr>
     </table>
   </section>
 
@@ -1159,7 +1170,7 @@ async function loadDuplicates() {
 }
 async function loadWatchView() {
   document.getElementById('watch-tab-journal').style.display = ADMIN_ROLE === 'admin_principal' ? '' : 'none';
-  document.getElementById('watch-tab-doublons').style.display = ADMIN_ROLE === 'admin_principal' ? '' : 'none';
+  document.getElementById('watch-tab-doublons').style.display = hasTask('controle_fraude') ? '' : 'none';
   await loadWatchWords();
   watchTab(WATCH_TAB);
   if (localStorage.getItem('eaji_watch_runner') === '1' && !W_RUN.on) toggleWatchRunner();
@@ -2418,15 +2429,27 @@ async function adminApi(path, { method = 'GET', body } = {}) {
 
 function fmtDate(d){ try { return new Date(d).toLocaleDateString('fr-FR'); } catch { return ''; } }
 
-let ADMIN_ROLE = null;
+let ADMIN_ROLE = null, ADMIN_PERMS = [];
+// Onglets visibles par un administrateur secondaire selon les tâches confiées (il suffit d'en avoir une).
+const TAB_TASKS = {
+  'v-creators': ['gerer_comptes_utilisateurs'], 'v-moderation': ['moderer_contenu'], 'v-watch': ['moderer_contenu'],
+  'v-identities': ['gerer_comptes_utilisateurs', 'verifier_identites'], 'v-support': ['repondre_signalements'],
+  'v-threats': ['gerer_comptes_utilisateurs', 'alertes_securite'], 'v-broadcast': ['envoyer_annonces'],
+  'v-advertise': ['gerer_annonceurs'], 'v-backgrounds': ['gerer_arriere_plans'],
+};
+const PRINCIPAL_TABS = ['v-commissions', 'v-admins', 'v-payments', 'v-revenue', 'v-payouts', 'v-rates', 'v-finance', 'v-backup'];
+const hasTask = (k) => ADMIN_ROLE === 'admin_principal' || ADMIN_PERMS.includes(k);
 async function loadMe(){
   try {
     const me = await adminApi('/api/admin/me');
-    ADMIN_ROLE = me.role;
+    ADMIN_ROLE = me.role; ADMIN_PERMS = me.permissions || [];
     document.querySelector('.role-tag').textContent =
-      (me.role === 'admin_principal' ? 'Administrateur principal — ' : 'Administrateur — ') + me.name;
+      (me.role === 'admin_principal' ? 'Administrateur principal — ' : (me.jobTitle ? me.jobTitle + ' — ' : 'Administrateur — ')) + me.name;
     if (me.role !== 'admin_principal') {
-      document.querySelectorAll('.tab[data-target="v-commissions"], .tab[data-target="v-admins"], .tab[data-target="v-payments"], .tab[data-target="v-revenue"], .tab[data-target="v-payouts"], .tab[data-target="v-advertise"], .tab[data-target="v-broadcast"], .tab[data-target="v-rates"], .tab[data-target="v-backgrounds"], .tab[data-target="v-finance"], .tab[data-target="v-backup"]').forEach(t => t.style.display = 'none');
+      document.querySelectorAll('.tab[data-target]').forEach((t) => {
+        const v = t.dataset.target;
+        if (PRINCIPAL_TABS.includes(v) || (TAB_TASKS[v] && !TAB_TASKS[v].some(hasTask))) t.style.display = 'none';
+      });
     } else {
       refreshPendingCount();
     }
@@ -2509,19 +2532,48 @@ async function loadReports(){
   } catch (e) { msg.textContent = e.message; }
 }
 
+let ADMIN_TASKS = [], ADMINS_LIST = [], AE_ID = null;
+const taskBoxes = (cls, checked) => ADMIN_TASKS.map((t) => `<label style="display:block;font-size:13px;margin:6px 0;"><input type="checkbox" class="${cls}" value="${escapeHtml(t.key)}"${checked.includes(t.key) ? ' checked' : ''}> ${escapeHtml(t.label)}</label>`).join('');
+const taskLabel = (k) => { const t = ADMIN_TASKS.find((x) => x.key === k); return t ? t.label.split(' :')[0].split(' (')[0] : k; };
 async function loadAdmins(){
   const msg = document.getElementById('admins-msg');
   try {
-    const { admins } = await adminApi('/api/admin/admins');
+    const { admins, tasks } = await adminApi('/api/admin/admins');
+    ADMIN_TASKS = tasks || []; ADMINS_LIST = admins;
+    const na = document.getElementById('na-tasks');
+    if (!na.dataset.ready) { na.innerHTML = taskBoxes('na-perm', ['moderer_contenu']); na.dataset.ready = '1'; }
     const t = document.getElementById('admins-table');
     t.innerHTML = t.rows[0].outerHTML + admins.map(a => `
-      <tr><td>${escapeHtml(a.name)}</td><td>${a.role === 'admin_principal' ? 'Principal' : 'Secondaire'}</td>
-      <td>${escapeHtml(a.phones || '')}</td><td>${a.role === 'admin_principal' ? 'Toutes' : escapeHtml(a.permissions || 'Aucune')}</td>
+      <tr><td>${escapeHtml(a.name)}</td><td>${a.role === 'admin_principal' ? 'Administrateur principal' : escapeHtml(a.job_title || 'Administrateur secondaire')}</td>
+      <td>${escapeHtml(a.phones || '')}</td><td>${a.role === 'admin_principal' ? 'Toutes' : ((a.permission_list || []).map((k) => `<div class="small">• ${escapeHtml(taskLabel(k))}</div>`).join('') || 'Aucune')}</td>
       <td><span class="badge ${a.status === 'actif' ? 'ok' : 'wait'}">${escapeHtml(a.status)}</span>${a.has_email ? '' : '<div class="small">⚠️ pas d\'email</div>'}</td>
-      <td>${a.role === 'admin_principal' ? '' : `<button class="btn" data-id="${escapeHtml(a.id)}" onclick="setAdminEmail(this.dataset.id)">Email de connexion</button>
+      <td>${a.role === 'admin_principal' ? '' : `<button class="btn approve" data-id="${escapeHtml(a.id)}" onclick="editAdminTasks(this.dataset.id)">Poste et tâches</button>
+        <button class="btn" data-id="${escapeHtml(a.id)}" onclick="setAdminEmail(this.dataset.id)">Email de connexion</button>
         <button class="btn ${a.status === 'actif' ? 'remove' : 'approve'}" data-id="${escapeHtml(a.id)}" data-st="${a.status === 'actif' ? 'suspendu' : 'actif'}" onclick="setAdminStatus(this.dataset.id, this.dataset.st)">${a.status === 'actif' ? 'Suspendre' : 'Réactiver'}</button>`}</td></tr>`).join('');
     msg.textContent = '';
   } catch (e) { msg.textContent = e.message; }
+}
+function editAdminTasks(id) {
+  const a = ADMINS_LIST.find((x) => x.id === id);
+  if (!a) return;
+  AE_ID = id;
+  document.getElementById('ae-name').textContent = a.name;
+  document.getElementById('ae-title').value = a.job_title || '';
+  document.getElementById('ae-tasks').innerHTML = taskBoxes('ae-perm', a.permission_list || []);
+  document.getElementById('ae-error').textContent = '';
+  const box = document.getElementById('admin-edit');
+  box.style.display = 'block'; box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+async function saveAdminTasks() {
+  const err = document.getElementById('ae-error');
+  try {
+    await adminApi(`/api/admin/${AE_ID}/tasks`, { method: 'PUT', body: {
+      jobTitle: document.getElementById('ae-title').value.trim(),
+      permissions: [...document.querySelectorAll('.ae-perm:checked')].map((c) => c.value) } });
+    document.getElementById('admin-edit').style.display = 'none';
+    document.getElementById('admins-msg').textContent = 'Poste et tâches enregistrés.';
+    loadAdmins();
+  } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
 }
 
 async function addAdmin(){
@@ -2534,6 +2586,7 @@ async function addAdmin(){
     password: document.getElementById('na-password').value,
     email: document.getElementById('na-email').value.trim(),
     permissions: [...document.querySelectorAll('.na-perm:checked')].map(c => c.value),
+    jobTitle: document.getElementById('na-title').value.trim(),
   };
   try {
     await adminApi('/api/admin/approve', { method: 'POST', body });
@@ -2541,7 +2594,7 @@ async function addAdmin(){
     errorEl.textContent = e.message; errorEl.style.display = 'block'; return;
   }
   successEl.style.display = 'block';
-  ['na-name', 'na-phone', 'na-email', 'na-password'].forEach(id => document.getElementById(id).value = '');
+  ['na-name', 'na-phone', 'na-email', 'na-password', 'na-title'].forEach(id => document.getElementById(id).value = '');
   loadAdmins();
 }
 async function setAdminEmail(id) {
