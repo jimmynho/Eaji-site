@@ -1048,11 +1048,21 @@ window.eajiLoader = (function () {
     }, wait);
   }
   start(false);
-  // Ouverture : visible juste le temps de se construire (environ 1 s), au plus 3,5 s si la page tarde.
-  const opened = () => stop(1100);
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', opened); else opened();
-  setTimeout(() => stop(0), 3500);
-  return { show: () => start(true), hide: () => { if (!el.hidden && !el.classList.contains('es-out')) stop(700); } };
+  // Déjà connecté ? L'animation reste jusqu'à ce que le compte soit prêt (jamais l'écran de connexion),
+  // au plus 10 s si le réseau est très lent.
+  let session = false;
+  try { session = Boolean(localStorage.getItem('eaji_creator_token') || sessionStorage.getItem('eaji_creator_token')); } catch (e) {}
+  if (session) {
+    el.style.animation = 'esSafety .3s ease 10s forwards';
+    setTimeout(() => stop(0), 10000);
+  } else {
+    // Ouverture : visible juste le temps de se construire (environ 1 s), au plus 3,5 s si la page tarde.
+    const opened = () => stop(1100);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', opened); else opened();
+    setTimeout(() => stop(0), 3500);
+  }
+  return { show: () => start(true), hide: () => { if (!el.hidden && !el.classList.contains('es-out')) stop(700); },
+    ready: () => { if (!el.hidden && !el.classList.contains('es-out')) stop(1100); } };
 })();
 </script>
 
@@ -1970,7 +1980,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.08a';
+const APP_VERSION = '2026.11.09a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -2051,6 +2061,11 @@ function storeGet(k) { try { return localStorage.getItem(k) || sessionStorage.ge
 function storeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { try { sessionStorage.setItem(k, v); } catch (e2) {} } }
 function storeClear() { ['eaji_creator_token', 'eaji_creator_id'].forEach(k => { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} }); }
 let CREATOR_TOKEN = storeGet('eaji_creator_token'); // vrai jeton une fois connecté
+// Déjà connecté : l'écran de connexion ne s'affiche jamais à l'ouverture (l'animation « Eaji » couvre le chargement).
+if (CREATOR_TOKEN) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'flex';
+}
 // ==== Pays, indicatifs, zones et langues ====
 const COUNTRIES = [["DZ", "Algérie", "+213", "afrique"], ["AO", "Angola", "+244", "afrique"], ["BJ", "Bénin", "+229", "afrique"], ["BW", "Botswana", "+267", "afrique"], ["BF", "Burkina Faso", "+226", "afrique"], ["BI", "Burundi", "+257", "afrique"], ["CV", "Cap-Vert", "+238", "afrique"], ["CM", "Cameroun", "+237", "afrique"], ["CF", "Centrafrique", "+236", "afrique"], ["TD", "Tchad", "+235", "afrique"], ["KM", "Comores", "+269", "afrique"], ["CG", "Congo-Brazzaville", "+242", "afrique"], ["CD", "RD Congo", "+243", "afrique"], ["CI", "Côte d'Ivoire", "+225", "afrique"], ["DJ", "Djibouti", "+253", "afrique"], ["EG", "Égypte", "+20", "afrique"], ["GQ", "Guinée équatoriale", "+240", "afrique"], ["ER", "Érythrée", "+291", "afrique"], ["SZ", "Eswatini", "+268", "afrique"], ["ET", "Éthiopie", "+251", "afrique"], ["GA", "Gabon", "+241", "afrique"], ["GM", "Gambie", "+220", "afrique"], ["GH", "Ghana", "+233", "afrique"], ["GN", "Guinée", "+224", "afrique"], ["GW", "Guinée-Bissau", "+245", "afrique"], ["KE", "Kenya", "+254", "afrique"], ["LS", "Lesotho", "+266", "afrique"], ["LR", "Liberia", "+231", "afrique"], ["LY", "Libye", "+218", "afrique"], ["MG", "Madagascar", "+261", "afrique"], ["MW", "Malawi", "+265", "afrique"], ["ML", "Mali", "+223", "afrique"], ["MR", "Mauritanie", "+222", "afrique"], ["MU", "Maurice", "+230", "afrique"], ["MA", "Maroc", "+212", "afrique"], ["MZ", "Mozambique", "+258", "afrique"], ["NA", "Namibie", "+264", "afrique"], ["NE", "Niger", "+227", "afrique"], ["NG", "Nigeria", "+234", "afrique"], ["RW", "Rwanda", "+250", "afrique"], ["ST", "Sao Tomé-et-Principe", "+239", "afrique"], ["SN", "Sénégal", "+221", "afrique"], ["SC", "Seychelles", "+248", "afrique"], ["SL", "Sierra Leone", "+232", "afrique"], ["SO", "Somalie", "+252", "afrique"], ["ZA", "Afrique du Sud", "+27", "afrique"], ["SS", "Soudan du Sud", "+211", "afrique"], ["SD", "Soudan", "+249", "afrique"], ["TZ", "Tanzanie", "+255", "afrique"], ["TG", "Togo", "+228", "afrique"], ["TN", "Tunisie", "+216", "afrique"], ["UG", "Ouganda", "+256", "afrique"], ["ZM", "Zambie", "+260", "afrique"], ["ZW", "Zimbabwe", "+263", "afrique"], ["AG", "Antigua-et-Barbuda", "+1268", "caraibes"], ["BS", "Bahamas", "+1242", "caraibes"], ["BB", "Barbade", "+1246", "caraibes"], ["CU", "Cuba", "+53", "caraibes"], ["DM", "Dominique", "+1767", "caraibes"], ["DO", "République dominicaine", "+1809", "caraibes"], ["GD", "Grenade", "+1473", "caraibes"], ["HT", "Haïti", "+509", "caraibes"], ["JM", "Jamaïque", "+1876", "caraibes"], ["KN", "Saint-Christophe-et-Niévès", "+1869", "caraibes"], ["LC", "Sainte-Lucie", "+1758", "caraibes"], ["VC", "Saint-Vincent-et-les-Grenadines", "+1784", "caraibes"], ["TT", "Trinité-et-Tobago", "+1868", "caraibes"], ["AF", "Afghanistan", "+93", "asie"], ["SA", "Arabie saoudite", "+966", "asie"], ["AM", "Arménie", "+374", "asie"], ["AZ", "Azerbaïdjan", "+994", "asie"], ["BH", "Bahreïn", "+973", "asie"], ["BD", "Bangladesh", "+880", "asie"], ["BT", "Bhoutan", "+975", "asie"], ["MM", "Birmanie (Myanmar)", "+95", "asie"], ["BN", "Brunei", "+673", "asie"], ["KH", "Cambodge", "+855", "asie"], ["CN", "Chine", "+86", "asie"], ["KR", "Corée du Sud", "+82", "asie"], ["AE", "Émirats arabes unis", "+971", "asie"], ["GE", "Géorgie", "+995", "asie"], ["IN", "Inde", "+91", "asie"], ["ID", "Indonésie", "+62", "asie"], ["IQ", "Irak", "+964", "asie"], ["IR", "Iran", "+98", "asie"], ["IL", "Israël", "+972", "asie"], ["JP", "Japon", "+81", "asie"], ["JO", "Jordanie", "+962", "asie"], ["KZ", "Kazakhstan", "+7", "asie"], ["KG", "Kirghizistan", "+996", "asie"], ["KW", "Koweït", "+965", "asie"], ["LA", "Laos", "+856", "asie"], ["LB", "Liban", "+961", "asie"], ["MY", "Malaisie", "+60", "asie"], ["MV", "Maldives", "+960", "asie"], ["MN", "Mongolie", "+976", "asie"], ["NP", "Népal", "+977", "asie"], ["OM", "Oman", "+968", "asie"], ["UZ", "Ouzbékistan", "+998", "asie"], ["PK", "Pakistan", "+92", "asie"], ["PS", "Palestine", "+970", "asie"], ["PH", "Philippines", "+63", "asie"], ["QA", "Qatar", "+974", "asie"], ["SG", "Singapour", "+65", "asie"], ["LK", "Sri Lanka", "+94", "asie"], ["SY", "Syrie", "+963", "asie"], ["TJ", "Tadjikistan", "+992", "asie"], ["TW", "Taïwan", "+886", "asie"], ["TH", "Thaïlande", "+66", "asie"], ["TL", "Timor oriental", "+670", "asie"], ["TM", "Turkménistan", "+993", "asie"], ["TR", "Turquie", "+90", "asie"], ["VN", "Viêt Nam", "+84", "asie"], ["YE", "Yémen", "+967", "asie"], ["DE", "Allemagne", "+49", "europe"], ["AT", "Autriche", "+43", "europe"], ["HU", "Hongrie", "+36", "europe"], ["LI", "Liechtenstein", "+423", "europe"], ["PL", "Pologne", "+48", "europe"], ["SK", "Slovaquie", "+421", "europe"], ["SI", "Slovénie", "+386", "europe"], ["CH", "Suisse", "+41", "europe"], ["CZ", "Tchéquie", "+420", "europe"], ["US", "États-Unis", "+1", "amerique"], ["CA", "Canada", "+1", "amerique"], ["MX", "Mexique", "+52", "amerique"], ["GT", "Guatemala", "+502", "amerique"], ["BZ", "Belize", "+501", "amerique"], ["HN", "Honduras", "+504", "amerique"], ["SV", "Salvador", "+503", "amerique"], ["NI", "Nicaragua", "+505", "amerique"], ["CR", "Costa Rica", "+506", "amerique"], ["PA", "Panama", "+507", "amerique"], ["CO", "Colombie", "+57", "amerique"], ["VE", "Venezuela", "+58", "amerique"], ["EC", "Équateur", "+593", "amerique"], ["PE", "Pérou", "+51", "amerique"], ["BO", "Bolivie", "+591", "amerique"], ["BR", "Brésil", "+55", "amerique"], ["PY", "Paraguay", "+595", "amerique"], ["UY", "Uruguay", "+598", "amerique"], ["AR", "Argentine", "+54", "amerique"], ["CL", "Chili", "+56", "amerique"], ["GY", "Guyana", "+592", "amerique"], ["SR", "Suriname", "+597", "amerique"], ["PR", "Porto Rico", "+1787", "amerique"], ["FR", "France", "+33", "europe"], ["BE", "Belgique", "+32", "europe"], ["NL", "Pays-Bas", "+31", "europe"], ["LU", "Luxembourg", "+352", "europe"], ["GB", "Royaume-Uni", "+44", "europe"], ["IE", "Irlande", "+353", "europe"], ["ES", "Espagne", "+34", "europe"], ["PT", "Portugal", "+351", "europe"], ["IT", "Italie", "+39", "europe"], ["MT", "Malte", "+356", "europe"], ["GR", "Grèce", "+30", "europe"], ["CY", "Chypre", "+357", "europe"], ["DK", "Danemark", "+45", "europe"], ["SE", "Suède", "+46", "europe"], ["NO", "Norvège", "+47", "europe"], ["FI", "Finlande", "+358", "europe"], ["IS", "Islande", "+354", "europe"], ["EE", "Estonie", "+372", "europe"], ["LV", "Lettonie", "+371", "europe"], ["LT", "Lituanie", "+370", "europe"], ["RO", "Roumanie", "+40", "europe"], ["BG", "Bulgarie", "+359", "europe"], ["HR", "Croatie", "+385", "europe"], ["RS", "Serbie", "+381", "europe"], ["BA", "Bosnie-Herzégovine", "+387", "europe"], ["ME", "Monténégro", "+382", "europe"], ["MK", "Macédoine du Nord", "+389", "europe"], ["AL", "Albanie", "+355", "europe"], ["XK", "Kosovo", "+383", "europe"], ["MD", "Moldavie", "+373", "europe"], ["UA", "Ukraine", "+380", "europe"], ["BY", "Biélorussie", "+375", "europe"], ["RU", "Russie", "+7", "europe"], ["MC", "Monaco", "+377", "europe"], ["AD", "Andorre", "+376", "europe"], ["SM", "Saint-Marin", "+378", "europe"], ["VA", "Vatican", "+39", "europe"], ["AU", "Australie", "+61", "oceanie"], ["NZ", "Nouvelle-Zélande", "+64", "oceanie"], ["PG", "Papouasie-Nouvelle-Guinée", "+675", "oceanie"], ["FJ", "Fidji", "+679", "oceanie"], ["SB", "Îles Salomon", "+677", "oceanie"], ["VU", "Vanuatu", "+678", "oceanie"], ["WS", "Samoa", "+685", "oceanie"], ["TO", "Tonga", "+676", "oceanie"], ["KI", "Kiribati", "+686", "oceanie"], ["TV", "Tuvalu", "+688", "oceanie"], ["NR", "Nauru", "+674", "oceanie"], ["PW", "Palaos", "+680", "oceanie"], ["FM", "Micronésie", "+691", "oceanie"], ["MH", "Îles Marshall", "+692", "oceanie"], ["HK", "Hong Kong", "+852", "asie"], ["MO", "Macao", "+853", "asie"]]; // [code, nom, indicatif, zone] — tous les pays du monde
 // Pays où les créateurs peuvent gagner de l'argent (même liste que world-countries.js sur le serveur).
@@ -2725,6 +2740,8 @@ async function apiCall(path, { method = 'GET', body, pin = false, _again = false
   const data = await res.json().catch(() => ({}));
   // Ce téléphone a été déconnecté à distance par le propriétaire du compte (« Mes connexions »).
   if (res.status === 401 && data.code === 'appareil_deconnecte' && CREATOR_TOKEN) { remoteSignedOut(); throw new Error(data.error); }
+  // Connexion expirée (ou mot de passe changé ailleurs) : retour propre à l'écran de connexion, pas une appli vide.
+  if (res.status === 401 && CREATOR_TOKEN && data.error === 'Session invalide ou expirée.') { sessionExpired(); throw new Error(data.error); }
   // Portefeuille ou groupes protégés : code secret demandé (pour une action, ou quand l'écran le demande), puis on refait la demande.
   if (res.status === 423 && data.code === 'pin_requis') {
     if (!_again && (method !== 'GET' || pin) && await askPin(data.what === 'groupes' ? 'groupes' : 'portefeuille')) return apiCall(path, { method, body, pin, _again: true });
@@ -5072,6 +5089,14 @@ async function revokeOtherSessions() {
   loadSessions();
 }
 // Ce téléphone a été déconnecté à distance : retour à l'écran de connexion.
+function sessionExpired() {
+  if (sessionExpired.done) return;
+  sessionExpired.done = true;
+  storeClear();
+  CREATOR_TOKEN = null;
+  try { sessionStorage.setItem('eaji_session_expiree', '1'); } catch (e) {}
+  location.reload();
+}
 function remoteSignedOut() {
   if (remoteSignedOut.done) return;
   remoteSignedOut.done = true;
@@ -12326,6 +12351,7 @@ window.addEventListener('load', async () => {
   }).join('');
 
   if (!navigator.onLine) setOffline(true);
+  try { if (sessionStorage.getItem('eaji_session_expiree')) { sessionStorage.removeItem('eaji_session_expiree'); showToast(i18nT('Ta connexion a expiré : reconnecte-toi.')); } } catch (e) {}
   if (CREATOR_TOKEN) {
     // Session déjà ouverte (rechargement de page) : on saute directement dans l'app.
     CREATOR_ID = storeGet('eaji_creator_id') || CREATOR_ID;
@@ -12337,6 +12363,7 @@ window.addEventListener('load', async () => {
     checkLiveEligibility();
     loadAiQuota();
     await loadProfile().catch(() => {});
+    eajiLoader.ready(); // le compte est prêt : l'animation « Eaji » s'efface
     loadMyContent(); loadFollowers(); loadBlocked(); loadPayoutAccount();
     startIncomingCallWatch();
     loadMoney(); loadMyAds();
