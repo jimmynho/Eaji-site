@@ -186,6 +186,41 @@ select.field{appearance:none;}
 .settings-block .section-title{margin:0 0 12px;}
 .mini-btn{background:none;border:1px solid var(--line);color:var(--text);border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer;}
 .mini-btn.danger{border-color:var(--coral);color:var(--coral);}
+/* Publier : grandes tuiles par type (façon YouTube) + outils du créateur */
+.pub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px;}
+.pub-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:18px 8px 14px;border-radius:18px;border:1px solid var(--line);background:var(--surface);color:var(--text);cursor:pointer;min-width:0;}
+.pub-tile .pub-ic{font-size:52px;line-height:1.1;}
+.pub-tile b{font-size:14px;text-align:center;}
+.pub-tile small{margin-top:4px;padding:4px 14px;border-radius:20px;background:var(--gold);color:#1B1E29;font-size:12px;font-weight:700;}
+.pub-tile:active{transform:scale(.97);}
+.pub-head{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--gold);}
+.pub-head-ic{font-size:34px;line-height:1;}
+.pub-head b{flex:1;font-size:16px;color:var(--text);}
+.tool-box{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:10px;}
+.tool-title{font-size:13px;font-weight:700;color:var(--text);margin:0 0 8px;}
+.tool-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.tool-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;min-width:0;}
+.tool-btn span{font-size:26px;line-height:1.1;}
+.ed-trim b{color:var(--gold);}
+/* Hashtags et tendances */
+.hashtag{color:var(--teal);font-weight:600;text-decoration:none;cursor:pointer;}
+.tp .hashtag{color:inherit;text-decoration:underline;}
+.trend-row{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;padding-bottom:4px;align-items:center;scrollbar-width:none;}
+.trend-row::-webkit-scrollbar{display:none;}
+.trend-row .trend-t{flex:none;font-size:13px;font-weight:700;color:var(--on-gold,var(--text));}
+.trend-chip{flex:none;padding:7px 12px;border-radius:18px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.trend-chip small{color:var(--muted);font-weight:500;margin-left:4px;}
+.tag-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--teal);color:var(--text);}
+.tag-bar b{font-size:16px;color:var(--teal);}
+.tag-bar span{flex:1;font-size:12px;color:var(--muted);}
+/* Statistiques d'une publication */
+.cs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px;}
+.cs-cell{padding:10px 6px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);text-align:center;}
+.cs-cell b{display:block;font-size:20px;color:var(--text);}
+.cs-cell span{font-size:11px;color:var(--muted);}
+.cs-bars{display:flex;align-items:flex-end;gap:3px;height:90px;margin:8px 0 4px;}
+.cs-bars div{flex:1;min-height:2px;border-radius:3px 3px 0 0;background:var(--gold);}
+.cs-axis{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);}
 /* Appli du Play Store : pas d'achats numériques en attendant Google Play Billing (règle de Google). */
 .play-store .play-hide,.play-store .plan-row,.play-store .live-gift-row,.play-store .gift-box,.play-store .earn-actions,.play-store .feed-action[onclick^="openGift"]{display:none!important;}
 .delacc-list{margin:0 0 10px;padding-left:18px;font-size:13px;color:var(--muted);}
@@ -853,10 +888,10 @@ textarea.grow-ta.tp-live.tp-panel{text-shadow:0 1px 3px rgba(0,0,0,.85);color:#f
 // L'application est écrite en français. Pour une autre langue, un dictionnaire (fichier i18n/xx.js, chargé
 // une seule fois puis gardé par le téléphone) remplace chaque texte affiché : écrans, boutons, messages,
 // fenêtres de confirmation. Les textes des utilisateurs (messages, titres, commentaires) ne sont jamais traduits.
-const I18N_LANGS = { fr: 'Français', en: 'English', es: 'Español', pt: 'Português', sw: 'Kiswahili', ln: 'Lingála', ar: 'العربية', zh: '中文', hi: 'हिन्दी', ru: 'Русский', de: 'Deutsch' };
+const I18N_LANGS = { fr: 'Français', en: 'English', es: 'Español', pt: 'Português', sw: 'Kiswahili', ln: 'Lingála', kg: 'Kikongo', lu: 'Tshiluba', ar: 'العربية', zh: '中文', hi: 'हिन्दी', ru: 'Русский', de: 'Deutsch' };
 // Langues sans dictionnaire pour l'instant : on affiche la langue la plus proche, comprise dans la région.
 const I18N_NEAR = {
-  kg: 'fr', lu: 'fr', ktu: 'ln', rw: 'fr', rn: 'fr', lg: 'en', so: 'en', am: 'en', om: 'en', ti: 'en',
+  ktu: 'kg', rw: 'fr', rn: 'fr', lg: 'en', so: 'en', am: 'en', om: 'en', ti: 'en',
   ha: 'en', yo: 'en', ig: 'en', ak: 'en', ee: 'fr', wo: 'fr', ff: 'fr', bm: 'fr', mos: 'fr', dyu: 'fr', bci: 'fr', fon: 'fr',
   sg: 'fr', mg: 'fr', ewo: 'fr', dua: 'fr', ber: 'fr', zu: 'en', xh: 'en', af: 'en', st: 'en', tn: 'en', sn: 'en', ny: 'en', bem: 'en',
   ht: 'fr', gcf: 'fr', jam: 'en', pap: 'es', qu: 'es', gn: 'es', ay: 'es', nah: 'es', ca: 'es', eu: 'es', gl: 'pt',
@@ -1344,11 +1379,13 @@ window.eajiLoader = (function () {
       <div class="section-title" style="margin-top:14px;">Contenus de la communaut&eacute;</div>
       <div class="search-box"><input class="field" id="search-input" placeholder="🔍 Chercher un créateur ou une publication" oninput="onSearchInput()"></div>
       <div id="search-results"></div>
+      <div class="trend-row" id="trend-row" style="display:none;"></div>
       <div class="live-strip" id="live-strip"></div>
       <div class="scope-row">
         <button class="scope-btn sel" id="scope-country" onclick="setFeedScope('pays')">Mon pays</button>
         <button class="scope-btn" id="scope-all" onclick="setFeedScope('tout')">Partout</button>
       </div>
+      <div class="tag-bar" id="tag-bar" style="display:none;"><b translate="no"></b><span id="tag-count"></span><button class="mini-btn" onclick="closeHashtag()">✕ Retour au fil</button></div>
       <div id="feed-list"></div>
     </section>
 
@@ -1388,6 +1425,22 @@ window.eajiLoader = (function () {
       </div>
       <div class="section-title" style="margin-top:14px;">Publier un contenu</div>
       <div class="outbox-box" id="outbox-box" style="display:none;"></div>
+      <p class="feed-type" id="pub-hint" style="margin:-4px 0 10px;">Touche ce que tu veux publier.</p>
+      <div class="pub-grid" id="pub-grid">
+        <button class="pub-tile" data-type="video_courte" onclick="pickPubType('video_courte')"><span class="pub-ic">📹</span><b>Vidéo courte</b><small>Publier</small></button>
+        <button class="pub-tile" data-type="video_longue" onclick="pickPubType('video_longue')"><span class="pub-ic">🎬</span><b>Vidéo longue</b><small>Publier</small></button>
+        <button class="pub-tile" data-type="film" onclick="pickPubType('film')"><span class="pub-ic">🎞️</span><b>Film</b><small>Publier</small></button>
+        <button class="pub-tile" data-type="photo" onclick="pickPubType('photo')"><span class="pub-ic">📷</span><b>Photo</b><small>Publier</small></button>
+        <button class="pub-tile" data-type="publication" onclick="pickPubType('publication')"><span class="pub-ic">✍️</span><b>Publication (texte)</b><small>Publier</small></button>
+        <button class="pub-tile" data-type="musique" onclick="pickPubType('musique')"><span class="pub-ic">🎛️</span><b>Musique</b><small>Publier</small></button>
+        <button class="pub-tile" data-type="podcast" onclick="pickPubType('podcast')"><span class="pub-ic">🎙️</span><b>Podcast</b><small>Publier</small></button>
+        <button class="pub-tile" data-type="livre" onclick="pickPubType('livre')"><span class="pub-ic">📚</span><b>Livre</b><small>Publier</small></button>
+        <button class="pub-tile" data-type="pdf" onclick="pickPubType('pdf')"><span class="pub-ic">📄</span><b>PDF</b><small>Publier</small></button>
+        <button class="pub-tile" data-type="powerpoint" onclick="pickPubType('powerpoint')"><span class="pub-ic">📊</span><b>PowerPoint</b><small>Publier</small></button>
+      </div>
+      <div id="pub-form" style="display:none;">
+      <div class="pub-head"><span class="pub-head-ic" id="pub-head-ic">📹</span><b id="pub-head-label">Vidéo courte</b><button class="mini-btn" onclick="pubBack()">← Changer de type</button></div>
+      <div id="up-type-wrap" style="display:none;">
       <label class="field-label" for="up-type">Type</label>
       <select class="field" id="up-type" onchange="updateUploadAccept()">
         <option value="video_courte">Vidéo courte</option>
@@ -1401,6 +1454,7 @@ window.eajiLoader = (function () {
         <option value="livre">Livre</option>
         <option value="powerpoint">PowerPoint</option>
       </select>
+      </div>
       <label class="field-label" for="up-title" id="up-title-label" style="margin-top:10px;">Titre</label>
       <!-- Publication texte : fond au choix (couleurs, dégradés, papiers peints) -->
       <div id="up-bg-wrap" style="display:none;">
@@ -1409,6 +1463,7 @@ window.eajiLoader = (function () {
       </div>
       <textarea class="field grow-ta" id="up-title" rows="1" data-max-words="5000" data-max-h="0.7" placeholder="Titre de ton contenu"></textarea>
       <p class="ta-count" id="up-title-count"></p>
+      <p class="feed-type" id="up-tags-hint" style="margin:-4px 0 8px;font-size:11px;">Astuce : ajoute des #hashtags pour être trouvé plus facilement (ex. : #kinshasa #musique).</p>
       <label class="field-label" for="up-visibility" style="margin-top:10px;">Qui peut voir</label>
       <select class="field" id="up-visibility">
         <option value="public">Tout le monde</option>
@@ -1429,7 +1484,15 @@ window.eajiLoader = (function () {
         <button class="mini-btn" id="up-montage-btn" onclick="openMontage()">🤖 Montage IA</button>
       </div>
       <div id="up-edit-wrap" style="display:none;margin:-2px 0 12px;">
-        <button class="mini-btn" id="up-edit-btn" onclick="openEditor()">✨ Modifier : filtres, effets, voix, musique</button>
+        <div class="tool-box" id="up-tools">
+          <div class="tool-title">🛠️ Outils du créateur</div>
+          <div class="tool-row">
+            <button class="tool-btn" id="tool-cut" onclick="openEditor('couper')"><span>✂️</span>Couper</button>
+            <button class="tool-btn" id="tool-music" onclick="openEditor('musique')"><span>🎵</span>Musique</button>
+            <button class="tool-btn" id="tool-text" onclick="openEditor('textes')"><span>🔤</span>Texte</button>
+            <button class="tool-btn" id="up-edit-btn" onclick="openEditor()"><span>✨</span>Filtres et effets</button>
+          </div>
+        </div>
         <p class="feed-type" id="up-edit-info" style="margin:6px 0 0;"></p>
       </div>
       </div>
@@ -1440,6 +1503,7 @@ window.eajiLoader = (function () {
       <p class="form-error" id="up-error" style="margin-top:8px;"></p>
       <p class="form-success" id="up-success" style="margin-top:8px;">Contenu publié.</p>
       <button class="primary-btn" id="up-btn" onclick="uploadContent()">Publier</button>
+      </div>
 
       <div class="section-title" style="margin-top:24px;">Voir mes publications</div>
       <div class="settings-block" id="my-content"><p class="feed-empty" style="padding:8px;">Aucune publication pour le moment.</p></div>
@@ -1980,7 +2044,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.09a';
+const APP_VERSION = '2026.11.10a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -2898,7 +2962,31 @@ async function sendFileToStorage(uploadInfo, file) {
 }
 
 // Envoi réel d'un fichier : 1) adresse temporaire, 2) envoi au stockage, 3) enregistrement.
-function updateUploadAccept() {
+// Page « Publier » : grandes tuiles par type. La liste déroulante d'origine reste (cachée) : tout le reste du code s'en sert.
+const PUB_ICONS = { video_courte: '📹', video_longue: '🎬', film: '🎞️', photo: '📷', publication: '✍️', musique: '🎛️', podcast: '🎙️', livre: '📚', pdf: '📄', powerpoint: '📊' };
+function pubShowForm() {
+  const sel = document.getElementById('up-type'), form = document.getElementById('pub-form');
+  if (!sel || !form) return;
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('pub-head-ic').textContent = PUB_ICONS[sel.value] || '📤';
+  document.getElementById('pub-head-label').textContent = opt ? opt.textContent : '';
+  form.style.display = 'block';
+  document.getElementById('pub-grid').style.display = 'none';
+  document.getElementById('pub-hint').style.display = 'none';
+}
+function pickPubType(t) {
+  const sel = document.getElementById('up-type');
+  if (sel.value !== t) { sel.value = t; updateUploadAccept(); } else pubShowForm();
+  const form = document.getElementById('pub-form');
+  if (form.scrollIntoView) form.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+function pubBack() {
+  document.getElementById('pub-form').style.display = 'none';
+  document.getElementById('pub-grid').style.display = '';
+  document.getElementById('pub-hint').style.display = '';
+}
+function updateUploadAccept(init) {
+  if (init !== true) pubShowForm();
   const accept = { video_courte: 'video/*', video_longue: 'video/*', film: 'video/*', photo: 'image/*',
     musique: 'audio/*', podcast: 'audio/*', pdf: '.pdf,application/pdf', livre: '.pdf,.epub', powerpoint: '.ppt,.pptx' };
   document.getElementById('up-file').accept = accept[document.getElementById('up-type').value] || '';
@@ -3130,12 +3218,16 @@ function dmTextHtml(text, style) {
   return `<span translate="no"${style ? ` style="${style}"` : ''}${c.cut ? ' class="cut" onclick="toggleCut(this)"' : ''}>${c.html}</span>${c.cut ? moreBtnHtml() : ''}`;
 }
 
+// #hashtags cliquables dans un texte déjà protégé (escapeHtml).
+function tagifyHtml(h) {
+  return String(h).replace(/(^|\s)#([^\s#.,;:!?()"«»<>&'’]{2,40})/g, (m, sp, t) => `${sp}<a class="hashtag" href="#" onclick="event.stopPropagation();openHashtag(this.textContent);return false;">#${t}</a>`);
+}
 // Titre / texte d'une publication : texte sur son fond pour une publication texte.
 function feedTitleHtml(item) {
   const title = String(item.title || '');
   const c = cutTextHtml(title);
   const more = c.cut ? moreBtnHtml() : '';
-  const p = `<p class="feed-title${c.cut ? ' cut' : ''}" translate="no"${c.cut ? ' onclick="toggleCut(this)"' : ''}>${c.html}</p>`;
+  const p = `<p class="feed-title${c.cut ? ' cut' : ''}" translate="no"${c.cut ? ' onclick="toggleCut(this)"' : ''}>${tagifyHtml(c.html)}</p>`;
   if (item.content_type === 'publication' && item.text_only) {
     const a = textBgAttrs(item.text_bg);
     const big = !c.cut && title.length <= 160 && (title.match(/\n/g) || []).length <= 4;
@@ -3246,8 +3338,47 @@ function updateScopeLabel() {
   document.getElementById('scope-country').textContent = c ? `Mon pays (${c.name})` : 'Mon pays';
 }
 
+// ==== Hashtags et tendances ====
+let TAG_VIEW = null;
+async function loadTrends() {
+  const row = document.getElementById('trend-row');
+  if (!row) return;
+  try {
+    const { tags } = await apiCall(`/api/hashtags/trending${FEED_SCOPE === 'pays' && MY_COUNTRY ? `?country=${MY_COUNTRY}` : ''}`);
+    if (!tags || !tags.length) { row.style.display = 'none'; row.innerHTML = ''; return; }
+    row.innerHTML = `<span class="trend-t">🔥 ${escapeHtml(i18nT('Tendances'))}</span>` + tags.map((t) => `<button class="trend-chip" translate="no" data-tag="${escapeHtml(t.tag)}" onclick="openHashtag(this.dataset.tag)">#${escapeHtml(t.tag)}<small>${Number(t.posts) || 0}</small></button>`).join('');
+    row.style.display = 'flex';
+  } catch (e) { row.style.display = 'none'; }
+}
+async function openHashtag(raw) {
+  const tag = String(raw || '').trim().replace(/^#/, '').toLowerCase();
+  if (!tag) return;
+  const tabBtn = document.querySelector('.tab[data-target="s-decouvrir"]');
+  if (tabBtn && !document.getElementById('s-decouvrir').classList.contains('active')) tabBtn.click();
+  TAG_VIEW = tag;
+  const bar = document.getElementById('tag-bar'), list = document.getElementById('feed-list');
+  bar.querySelector('b').textContent = '#' + tag;
+  document.getElementById('tag-count').textContent = '';
+  bar.style.display = 'flex';
+  list.innerHTML = `<p class="feed-empty">${escapeHtml(i18nT('Chargement…'))}</p>`;
+  try {
+    const d = await apiCall(`/api/hashtags/feed?tag=${encodeURIComponent(tag)}`);
+    if (TAG_VIEW !== tag) return;
+    (d.following || []).forEach((id) => followingSet.add(id));
+    document.getElementById('tag-count').textContent = i18nF('{0} publication(s)', d.items.length);
+    list.innerHTML = d.items.length ? d.items.map(feedCardHtml).join('') : `<p class="feed-empty">${escapeHtml(i18nT('Aucune publication avec ce hashtag pour le moment.'))}</p>`;
+    if (bar.scrollIntoView) bar.scrollIntoView({ block: 'start' });
+  } catch (e) { if (TAG_VIEW === tag) list.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`; }
+}
+function closeHashtag() {
+  TAG_VIEW = null;
+  document.getElementById('tag-bar').style.display = 'none';
+  loadFeed();
+}
+
 function setFeedScope(scope) {
   FEED_SCOPE = scope;
+  TAG_VIEW = null; document.getElementById('tag-bar').style.display = 'none';
   document.getElementById('scope-country').classList.toggle('sel', scope === 'pays');
   document.getElementById('scope-all').classList.toggle('sel', scope === 'tout');
   loadFeed();
@@ -3255,6 +3386,8 @@ function setFeedScope(scope) {
 
 async function loadFeed() {
   const list = document.getElementById('feed-list');
+  loadTrends();
+  if (TAG_VIEW) return; // on regarde un #hashtag : le fil revient avec « Retour au fil »
   if (typeof loadLives === 'function') loadLives();
   try {
     const data = await apiCall(FEED_SCOPE === 'pays' ? `/api/feed?country=${MY_COUNTRY}` : '/api/feed');
@@ -4073,6 +4206,7 @@ async function loadMyContent() {
       <div class="list-row" data-id="${escapeHtml(c.id)}" data-scope="${escapeHtml(c.visibility_scope)}" data-price="${c.sale_price ? Number(c.sale_price) : ''}" data-text="${c.text_only ? 1 : 0}" data-bg="${escapeHtml(c.text_bg || '')}">
         <div class="grow"><span class="my-title">${escapeHtml(c.title)}</span>
           <div class="sub">${escapeHtml(contentTypeLabel(c.content_type))} · ${c.visibility_scope === 'abonnes' ? 'abonnés' : 'tout le monde'} · ${Number(c.view_count) || 0} vues · ${Number(c.like_count) || 0} j'aime${c.sale_price ? ` · en vente ${escapeHtml(formatMoney(c.sale_price, 'USD'))} · ${Number(c.sales_count) || 0} vente(s)` : (videoPriceFor(c.duration_seconds) ? ` · payante ${escapeHtml(formatMoney(videoPriceFor(c.duration_seconds), 'USD'))}` : '')}</div>${c.ai_generated ? '<div class="ai-badge">🤖 Contenu créé par IA : non rémunéré, ses vues ne comptent pas pour ta rémunération</div>' : ''}
+          <div style="margin-top:6px;"><button class="mini-btn" onclick="openContentStats(this.closest('.list-row').dataset.id)">📊 Statistiques</button></div>
         </div>
         <button class="mini-btn" onclick="editMyContent(this)">Modifier</button>
         <button class="mini-btn danger" onclick="deleteMyContent(this)">Supprimer</button>
@@ -4088,6 +4222,28 @@ async function loadMyContent() {
     backfillThumbs(items).catch(() => {});
   } catch (e) { box.innerHTML = `<p class="feed-empty">${escapeHtml(e.message)}</p>`; }
 }
+// 📊 Statistiques d'une de mes publications.
+async function openContentStats(id) {
+  const sheet = document.getElementById('cs-sheet'), body = document.getElementById('cs-body');
+  body.innerHTML = `<p class="feed-type">${escapeHtml(i18nT('Chargement…'))}</p>`;
+  sheet.style.display = 'flex';
+  try {
+    const d = await apiCall(`/api/my/content/${id}/stats`);
+    const cell = (n, label) => `<div class="cs-cell"><b>${escapeHtml(kfmt(n))}</b><span>${escapeHtml(i18nT(label))}</span></div>`;
+    const max = Math.max(1, ...d.days.map((x) => x.views));
+    const dl = (x) => { try { return new Date(x + 'T12:00:00').toLocaleDateString(I18N.lang || 'fr', { day: 'numeric', month: 'short' }); } catch (e) { return x; } };
+    const trend = d.prev7 ? Math.round(((d.last7 - d.prev7) / d.prev7) * 100) : null;
+    body.innerHTML = `<p class="feed-title" translate="no" style="margin:0 0 2px;">${escapeHtml(String(d.title || '').slice(0, 120))}</p>
+      <p class="feed-type" style="margin:0;">${escapeHtml(contentTypeLabel(d.contentType))} · ${escapeHtml(i18nT('publié le'))} ${escapeHtml(dl(String(d.createdAt).slice(0, 10)))}</p>
+      <div class="cs-grid">${cell(d.views, 'Vues')}${cell(d.likes, "J'aime")}${cell(d.comments, 'Commentaires')}${cell(d.reposts, 'Partages')}${cell(d.favorites, 'Favoris')}${cell(d.later, 'Plus tard')}${cell(d.sales, 'Ventes')}${cell(d.gifts, 'Cadeaux reçus')}<div class="cs-cell"><b>${d.engagement} %</b><span>${escapeHtml(i18nT('Réactions'))}</span></div></div>
+      <div class="section-title" style="margin:0;color:var(--text);font-size:14px;">${escapeHtml(i18nT('Vues des 14 derniers jours'))}</div>
+      <div class="cs-bars">${d.days.map((x) => `<div title="${escapeHtml(dl(x.day))} : ${x.views}" style="height:${Math.round((x.views / max) * 100)}%;"></div>`).join('')}</div>
+      <div class="cs-axis"><span>${escapeHtml(dl(d.days[0].day))}</span><span>${escapeHtml(dl(d.days[d.days.length - 1].day))}</span></div>
+      <p class="feed-type" id="cs-week" style="margin:10px 0 0;">${escapeHtml(i18nF('7 derniers jours : {0} vue(s)', d.last7))}${trend === null ? '' : ` (${trend >= 0 ? '+' : ''}${trend} % ${escapeHtml(i18nT('par rapport aux 7 jours d\'avant'))})`}</p>
+      <p class="feed-type" style="margin:6px 0 0;font-size:11px;">${escapeHtml(i18nT('Réactions = part des spectateurs qui ont aimé, commenté ou partagé.'))}</p>`;
+  } catch (e) { body.innerHTML = `<p class="form-error" style="display:block;">${escapeHtml(e.message)}</p>`; }
+}
+function closeContentStats() { document.getElementById('cs-sheet').style.display = 'none'; }
 function editMyContent(btn) {
   const row = btn.closest('.list-row');
   const title = row.querySelector('.my-title').textContent;
@@ -7143,8 +7299,36 @@ function edDraw() {
   }
 }
 
+// ✂️ Couper : on garde la partie entre trimStart et trimEnd (au moins 1 seconde).
+const edClock = (x) => { const v = Math.max(0, Number(x) || 0); return `${Math.floor(v / 60)}:${String(Math.floor(v % 60)).padStart(2, '0')}`; };
+const edTrimmed = (E) => E.kind === 'video' && E.duration > 0 && (E.trimStart > 0.05 || E.trimEnd < E.duration - 0.05);
+function edTrimLabels() {
+  const E = EDITOR; if (!E) return;
+  const set = (id, v) => { const el = edEl(id); if (el) el.textContent = v; };
+  set('ed-trim-a', edClock(E.trimStart)); set('ed-trim-b', edClock(E.trimEnd)); set('ed-trim-d', edClock(E.trimEnd - E.trimStart));
+  const a = edEl('ed-trim-s'), b = edEl('ed-trim-e');
+  if (a && Number(a.value) !== E.trimStart) a.value = E.trimStart;
+  if (b && Number(b.value) !== E.trimEnd) b.value = E.trimEnd;
+}
+function edSetTrimStart(v) {
+  const E = EDITOR; if (!E || E.busy) return;
+  E.trimStart = Math.max(0, Math.min(Number(v) || 0, E.trimEnd - 1));
+  edPause(); try { E.vEl.currentTime = E.trimStart; } catch (e) {}
+  edTrimLabels();
+}
+function edSetTrimEnd(v) {
+  const E = EDITOR; if (!E || E.busy) return;
+  E.trimEnd = Math.min(E.duration, Math.max(Number(v) || 0, E.trimStart + 1));
+  edPause(); try { E.vEl.currentTime = Math.max(E.trimStart, E.trimEnd - 0.1); } catch (e) {}
+  edTrimLabels();
+}
+function edTrimHere(side) { const E = EDITOR; if (!E) return; const t = E.vEl.currentTime; if (side === 's') edSetTrimStart(t); else edSetTrimEnd(t); }
+function edTrimReset() { const E = EDITOR; if (!E || E.busy) return; E.trimStart = 0; E.trimEnd = E.duration; edPause(); try { E.vEl.currentTime = 0; } catch (e) {} edTrimLabels(); }
+
 function edLoop() {
   if (!EDITOR) return;
+  const E0 = EDITOR;
+  if (E0.kind === 'video' && !E0.busy && E0.trimEnd && !E0.vEl.paused && E0.vEl.currentTime >= E0.trimEnd) { edPause(); try { E0.vEl.currentTime = E0.trimStart; } catch (e) {} }
   edDraw();
   edSyncClips();
   EDITOR.raf = requestAnimationFrame(edLoop);
@@ -7154,7 +7338,7 @@ function edSyncExtras() {
   const E = EDITOR, t = E.vEl.currentTime;
   if (E.musicEl.src && E.music) {
     const md = E.musicEl.duration;
-    let mt = (E.musicStart || 0) + t;
+    let mt = (E.musicStart || 0) + Math.max(0, t - (E.trimStart || 0));
     if (md && Number.isFinite(md)) mt = mt % md;
     try { E.musicEl.currentTime = mt; } catch (e) {}
   }
@@ -7164,6 +7348,7 @@ function edSyncExtras() {
 async function edPlay() {
   const E = EDITOR; if (!E || E.kind === 'photo') return;
   await E.ac.resume().catch(() => {});
+  if (!E.busy && E.trimEnd && (E.vEl.currentTime < E.trimStart - 0.05 || E.vEl.currentTime >= E.trimEnd - 0.05)) { try { E.vEl.currentTime = E.trimStart; } catch (e) {} }
   edSyncExtras();
   const plays = [E.vEl.play()];
   if (E.musicEl.src && E.music) plays.push(E.musicEl.play().catch(() => {}));
@@ -7188,7 +7373,13 @@ function edRenderPanel() {
   const chips = (list, cur, fn) => `<div class="ed-chips">${list.map(x => `<button class="${x.id === cur ? 'sel' : ''}" onclick="${fn}('${x.id}')">${escapeHtml(x.label)}</button>`).join('')}</div>`;
   const slider = (label, id, val, fn, min = 0, max = 1, step = 0.05) =>
     `<label class="ed-slider">${label}<input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}" oninput="${fn}(this.value)"></label>`;
-  if (tab === 'filtres') box.innerHTML = chips(ED_FILTERS, E.filter, 'edSetFilter') + (E.canFilter ? '' : '<p class="ed-note">Ton téléphone n\'applique que les teintes (Chaud, Froid, Rêve).</p>');
+  if (tab === 'couper') {
+    const d = Math.max(1, E.duration || 0);
+    box.innerHTML = `<p class="ed-note ed-trim">${escapeHtml(i18nT('Garde seulement la partie que tu veux :'))} <b id="ed-trim-a">${edClock(E.trimStart)}</b> → <b id="ed-trim-b">${edClock(E.trimEnd)}</b> · ${escapeHtml(i18nT('durée'))} <b id="ed-trim-d">${edClock(E.trimEnd - E.trimStart)}</b></p>`
+      + slider(i18nT('Début'), 'ed-trim-s', E.trimStart, 'edSetTrimStart', 0, d, 0.1) + slider(i18nT('Fin'), 'ed-trim-e', E.trimEnd, 'edSetTrimEnd', 0, d, 0.1)
+      + `<div class="ed-chips"><button onclick="edTrimHere('s')">${escapeHtml(i18nT('Début = image affichée'))}</button><button onclick="edTrimHere('e')">${escapeHtml(i18nT('Fin = image affichée'))}</button><button onclick="edTrimReset()">${escapeHtml(i18nT('Toute la vidéo'))}</button></div>`;
+  }
+  else if (tab === 'filtres') box.innerHTML = chips(ED_FILTERS, E.filter, 'edSetFilter') + (E.canFilter ? '' : '<p class="ed-note">Ton téléphone n\'applique que les teintes (Chaud, Froid, Rêve).</p>');
   else if (tab === 'effets') box.innerHTML = chips(ED_EFFECTS, E.effect, 'edSetEffect');
   else if (tab === 'fond') {
     box.innerHTML = '<p class="ed-note">Remplace tout ce qui est derrière toi : flou, décor, ou ta propre photo.</p>' + bgPickerHtml(E.bg, 'edSetBg');
@@ -7768,7 +7959,7 @@ function edPanelExtra(tab) {
 
 
 // Ouvre l'éditeur sur le fichier choisi dans « Publier un contenu ».
-async function openEditor() {
+async function openEditor(wantTab) {
   const file = edEl('up-file').files[0];
   if (!file) return showToast('Choisis d\'abord une photo ou une vidéo.');
   const kind = file.type.startsWith('image/') ? 'photo' : file.type.startsWith('video/') ? 'video' : null;
@@ -7781,7 +7972,7 @@ async function openEditor() {
   const E = EDITOR = {
     kind, file, url, duration, canvas, g: canvas.getContext('2d'), tab: 'filtres',
     filter: 'aucun', effect: 'aucun', bg: 'aucun', voice: 'normale', music: null, musicStart: 0, voUrl: null, voiceNodes: [],
-    tts: [], sfx: [], texts: [], stats: [], textColor: '#FFFFFF',
+    tts: [], sfx: [], texts: [], stats: [], textColor: '#FFFFFF', trimStart: 0, trimEnd: 0,
   };
   E.canFilter = typeof E.g.filter === 'string';
   edEl('ed-overlay').style.display = 'flex';
@@ -7790,7 +7981,7 @@ async function openEditor() {
   edMsg('');
   const fit = (w, h, max) => { const s = Math.min(1, max / Math.max(w, h)); return [Math.round(w * s / 2) * 2, Math.round(h * s / 2) * 2]; };
   // Photo : seulement les filtres et les effets (pas de son).
-  for (const t of ['voix', 'musique', 'mavoix', 'voixoff', 'sons']) document.querySelector(`#ed-tabs button[data-t="${t}"]`).style.display = kind === 'photo' ? 'none' : '';
+  for (const t of ['couper', 'voix', 'musique', 'mavoix', 'voixoff', 'sons']) document.querySelector(`#ed-tabs button[data-t="${t}"]`).style.display = kind === 'photo' ? 'none' : '';
   edEl('ed-play').style.display = kind === 'photo' ? 'none' : '';
   edEl('ed-progress').style.display = kind === 'photo' ? 'none' : '';
   if (kind === 'photo') {
@@ -7803,6 +7994,7 @@ async function openEditor() {
     await new Promise((res) => { v.onloadeddata = res; v.onerror = res; setTimeout(res, 8000); });
     [canvas.width, canvas.height] = fit(v.videoWidth || 720, v.videoHeight || 1280, 1280);
     E.duration = duration || v.duration || 0;
+    E.trimEnd = E.duration;
     const ac = E.ac = new (window.AudioContext || window.webkitAudioContext)();
     E.master = ac.createGain();
     E.monitor = ac.createGain(); E.master.connect(E.monitor); E.monitor.connect(ac.destination);
@@ -7814,9 +8006,10 @@ async function openEditor() {
     E.voSrc = ac.createMediaElementSource(E.voEl); E.voGain = ac.createGain(); E.voGain.gain.value = 1.2; E.voSrc.connect(E.voGain); E.voGain.connect(E.master);
     E.sfxGain = ac.createGain(); E.sfxGain.gain.value = 0.9; E.sfxGain.connect(E.master);
     edApplyVoice();
-    v.addEventListener('ended', () => { if (!E.busy) { edPause(); v.currentTime = 0; } });
+    v.addEventListener('ended', () => { if (!E.busy) { edPause(); v.currentTime = E.trimStart || 0; } });
     if (PENDING_SOUND) edSetMusic(PENDING_SOUND.url, `${PENDING_SOUND.title} — ${PENDING_SOUND.creatorName}`, PENDING_SOUND.id);
   }
+  if (typeof wantTab === 'string' && document.querySelector(`#ed-tabs button[data-t="${wantTab}"]`) && (kind === 'video' || !['couper', 'musique'].includes(wantTab))) E.tab = wantTab;
   edRenderPanel();
   edLoop();
 }
@@ -7888,7 +8081,8 @@ async function edRecordVideo() {
     .find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m));
   if (!mime) throw new Error('Ton téléphone ne permet pas d\'enregistrer le montage. Mets à jour ton navigateur.');
   edPause();
-  E.vEl.currentTime = 0;
+  const t0v = E.trimStart || 0, t1v = E.trimEnd || E.duration || 0;
+  E.vEl.currentTime = t0v;
   await new Promise(r => { E.vEl.onseeked = r; setTimeout(r, 1500); });
   edDraw();
   const stream = new MediaStream([E.canvas.captureStream(30).getVideoTracks()[0], ...E.recDest.stream.getAudioTracks()]);
@@ -7900,7 +8094,7 @@ async function edRecordVideo() {
   rec.start(1000);
   await edPlay();
   await new Promise((res) => {
-    const check = () => { if (!EDITOR || E.vEl.ended) return res(); edMsg(`Création du montage… ${Math.min(99, Math.round(E.vEl.currentTime / (E.duration || 1) * 100))} % — garde l'écran allumé.`); setTimeout(check, 400); };
+    const check = () => { if (!EDITOR || E.vEl.ended || (t1v && E.vEl.currentTime >= t1v)) return res(); edMsg(`Création du montage… ${Math.min(99, Math.max(0, Math.round((E.vEl.currentTime - t0v) / ((t1v - t0v) || 1) * 100)))} % — garde l'écran allumé.`); setTimeout(check, t1v && t1v - E.vEl.currentTime < 1 ? 60 : 400); };
     check();
   });
   rec.stop(); await stopped;
@@ -7914,6 +8108,7 @@ async function edRecordVideo() {
 
 function edSummary() {
   const E = EDITOR, parts = [];
+  if (edTrimmed(E)) parts.push(`${i18nT('coupée')} (${edClock(E.trimEnd - E.trimStart)})`);
   if (E.filter !== 'aucun') parts.push('filtre ' + ED_FILTERS.find(x => x.id === E.filter).label);
   if (E.effect !== 'aucun') parts.push('effet ' + ED_EFFECTS.find(x => x.id === E.effect).label.replace(/^\S+\s/, ''));
   if (E.bg !== 'aucun') parts.push('fond ' + bgLabel(E.bg));
@@ -7944,7 +8139,7 @@ async function finishEditor() {
       file = await edRecordVideo();
     }
     if (!EDITOR) return;
-    EDITED = { file, duration: E.kind === 'video' ? E.duration : null, soundId: E.music ? E.music.soundId : null, summary };
+    EDITED = { file, duration: E.kind === 'video' ? (edTrimmed(E) ? Math.max(1, Math.round(E.trimEnd - E.trimStart)) : E.duration) : null, soundId: E.music ? E.music.soundId : null, summary };
     E.busy = false;
     closeEditor();
     showEditedInfo();
@@ -7967,8 +8162,13 @@ function showEditedInfo() {
 function refreshEditButton() {
   const f = edEl('up-file').files[0];
   const ok = f && (f.type.startsWith('image/') || f.type.startsWith('video/'));
+  const vid = f && f.type.startsWith('video/');
+  if (f || PENDING_SOUND || EDITED) pubShowForm(); // un fichier, un son ou un montage est prêt : on montre le formulaire
   edEl('up-edit-wrap').style.display = ok || PENDING_SOUND || EDITED ? 'block' : 'none';
+  edEl('up-tools').style.display = ok ? '' : 'none';
   edEl('up-edit-btn').style.display = ok ? '' : 'none';
+  edEl('tool-cut').style.display = vid ? '' : 'none';
+  edEl('tool-music').style.display = vid ? '' : 'none';
   showEditedInfo();
 }
 
@@ -12332,7 +12532,7 @@ function reelUnmute() {
 
 document.addEventListener('DOMContentLoaded', () => { const v = document.getElementById('app-version'); if (v) v.textContent = APP_VERSION; });
 window.addEventListener('load', async () => {
-  updateUploadAccept();
+  updateUploadAccept(true);
   fillUiLangSelects();
   wireCountryPicker('reg-zone', 'reg-country', 'reg-dial', 'reg-language', MY_COUNTRY, I18N.wanted || I18N.lang);
   regAllCountries();
@@ -12492,6 +12692,12 @@ if (PLAY_APP) {
     <p class="feed-type" id="picker-count" style="margin:10px 0;">0 sélectionné(s)</p>
     <button class="primary-btn" id="picker-btn" onclick="confirmPicker()">Valider</button>
     <button class="mini-btn" style="width:100%;margin-top:8px;padding:10px;" onclick="closePicker()">Annuler</button>
+  </div>
+</div>
+<div class="sheet" id="cs-sheet" onclick="if (event.target === this) closeContentStats()">
+  <div class="sheet-card">
+    <div style="display:flex;align-items:center;gap:10px;margin:0 0 10px;"><div class="section-title" style="margin:0;flex:1;color:var(--text);">📊 Statistiques de la publication</div><button class="mini-btn" onclick="closeContentStats()">Fermer ✕</button></div>
+    <div id="cs-body"></div>
   </div>
 </div>
 <div class="sheet" id="delacc-sheet" onclick="if (event.target === this) closeDeleteAccount()">
@@ -12914,6 +13120,7 @@ if (PLAY_APP) {
   <div class="ed-stage"><canvas id="ed-canvas" width="720" height="1280"></canvas><button class="ed-play" id="ed-play" onclick="edTogglePlay()">▶</button></div>
   <div class="ed-progress" id="ed-progress"><div></div></div>
   <div class="ed-tabs" id="ed-tabs">
+    <button data-t="couper" onclick="edTab('couper')">✂️ Couper</button>
     <button data-t="filtres" onclick="edTab('filtres')">🎨 Filtres</button>
     <button data-t="effets" onclick="edTab('effets')">✨ Effets</button>
     <button data-t="fond" onclick="edTab('fond')">🏞️ Fond</button>
