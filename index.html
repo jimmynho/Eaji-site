@@ -378,6 +378,39 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 .cam-bar{display:flex;align-items:center;justify-content:center;gap:16px;padding:14px 0 calc(18px + env(safe-area-inset-bottom,0px));}
 .cam-shoot{width:72px;height:72px;border-radius:50%;border:5px solid #fff;background:#fff;cursor:pointer;}
 .cam-shoot.video{background:#E8304F;}
+.cam-tint{position:absolute;inset:0;pointer-events:none;}
+.cam-overlay.studio .cam-top-flip{display:none;}
+.cam-count{display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:120px;font-weight:800;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.7);pointer-events:none;z-index:3;}
+.cam-side{display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);flex-direction:column;gap:6px;z-index:2;max-height:96%;overflow-y:auto;scrollbar-width:none;}
+.cam-side::-webkit-scrollbar{display:none;}
+.cam-side button{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:1px;width:72px;padding:6px 1px;border:none;border-radius:12px;background:rgba(0,0,0,.5);color:#fff;cursor:pointer;}
+.cam-side button span{font-size:20px;line-height:1.1;}
+.cam-side button b{font-size:9px;font-weight:700;line-height:1.15;}
+.cam-side button b i{font-style:normal;}
+.cam-overlay.studio.photo-mode .cam-side-live .vid-only{display:none;}
+.cam-light-row{align-items:center;gap:10px;padding:2px 18px 6px;font-size:18px;}
+.cam-light-row input{flex:1;}
+.cam-prompt{display:none;position:absolute;left:10px;right:86px;top:8px;height:34%;overflow:hidden;border-radius:12px;background:rgba(0,0,0,.45);z-index:2;pointer-events:none;}
+.cam-prompt div{padding:10px 12px;color:#fff;font-size:20px;font-weight:700;line-height:1.35;white-space:pre-wrap;text-shadow:0 1px 4px rgba(0,0,0,.8);will-change:transform;}
+.cam-prompt-edit{display:none;position:absolute;inset:0;z-index:4;background:rgba(0,0,0,.88);flex-direction:column;gap:8px;padding:14px;justify-content:center;}
+.cam-prompt-edit p{margin:0;font-size:12px;color:#cfd3dc;}
+.cam-side button.on{background:var(--gold);color:#1B1E29;}
+.cam-overlay.studio:not(.taken) .cam-side-live{display:flex;}
+.cam-overlay.studio.taken .cam-side-done{display:flex;}
+.cam-overlay.studio.taken-photo .cam-side-done .vid-only{display:none;}
+.cam-filters{display:none;gap:10px;overflow-x:auto;padding:4px 12px 2px;scrollbar-width:none;}
+.cam-filters::-webkit-scrollbar{display:none;}
+.cam-overlay.studio:not(.taken) .cam-filters{display:flex;}
+.cam-filters button{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;color:#ddd;cursor:pointer;padding:2px;}
+.cam-filters button i{display:block;width:46px;height:46px;border-radius:12px;border:2px solid transparent;background:linear-gradient(135deg,#f6c35b,#e8304f 55%,#4a7dff);}
+.cam-filters button.sel i{border-color:#fff;}
+.cam-filters button.sel{color:#fff;font-weight:700;}
+.cam-filters button span{font-size:10px;white-space:nowrap;}
+.cam-gal,.cam-gal-space{display:none;width:64px;}
+.cam-overlay.studio .cam-gal{display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:transparent;color:#fff;cursor:pointer;}
+.cam-overlay.studio .cam-gal-space{display:block;}
+.cam-gal span{font-size:30px;line-height:1.1;}
+.cam-gal b{font-size:11px;}
 .cam-shoot.rec{border-radius:18px;background:#E8304F;animation:pulse 1s infinite;}
 .ed-overlay{position:fixed;inset:0;z-index:65;background:#0b0b10;color:#fff;display:none;flex-direction:column;}
 .ed-top{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top,0px)) 12px 10px;}
@@ -1476,7 +1509,7 @@ window.eajiLoader = (function () {
       </div>
       <div id="up-file-wrap">
       <label class="field-label" for="up-file" style="margin-top:10px;">Fichier</label>
-      <input class="field" id="up-file" type="file" onchange="IMPORTED = null; onUploadFileChange()">
+      <input class="field" id="up-file" type="file" onchange="pubFilePicked()">
       <p class="feed-type" id="up-duration" style="margin:-6px 0 10px;"></p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin:-2px 0 10px;">
         <button class="mini-btn" id="up-camera-btn" onclick="cameraForPublish()">📷 Photo / 🎥 Vidéo maintenant</button>
@@ -2044,7 +2077,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.10a';
+const APP_VERSION = '2026.11.11a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -2974,11 +3007,61 @@ function pubShowForm() {
   document.getElementById('pub-grid').style.display = 'none';
   document.getElementById('pub-hint').style.display = 'none';
 }
-function pickPubType(t) {
+// Toucher une tuile mène tout de suite au bon endroit : la caméra (studio) pour une vidéo ou une photo,
+// les fichiers du téléphone pour une musique, un podcast, un livre, un PDF ou un PowerPoint, le texte pour une publication.
+// « formOnly » : seulement afficher le formulaire (sans ouvrir la caméra ni les fichiers).
+function pickPubType(t, formOnly) {
   const sel = document.getElementById('up-type');
   if (sel.value !== t) { sel.value = t; updateUploadAccept(); } else pubShowForm();
   const form = document.getElementById('pub-form');
   if (form.scrollIntoView) form.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  if (formOnly === true) return;
+  if (['video_courte', 'video_longue', 'film', 'photo'].includes(t)) openStudio(t);
+  else if (t === 'publication') { const ta = document.getElementById('up-title'); if (ta) setTimeout(() => ta.focus(), 50); }
+  else pubPickFile();
+}
+function pubPickFile() { const input = document.getElementById('up-file'); try { input.value = ''; } catch (e) {} input.click(); }
+// Studio : la caméra plein écran avec « Ajouter » (fichiers du téléphone), les outils sur le côté et les filtres en bas.
+let PUB_AUTO = null; // { filter, at } : après un choix dans les fichiers depuis le studio, on ouvre l'éditeur
+function openStudio(t) {
+  const photo = t === 'photo';
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { PUB_AUTO = { at: Date.now() }; return pubPickFile(); }
+  openCamera(studioDone, { mode: photo ? 'photo' : 'video', only: photo ? 'photo' : 'video', studio: true, facing: 'environment' });
+}
+async function studioDone(file, extra) {
+  extra = extra || {};
+  IMPORTED = null;
+  const type = document.getElementById('up-type');
+  if (file.type.startsWith('image/')) { if (type.value !== 'photo') { type.value = 'photo'; updateUploadAccept(); } }
+  else if (!['video_courte', 'video_longue', 'film'].includes(type.value)) { type.value = 'video_courte'; updateUploadAccept(); }
+  const input = document.getElementById('up-file');
+  if (!putFileInInput(input, file)) { EDITED = { file, duration: null, soundId: null, summary: 'pris avec la caméra' }; refreshEditButton(); return; }
+  await onUploadFileChange();
+  const video = file.type.startsWith('video/');
+  const changed = (extra.filter && extra.filter !== 'aucun') || extra.light || extra.retouch || (video && extra.speed && extra.speed !== 1);
+  if (extra.tab || changed) await studioEdit(extra.tab || (extra.filter && extra.filter !== 'aucun' ? 'filtres' : video && extra.speed !== 1 ? 'vitesse' : 'retouche'), extra);
+  else showToast(file.type.startsWith('image/') ? i18nT('Photo prête : ajoute un titre puis publie.') : i18nT('Vidéo prête : ajoute un titre puis publie.'));
+}
+async function studioEdit(tab, extra) {
+  extra = extra || {};
+  const f = document.getElementById('up-file').files[0];
+  if (!f) return;
+  if (f.type.startsWith('video/') && UPLOAD_DURATION > EDITOR_MAX_SECONDS) return; // trop longue pour l'éditeur : on publie telle quelle
+  if (!f.type.startsWith('video/') && !f.type.startsWith('image/')) return;
+  await openEditor(tab);
+  const E = EDITOR; if (!E) return;
+  // Les réglages choisis dans le studio (filtre, vitesse, éclairage, retouche) sont repris dans l'éditeur.
+  if (extra.filter && ED_FILTERS.some((x) => x.id === extra.filter)) E.filter = extra.filter;
+  if (E.kind === 'video' && ED_SPEEDS.includes(extra.speed)) { E.speed = extra.speed; try { E.vEl.playbackRate = E.speed; } catch (e) {} }
+  if (extra.light) E.light = Math.max(-0.5, Math.min(0.5, Number(extra.light) || 0));
+  if (extra.retouch) E.retouch = Math.max(0, Math.min(1, Number(extra.retouch) || 0));
+  edRenderPanel(); edDraw();
+}
+async function pubFilePicked() {
+  IMPORTED = null;
+  const auto = PUB_AUTO; PUB_AUTO = null;
+  await onUploadFileChange();
+  if (auto && Date.now() - auto.at < 5 * 60 * 1000) await studioEdit('filtres', auto);
 }
 function pubBack() {
   document.getElementById('pub-form').style.display = 'none';
@@ -7268,6 +7351,7 @@ function edDrawEffect(g, W, H, t) {
   g.globalAlpha = 1;
 }
 
+function edFilterCss(css, light) { const parts = []; if (css && css !== 'none') parts.push(css); if (light) parts.push(`brightness(${Math.round((1 + Number(light)) * 100) / 100})`); return parts.join(' ') || 'none'; }
 function edDraw() {
   const E = EDITOR; if (!E) return;
   const src = E.kind === 'photo' ? E.img : E.vEl;
@@ -7281,13 +7365,17 @@ function edDraw() {
     const dur = E.duration || 10, z = 1 + 0.18 * Math.min(1, t / dur);
     g.translate(W / 2, H / 2); g.scale(z, z); g.translate(-W / 2, -H / 2);
   }
-  if (E.canFilter) g.filter = f.css;
+  if (E.canFilter) g.filter = edFilterCss(f.css, E.light);
   if (E.kind === 'photo' || E.vEl.readyState >= 2) {
     // Arrière-plan virtuel : la personne est gardée, le reste est remplacé (avant filtres et effets).
     const frame = E.bg !== 'aucun' && BG_SEG ? bgCompose(src, W, H, E.bg, E.bgState || (E.bgState = {}), E.kind === 'photo') : src;
     g.drawImage(frame, 0, 0, W, H);
   }
   g.restore();
+  // Éclairage sur un téléphone sans filtres : un voile clair ou sombre.
+  if (!E.canFilter && E.light) { g.save(); g.fillStyle = E.light > 0 ? `rgba(255,255,255,${Math.min(0.45, E.light * 0.7)})` : `rgba(0,0,0,${Math.min(0.5, -E.light * 0.8)})`; g.fillRect(0, 0, W, H); g.restore(); }
+  // Retouche : l'image adoucie est reposée par-dessus (peau plus lisse, teint plus lumineux).
+  if (E.retouch > 0 && E.canFilter) { g.save(); g.globalAlpha = 0.5 * E.retouch; g.filter = `blur(${Math.round(2 + 5 * E.retouch)}px) brightness(${1 + 0.08 * E.retouch}) saturate(1.06)`; g.drawImage(E.canvas, 0, 0, W, H); g.restore(); }
   if (f.tint) { g.save(); g.globalCompositeOperation = 'soft-light'; g.fillStyle = f.tint; g.fillRect(0, 0, W, H); g.restore(); }
   if (f.vignette && E.effect !== 'vignette') { const save = E.effect; E.effect = 'vignette'; edDrawEffect(g, W, H, t); E.effect = save; }
   edDrawEffect(g, W, H, t);
@@ -7338,21 +7426,22 @@ function edSyncExtras() {
   const E = EDITOR, t = E.vEl.currentTime;
   if (E.musicEl.src && E.music) {
     const md = E.musicEl.duration;
-    let mt = (E.musicStart || 0) + Math.max(0, t - (E.trimStart || 0));
+    let mt = (E.musicStart || 0) + Math.max(0, t - (E.trimStart || 0)) / (E.speed || 1);
     if (md && Number.isFinite(md)) mt = mt % md;
     try { E.musicEl.currentTime = mt; } catch (e) {}
   }
-  if (E.voUrl) { try { E.voEl.currentTime = Math.min(t, E.voEl.duration || t); } catch (e) {} }
+  if (E.voUrl) { const vt = t / (E.speed || 1); try { E.voEl.currentTime = Math.min(vt, E.voEl.duration || vt); } catch (e) {} }
 }
 
 async function edPlay() {
   const E = EDITOR; if (!E || E.kind === 'photo') return;
   await E.ac.resume().catch(() => {});
   if (!E.busy && E.trimEnd && (E.vEl.currentTime < E.trimStart - 0.05 || E.vEl.currentTime >= E.trimEnd - 0.05)) { try { E.vEl.currentTime = E.trimStart; } catch (e) {} }
+  try { E.vEl.playbackRate = E.speed || 1; } catch (e) {}
   edSyncExtras();
   const plays = [E.vEl.play()];
   if (E.musicEl.src && E.music) plays.push(E.musicEl.play().catch(() => {}));
-  if (E.voUrl && E.vEl.currentTime < (E.voEl.duration || Infinity)) plays.push(E.voEl.play().catch(() => {}));
+  if (E.voUrl && E.vEl.currentTime / (E.speed || 1) < (E.voEl.duration || Infinity)) plays.push(E.voEl.play().catch(() => {}));
   await Promise.all(plays).catch(() => {});
   edEl('ed-play').textContent = '❚❚';
 }
@@ -7379,6 +7468,19 @@ function edRenderPanel() {
       + slider(i18nT('Début'), 'ed-trim-s', E.trimStart, 'edSetTrimStart', 0, d, 0.1) + slider(i18nT('Fin'), 'ed-trim-e', E.trimEnd, 'edSetTrimEnd', 0, d, 0.1)
       + `<div class="ed-chips"><button onclick="edTrimHere('s')">${escapeHtml(i18nT('Début = image affichée'))}</button><button onclick="edTrimHere('e')">${escapeHtml(i18nT('Fin = image affichée'))}</button><button onclick="edTrimReset()">${escapeHtml(i18nT('Toute la vidéo'))}</button></div>`;
   }
+  else if (tab === 'vitesse') {
+    box.innerHTML = `<p class="ed-note">${escapeHtml(i18nT('Vitesse de la vidéo : ralenti ou accéléré.'))}</p><div class="ed-chips">${ED_SPEEDS.map((v) => `<button class="${v === E.speed ? 'sel' : ''}" data-speed="${v}" onclick="edSetSpeed(${v})">${String(v).replace('.', ',')}×</button>`).join('')}</div>`;
+  }
+  else if (tab === 'retouche') {
+    box.innerHTML = slider(i18nT('Retouche (peau plus lisse)'), 'ed-retouch', E.retouch, 'edSetRetouch', 0, 1, 0.05) + slider(i18nT('Éclairage'), 'ed-light', E.light, 'edSetLight', -0.5, 0.5, 0.02)
+      + (E.canFilter ? '' : `<p class="ed-note">${escapeHtml(i18nT('Sur ce téléphone, seul l\'éclairage est disponible.'))}</p>`);
+  }
+  else if (tab === 'soustitres') {
+    const n = E.texts.filter((x) => x.sub).length;
+    box.innerHTML = `<p class="ed-note">${escapeHtml(i18nT('Écris tes sous-titres : une phrase par ligne. Ils sont répartis sur toute la vidéo, en bas de l\'image.'))}</p>
+      <textarea class="field" id="ed-sub" rows="4" maxlength="6000" placeholder="${escapeHtml(i18nT('Bonjour à tous !'))}">${escapeHtml(E.subsRaw || '')}</textarea>
+      <div class="ed-chips"><button onclick="edAddSubs()">💬 ${escapeHtml(i18nT('Mettre les sous-titres'))}</button>${n ? `<button onclick="edRemoveSubs()">✕ ${escapeHtml(i18nT('Retirer'))} (${n})</button>` : ''}</div>`;
+  }
   else if (tab === 'filtres') box.innerHTML = chips(ED_FILTERS, E.filter, 'edSetFilter') + (E.canFilter ? '' : '<p class="ed-note">Ton téléphone n\'applique que les teintes (Chaud, Froid, Rêve).</p>');
   else if (tab === 'effets') box.innerHTML = chips(ED_EFFECTS, E.effect, 'edSetEffect');
   else if (tab === 'fond') {
@@ -7403,6 +7505,21 @@ function edRenderPanel() {
 }
 function edTab(t) { if (EDITOR && !EDITOR.busy) { EDITOR.tab = t; edRenderPanel(); } }
 function edSetFilter(id) { EDITOR.filter = id; edRenderPanel(); edDraw(); }
+function edSetSpeed(v) { const E = EDITOR; if (!E || E.busy || E.kind !== 'video') return; E.speed = ED_SPEEDS.includes(Number(v)) ? Number(v) : 1; try { E.vEl.playbackRate = E.speed; } catch (e) {} if (!E.vEl.paused) { edPause(); } if (E.tab === 'vitesse') edRenderPanel(); }
+function edSetLight(v) { const E = EDITOR; if (!E) return; E.light = Math.max(-0.5, Math.min(0.5, Number(v) || 0)); edDraw(); }
+function edSetRetouch(v) { const E = EDITOR; if (!E) return; E.retouch = Math.max(0, Math.min(1, Number(v) || 0)); edDraw(); }
+// 💬 Sous-titres : une phrase par ligne, réparties sur toute la vidéo (en bas de l'image).
+function edAddSubs() {
+  const E = EDITOR; if (!E || E.kind !== 'video') return;
+  const lines = edEl('ed-sub').value.split('\n').map((l) => l.trim().slice(0, 120)).filter(Boolean).slice(0, 60);
+  if (!lines.length) return edMsg(i18nT('Écris tes sous-titres : une phrase par ligne.'));
+  const a = E.trimStart || 0, b = E.trimEnd || E.duration || 0, each = (b - a) / lines.length;
+  E.texts = E.texts.filter((x) => !x.sub);
+  lines.forEach((text, i) => E.texts.push({ text, start: Math.round((a + i * each) * 10) / 10, end: Math.round((a + (i + 1) * each) * 10) / 10 - 0.05, anim: 'fixe', pos: 'bas', color: '#FFFFFF', size: 'petit', box: true, sub: true }));
+  E.subsRaw = lines.join('\n'); edMsg('');
+  edRenderPanel(); edDraw();
+}
+function edRemoveSubs() { const E = EDITOR; if (!E) return; E.texts = E.texts.filter((x) => !x.sub); E.subsRaw = ''; edRenderPanel(); edDraw(); }
 function edSetEffect(id) { EDITOR.effect = id; edRenderPanel(); edDraw(); }
 async function edSetBg(id) {
   const E = EDITOR; if (!E || E.busy) return;
@@ -7770,9 +7887,9 @@ function edSyncClips() {
   const E = EDITOR; if (!E || E.kind === 'photo') return;
   const t = E.vEl.currentTime, playing = !E.vEl.paused && !E.vEl.ended;
   for (const c of E.tts) {
-    const inside = t >= c.start && t < c.start + c.duration;
+    const sp = E.speed || 1, inside = t >= c.start && t < c.start + c.duration * sp;
     if (playing && inside) {
-      if (c.el.paused) { try { c.el.currentTime = Math.max(0, t - c.start); } catch (e) {} c.el.play().catch(() => {}); }
+      if (c.el.paused) { try { c.el.currentTime = Math.max(0, (t - c.start) / sp); } catch (e) {} c.el.play().catch(() => {}); }
     } else if (!c.el.paused) c.el.pause();
   }
   const last = E.lastClipT === undefined ? t : E.lastClipT;
@@ -7826,6 +7943,7 @@ function edDrawTexts(g, W, H, t, still) {
     const lines = edWrap(g, txt, W * 0.86), lh = size * 1.2;
     const cy = { haut: H * 0.16, milieu: H / 2, bas: H * 0.82 }[x.pos] || H / 2;
     let dx = 0, scale = 1, alpha = Math.max(0, Math.min(p, out));
+    if (x.sub) alpha = 1; // un sous-titre s'affiche d'un coup
     if (x.anim === 'machine' || x.anim === 'neon') alpha = Math.max(0, out);
     if (x.anim === 'glisse') dx = (1 - p) * -W * 0.8;
     if (x.anim === 'zoom') scale = 0.2 + 0.8 * p;
@@ -7928,7 +8046,7 @@ function edPanelExtra(tab) {
       <label class="ed-check"><input type="checkbox" id="ed-txt-box" checked> Fond derrière le texte</label></div>
       ${timing('ed-txt', true, 3)}
       <button class="primary-btn" onclick="edAddText()">➕ Ajouter le texte</button>
-      ${E.texts.map((x, i) => `<div class="ed-item"><span>🔤 « ${escapeHtml(x.text.slice(0, 30))} »${video ? ` · ${x.start}–${Math.round(x.end * 10) / 10} s` : ''}</span><button onclick="edRemoveText(${i})">✕</button></div>`).join('')}`;
+      ${E.texts.map((x, i) => x.sub ? '' : `<div class="ed-item"><span>🔤 « ${escapeHtml(x.text.slice(0, 30))} »${video ? ` · ${x.start}–${Math.round(x.end * 10) / 10} s` : ''}</span><button onclick="edRemoveText(${i})">✕</button></div>`).join('')}`;
   }
   if (tab === 'chiffres') {
     return `<p class="ed-note">Statistiques animées : écris une donnée par ligne (ex : « Kinshasa 45 »).</p>
@@ -7959,6 +8077,8 @@ function edPanelExtra(tab) {
 
 
 // Ouvre l'éditeur sur le fichier choisi dans « Publier un contenu ».
+const ED_VIDEO_TABS = ['couper', 'vitesse', 'voix', 'musique', 'mavoix', 'voixoff', 'sons', 'soustitres']; // onglets cachés pour une photo
+const ED_SPEEDS = [0.5, 1, 1.5, 2, 3];
 async function openEditor(wantTab) {
   const file = edEl('up-file').files[0];
   if (!file) return showToast('Choisis d\'abord une photo ou une vidéo.');
@@ -7973,6 +8093,7 @@ async function openEditor(wantTab) {
     kind, file, url, duration, canvas, g: canvas.getContext('2d'), tab: 'filtres',
     filter: 'aucun', effect: 'aucun', bg: 'aucun', voice: 'normale', music: null, musicStart: 0, voUrl: null, voiceNodes: [],
     tts: [], sfx: [], texts: [], stats: [], textColor: '#FFFFFF', trimStart: 0, trimEnd: 0,
+    speed: 1, light: 0, retouch: 0,
   };
   E.canFilter = typeof E.g.filter === 'string';
   edEl('ed-overlay').style.display = 'flex';
@@ -7981,7 +8102,7 @@ async function openEditor(wantTab) {
   edMsg('');
   const fit = (w, h, max) => { const s = Math.min(1, max / Math.max(w, h)); return [Math.round(w * s / 2) * 2, Math.round(h * s / 2) * 2]; };
   // Photo : seulement les filtres et les effets (pas de son).
-  for (const t of ['couper', 'voix', 'musique', 'mavoix', 'voixoff', 'sons']) document.querySelector(`#ed-tabs button[data-t="${t}"]`).style.display = kind === 'photo' ? 'none' : '';
+  for (const t of ED_VIDEO_TABS) document.querySelector(`#ed-tabs button[data-t="${t}"]`).style.display = kind === 'photo' ? 'none' : '';
   edEl('ed-play').style.display = kind === 'photo' ? 'none' : '';
   edEl('ed-progress').style.display = kind === 'photo' ? 'none' : '';
   if (kind === 'photo') {
@@ -8009,7 +8130,7 @@ async function openEditor(wantTab) {
     v.addEventListener('ended', () => { if (!E.busy) { edPause(); v.currentTime = E.trimStart || 0; } });
     if (PENDING_SOUND) edSetMusic(PENDING_SOUND.url, `${PENDING_SOUND.title} — ${PENDING_SOUND.creatorName}`, PENDING_SOUND.id);
   }
-  if (typeof wantTab === 'string' && document.querySelector(`#ed-tabs button[data-t="${wantTab}"]`) && (kind === 'video' || !['couper', 'musique'].includes(wantTab))) E.tab = wantTab;
+  if (typeof wantTab === 'string' && document.querySelector(`#ed-tabs button[data-t="${wantTab}"]`) && (kind === 'video' || !ED_VIDEO_TABS.includes(wantTab))) E.tab = wantTab;
   edRenderPanel();
   edLoop();
 }
@@ -8109,6 +8230,10 @@ async function edRecordVideo() {
 function edSummary() {
   const E = EDITOR, parts = [];
   if (edTrimmed(E)) parts.push(`${i18nT('coupée')} (${edClock(E.trimEnd - E.trimStart)})`);
+  if (E.kind === 'video' && E.speed && E.speed !== 1) parts.push(`${i18nT('vitesse')} ${String(E.speed).replace('.', ',')}×`);
+  if (E.retouch > 0) parts.push(i18nT('retouche'));
+  if (E.light) parts.push(i18nT('éclairage'));
+  if (E.texts.some((x) => x.sub)) parts.push(i18nT('sous-titres'));
   if (E.filter !== 'aucun') parts.push('filtre ' + ED_FILTERS.find(x => x.id === E.filter).label);
   if (E.effect !== 'aucun') parts.push('effet ' + ED_EFFECTS.find(x => x.id === E.effect).label.replace(/^\S+\s/, ''));
   if (E.bg !== 'aucun') parts.push('fond ' + bgLabel(E.bg));
@@ -8117,7 +8242,7 @@ function edSummary() {
   if (E.voUrl) parts.push('ta voix');
   if (E.tts.length) parts.push('voix off');
   if (E.sfx.length) parts.push('bruitages');
-  if (E.texts.length) parts.push('textes animés');
+  if (E.texts.some((x) => !x.sub)) parts.push('textes animés');
   if (E.stats.length) parts.push('statistiques');
   return parts.join(', ');
 }
@@ -8139,7 +8264,7 @@ async function finishEditor() {
       file = await edRecordVideo();
     }
     if (!EDITOR) return;
-    EDITED = { file, duration: E.kind === 'video' ? (edTrimmed(E) ? Math.max(1, Math.round(E.trimEnd - E.trimStart)) : E.duration) : null, soundId: E.music ? E.music.soundId : null, summary };
+    EDITED = { file, duration: E.kind === 'video' ? (edTrimmed(E) || E.speed !== 1 ? Math.max(1, Math.round((edTrimmed(E) ? E.trimEnd - E.trimStart : E.duration) / (E.speed || 1))) : E.duration) : null, soundId: E.music ? E.music.soundId : null, summary };
     E.busy = false;
     closeEditor();
     showEditedInfo();
@@ -9071,8 +9196,11 @@ let CAM = null; // { stream, facing, mode, rec, chunks, onDone, file }
 async function openCamera(onDone, opts = {}) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return showToast('Ton navigateur ne permet pas d\'utiliser la caméra.');
   closeCamera();
-  CAM = { facing: opts.facing || 'environment', mode: opts.mode === 'video' ? 'video' : 'photo', only: opts.only || null, onDone, chunks: [], maxSeconds: opts.maxSeconds || 600 };
+  CAM = { facing: opts.facing || 'environment', mode: opts.mode === 'video' ? 'video' : 'photo', only: opts.only || null, onDone, chunks: [], maxSeconds: opts.maxSeconds || 600,
+    studio: Boolean(opts.studio), filter: 'aucun', delay: 0, torch: false, speed: 1, light: 0, retouch: 0, lightOpen: false };
   document.getElementById('cam-overlay').style.display = 'flex';
+  document.getElementById('cam-overlay').classList.toggle('studio', CAM.studio);
+  camRenderStudio();
   document.getElementById('cam-modes').style.display = CAM.only ? 'none' : 'flex';
   camShowLive();
   await camStart();
@@ -9096,7 +9224,102 @@ async function camStart() {
   v.play().catch(() => {});
   document.getElementById('cam-msg').textContent = '';
   camRenderModes();
+  C.torch = false; camRenderStudio();
 }
+// ---- Studio (page Publier) : filtres en direct, minuteur, flash, fichiers du téléphone, outils après la prise ----
+function camFilterCss(id) {
+  const f = ED_FILTERS.find((x) => x.id === id), C = CAM, parts = [];
+  if (f && f.css !== 'none') parts.push(f.css);
+  if (C && C.light) parts.push(`brightness(${Math.round((1 + C.light) * 100) / 100})`);
+  if (C && C.retouch) parts.push(`blur(${(0.7 * C.retouch).toFixed(2)}px) brightness(${1 + 0.06 * C.retouch}) contrast(${1 - 0.06 * C.retouch})`); // aperçu ; la vraie retouche est faite dans l'éditeur
+  return parts.join(' ');
+}
+function camRenderStudio() {
+  const C = CAM; if (!C) return;
+  const v = document.getElementById('cam-video'), tint = document.getElementById('cam-tint');
+  const f = ED_FILTERS.find((x) => x.id === C.filter) || ED_FILTERS[0];
+  v.style.filter = C.studio ? camFilterCss(C.filter) : '';
+  tint.style.background = C.studio && f.tint ? f.tint : 'transparent';
+  if (!C.studio) return;
+  document.getElementById('cam-filters').innerHTML = ED_FILTERS.map((x) =>
+    `<button class="${x.id === C.filter ? 'sel' : ''}" data-f="${x.id}" onclick="camSetFilter('${x.id}')"><i style="filter:${x.css === 'none' ? 'none' : x.css};"></i><span>${escapeHtml(i18nT(x.label))}</span></button>`).join('');
+  const track = C.stream && C.stream.getVideoTracks()[0];
+  const caps = track && track.getCapabilities ? track.getCapabilities() : {};
+  C.canTorch = Boolean(caps.torch);
+  document.getElementById('cam-torch').classList.toggle('on', C.torch);
+  document.getElementById('cam-overlay').classList.toggle('photo-mode', C.mode === 'photo');
+  document.getElementById('cam-speed-label').textContent = `${String(C.speed).replace('.', ',')}×`;
+  document.getElementById('cam-speed').classList.toggle('on', C.speed !== 1);
+  document.getElementById('cam-retouch').classList.toggle('on', C.retouch > 0);
+  document.getElementById('cam-retouch-label').textContent = C.retouch >= 1 ? i18nT('Retouche') + ' ++' : C.retouch > 0 ? i18nT('Retouche') + ' +' : i18nT('Retouche');
+  document.getElementById('cam-light').classList.toggle('on', C.lightOpen || C.light !== 0);
+  document.getElementById('cam-light-row').style.display = C.lightOpen ? 'flex' : 'none';
+  document.getElementById('cam-prompt-btn').classList.toggle('on', Boolean(C.prompt));
+  camPromptShow();
+  document.getElementById('cam-timer').classList.toggle('on', C.delay > 0);
+  document.getElementById('cam-timer-label').textContent = C.delay ? `${C.delay} s` : i18nT('Minuteur');
+}
+function camSetFilter(id) { if (!CAM) return; CAM.filter = id; camRenderStudio(); }
+function camTimer() { if (!CAM || CAM.rec || CAM.counting) return; CAM.delay = CAM.delay === 0 ? 3 : CAM.delay === 3 ? 10 : 0; camRenderStudio(); }
+async function camTorch() {
+  const C = CAM; if (!C || !C.stream) return;
+  const track = C.stream.getVideoTracks()[0];
+  if (!C.canTorch) return showToast(i18nT('Le flash n\'est pas disponible sur cette caméra.'));
+  try { await track.applyConstraints({ advanced: [{ torch: !C.torch }] }); C.torch = !C.torch; } catch (e) { showToast(i18nT('Le flash n\'est pas disponible sur cette caméra.')); }
+  camRenderStudio();
+}
+function camSpeed() { const C = CAM; if (!C || C.rec) return; const i = ED_SPEEDS.indexOf(C.speed); C.speed = ED_SPEEDS[(i + 1) % ED_SPEEDS.length]; camRenderStudio(); }
+function camRetouch() { const C = CAM; if (!C) return; C.retouch = C.retouch === 0 ? 0.5 : C.retouch === 0.5 ? 1 : 0; camRenderStudio(); }
+function camLightToggle() { const C = CAM; if (!C) return; C.lightOpen = !C.lightOpen; document.getElementById('cam-light-range').value = C.light; camRenderStudio(); }
+function camSetLight(v) { const C = CAM; if (!C) return; C.light = Math.max(-0.5, Math.min(0.5, Number(v) || 0)); document.getElementById('cam-video').style.filter = camFilterCss(C.filter); }
+// Disposition : plusieurs vidéos ou images dans le même écran (2, 3, 4…) → le collage.
+function camLayout() { if (!CAM || CAM.rec) return; closeCamera(); openCollage(); }
+// Téléprompteur : ton texte défile à l'écran pendant que tu filmes (il n'est pas enregistré dans la vidéo).
+function camPromptOpen() {
+  const C = CAM; if (!C || C.rec) return;
+  let saved = ''; try { saved = localStorage.getItem('eaji_prompteur') || ''; } catch (e) {}
+  document.getElementById('cam-prompt-text').value = C.prompt || saved;
+  document.getElementById('cam-prompt-edit').style.display = 'flex';
+  camPromptSpeed(C.promptSpeed || 2);
+}
+function camPromptSpeed(n) { if (!CAM) return; CAM.promptSpeed = n; document.querySelectorAll('#cam-prompt-speeds button').forEach((b) => b.classList.toggle('sel', Number(b.dataset.s) === n)); }
+function camPromptSave(keep) {
+  const C = CAM; if (!C) return;
+  C.prompt = keep ? document.getElementById('cam-prompt-text').value.trim().slice(0, 5000) : '';
+  try { if (C.prompt) localStorage.setItem('eaji_prompteur', C.prompt); } catch (e) {}
+  document.getElementById('cam-prompt-edit').style.display = 'none';
+  camRenderStudio();
+}
+function camPromptShow() {
+  const C = CAM, box = document.getElementById('cam-prompt'); if (!box) return;
+  const on = Boolean(C && C.studio && C.prompt && !C.file);
+  box.style.display = on ? 'block' : 'none';
+  if (!on) return;
+  const inner = box.firstElementChild;
+  if (inner.textContent !== C.prompt) inner.textContent = C.prompt;
+  if (!C.rec) inner.style.transform = 'translateY(0)';
+}
+function camPromptRun() {
+  const C = CAM; if (!C || !C.prompt) return;
+  const box = document.getElementById('cam-prompt'), inner = box.firstElementChild, t0 = performance.now();
+  const pxs = { 1: 14, 2: 24, 3: 38 }[C.promptSpeed || 2];
+  const step = () => {
+    if (CAM !== C || !C.rec) return;
+    const y = Math.min(Math.max(0, inner.scrollHeight - box.clientHeight * 0.4), ((performance.now() - t0) / 1000) * pxs);
+    inner.style.transform = `translateY(${-y}px)`;
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+// « Ajouter » : choisir la photo ou la vidéo dans les fichiers du téléphone (l'éditeur s'ouvre ensuite).
+function camGallery() {
+  const C = CAM; if (!C || C.rec) return;
+  PUB_AUTO = { filter: C.filter, speed: C.speed, light: C.light, retouch: C.retouch, at: Date.now() };
+  closeCamera();
+  pubPickFile();
+}
+// Après la prise : un outil du côté ouvre l'éditeur directement au bon endroit.
+function camUseWith(tab) { if (!CAM || !CAM.file) return; CAM.wantTab = tab; camUse(); }
 function camRenderModes() {
   const C = CAM; if (!C) return;
   document.querySelectorAll('#cam-modes button').forEach(b => b.classList.toggle('sel', b.dataset.m === C.mode));
@@ -9119,9 +9342,22 @@ function camShowLive() {
   document.getElementById('cam-preview').innerHTML = '';
   document.getElementById('cam-live-bar').style.display = 'flex';
   document.getElementById('cam-done-bar').style.display = 'none';
+  document.getElementById('cam-overlay').classList.remove('taken');
 }
 async function camShoot() {
   const C = CAM; if (!C || !C.stream) return;
+  // Minuteur du studio : compte à rebours avant la photo ou le début de la vidéo.
+  if (C.studio && C.delay && !C.rec) {
+    if (C.counting) return;
+    C.counting = true;
+    const box = document.getElementById('cam-count');
+    for (let n = C.delay; n > 0; n--) {
+      box.textContent = n; box.style.display = 'flex';
+      await new Promise((r) => setTimeout(r, 1000));
+      if (CAM !== C) { box.style.display = 'none'; return; }
+    }
+    box.style.display = 'none'; C.counting = false;
+  }
   const v = document.getElementById('cam-video');
   if (C.mode === 'photo') {
     const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight;
@@ -9152,6 +9388,7 @@ async function camShoot() {
     camShowResult();
   };
   C.rec.start(1000);
+  if (C.studio) camPromptRun();
   document.getElementById('cam-shoot').classList.add('rec');
   const tick = () => {
     const sec = Math.floor((performance.now() - t0) / 1000);
@@ -9167,7 +9404,12 @@ function camShowResult() {
   document.getElementById('cam-video').style.display = 'none';
   const box = document.getElementById('cam-preview');
   box.style.display = 'flex';
-  box.innerHTML = C.file.type.startsWith('image/') ? `<img src="${url}" alt="Photo prise">` : `<video src="${url}" controls playsinline></video>`;
+  const fcss = C.studio ? camFilterCss(C.filter) : '';
+  box.innerHTML = C.file.type.startsWith('image/') ? `<img src="${url}" alt="Photo prise" style="filter:${fcss || 'none'};">` : `<video src="${url}" controls playsinline style="filter:${fcss || 'none'};"></video>`;
+  document.getElementById('cam-overlay').classList.add('taken');
+  document.getElementById('cam-prompt').style.display = 'none';
+  document.getElementById('cam-light-row').style.display = 'none';
+  document.getElementById('cam-overlay').classList.toggle('taken-photo', C.file.type.startsWith('image/'));
   document.getElementById('cam-live-bar').style.display = 'none';
   document.getElementById('cam-done-bar').style.display = 'flex';
   document.getElementById('cam-msg').textContent = '';
@@ -9180,9 +9422,9 @@ function camRetake() {
 }
 function camUse() {
   const C = CAM; if (!C || !C.file) return;
-  const file = C.file, cb = C.onDone;
+  const file = C.file, cb = C.onDone, extra = { filter: C.filter, tab: C.wantTab || null, speed: C.speed, light: C.light, retouch: C.retouch };
   closeCamera();
-  if (cb) cb(file);
+  if (cb) cb(file, extra);
 }
 function closeCamera() {
   const C = CAM; if (!C) return;
@@ -9190,7 +9432,13 @@ function closeCamera() {
   clearInterval(C.timer);
   if (C.stream) C.stream.getTracks().forEach(t => t.stop());
   CAM = null;
-  const v = document.getElementById('cam-video'); v.srcObject = null;
+  const v = document.getElementById('cam-video'); v.srcObject = null; v.style.filter = '';
+  document.getElementById('cam-tint').style.background = 'transparent';
+  document.getElementById('cam-count').style.display = 'none';
+  document.getElementById('cam-prompt').style.display = 'none';
+  document.getElementById('cam-prompt-edit').style.display = 'none';
+  document.getElementById('cam-light-row').style.display = 'none';
+  document.getElementById('cam-overlay').classList.remove('studio', 'taken', 'taken-photo', 'photo-mode');
   document.getElementById('cam-overlay').style.display = 'none';
   document.getElementById('cam-shoot').classList.remove('rec');
 }
@@ -13121,7 +13369,9 @@ if (PLAY_APP) {
   <div class="ed-progress" id="ed-progress"><div></div></div>
   <div class="ed-tabs" id="ed-tabs">
     <button data-t="couper" onclick="edTab('couper')">✂️ Couper</button>
+    <button data-t="vitesse" onclick="edTab('vitesse')">⏩ Vitesse</button>
     <button data-t="filtres" onclick="edTab('filtres')">🎨 Filtres</button>
+    <button data-t="retouche" onclick="edTab('retouche')">🪄 Retouche</button>
     <button data-t="effets" onclick="edTab('effets')">✨ Effets</button>
     <button data-t="fond" onclick="edTab('fond')">🏞️ Fond</button>
     <button data-t="voix" onclick="edTab('voix')">🗣️ Voix</button>
@@ -13130,6 +13380,7 @@ if (PLAY_APP) {
     <button data-t="voixoff" onclick="edTab('voixoff')">📢 Voix off</button>
     <button data-t="sons" onclick="edTab('sons')">💥 Bruitages</button>
     <button data-t="textes" onclick="edTab('textes')">🔤 Textes</button>
+    <button data-t="soustitres" onclick="edTab('soustitres')">💬 Sous-titres</button>
     <button data-t="chiffres" onclick="edTab('chiffres')">📊 Statistiques</button>
   </div>
   <div class="ed-panel" id="ed-panel"></div>
@@ -13146,11 +13397,46 @@ if (PLAY_APP) {
 
 <!-- Caméra intégrée -->
 <div class="cam-overlay" id="cam-overlay">
-  <div class="cam-top"><button class="ed-x" onclick="closeCamera()" aria-label="Fermer">✕</button><span style="flex:1;"></span><button class="ed-x" onclick="camFlip()" aria-label="Changer de caméra">🔄</button></div>
-  <div class="cam-stage"><video id="cam-video" autoplay playsinline muted></video><div class="cam-preview" id="cam-preview"></div></div>
+  <div class="cam-top"><button class="ed-x" onclick="closeCamera()" aria-label="Fermer">✕</button><span style="flex:1;"></span><button class="ed-x cam-top-flip" onclick="camFlip()" aria-label="Changer de caméra">🔄</button></div>
+  <div class="cam-stage"><video id="cam-video" autoplay playsinline muted></video><div class="cam-tint" id="cam-tint"></div><div class="cam-preview" id="cam-preview"></div>
+    <div class="cam-count" id="cam-count"></div>
+    <div class="cam-side cam-side-live">
+      <button onclick="camFlip()"><span>🔄</span><b>Retourner</b></button>
+      <button id="cam-speed" class="vid-only" onclick="camSpeed()"><span>⏩</span><b><i>Vitesse</i> <i id="cam-speed-label">1×</i></b></button>
+      <button id="cam-timer" onclick="camTimer()"><span>⏱️</span><b id="cam-timer-label">Minuteur</b></button>
+      <button id="cam-torch" onclick="camTorch()"><span>⚡</span><b>Flash</b></button>
+      <button id="cam-light" onclick="camLightToggle()"><span>💡</span><b>Éclairage</b></button>
+      <button id="cam-retouch" onclick="camRetouch()"><span>🪄</span><b id="cam-retouch-label">Retouche</b></button>
+      <button id="cam-prompt-btn" class="vid-only" onclick="camPromptOpen()"><span>📜</span><b>Téléprompteur</b></button>
+      <button onclick="camLayout()"><span>🧩</span><b>Disposition</b></button>
+    </div>
+    <div class="cam-prompt" id="cam-prompt"><div></div></div>
+    <div class="cam-prompt-edit" id="cam-prompt-edit">
+      <b>📜 Téléprompteur</b>
+      <p>Écris le texte à lire. Il défile à l'écran pendant que tu filmes ; il n'apparaît pas dans la vidéo.</p>
+      <textarea class="field" id="cam-prompt-text" rows="7" maxlength="5000" placeholder="Bonjour à tous !"></textarea>
+      <div class="ed-chips" id="cam-prompt-speeds"><button data-s="1" onclick="camPromptSpeed(1)">Lent</button><button data-s="2" onclick="camPromptSpeed(2)">Normal</button><button data-s="3" onclick="camPromptSpeed(3)">Rapide</button></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="mini-btn" onclick="camPromptSave(false)">Retirer</button><button class="ed-done" onclick="camPromptSave(true)">Valider ✅</button></div>
+    </div>
+    <div class="cam-side cam-side-done">
+      <button class="vid-only" onclick="camUseWith('couper')"><span>✂️</span><b>Couper</b></button>
+      <button class="vid-only" onclick="camUseWith('vitesse')"><span>⏩</span><b>Vitesse</b></button>
+      <button class="vid-only" onclick="camUseWith('musique')"><span>🎵</span><b>Musique</b></button>
+      <button class="vid-only" onclick="camUseWith('mavoix')"><span>🎙️</span><b>Ma voix</b></button>
+      <button onclick="camUseWith('textes')"><span>🔤</span><b>Texte</b></button>
+      <button class="vid-only" onclick="camUseWith('soustitres')"><span>💬</span><b>Sous-titres</b></button>
+      <button onclick="camUseWith('filtres')"><span>🎨</span><b>Filtres</b></button>
+      <button onclick="camUseWith('effets')"><span>✨</span><b>Effets</b></button>
+      <button onclick="camUseWith('fond')"><span>🏞️</span><b>Fond</b></button>
+      <button onclick="camUseWith('retouche')"><span>🪄</span><b>Retouche</b></button>
+      <button class="vid-only" onclick="camUseWith('sons')"><span>💥</span><b>Bruitages</b></button>
+    </div>
+  </div>
   <p class="cam-msg" id="cam-msg"></p>
   <div class="cam-modes" id="cam-modes"><button data-m="photo" onclick="camSetMode('photo')">Photo</button><button data-m="video" onclick="camSetMode('video')">Vidéo</button></div>
-  <div class="cam-bar" id="cam-live-bar"><button class="cam-shoot" id="cam-shoot" onclick="camShoot()" aria-label="Prendre"></button></div>
+  <label class="cam-light-row" id="cam-light-row" style="display:none;"><span>💡</span><input type="range" id="cam-light-range" min="-0.5" max="0.5" step="0.02" value="0" oninput="camSetLight(this.value)" aria-label="Éclairage"></label>
+  <div class="cam-filters" id="cam-filters"></div>
+  <div class="cam-bar" id="cam-live-bar"><button class="cam-gal" id="cam-gal" onclick="camGallery()"><span>🖼️</span><b>Ajouter</b></button><button class="cam-shoot" id="cam-shoot" onclick="camShoot()" aria-label="Prendre"></button><span class="cam-gal-space"></span></div>
   <div class="cam-bar" id="cam-done-bar" style="display:none;"><button class="mini-btn" onclick="camRetake()">↺ Reprendre</button><button class="ed-done" onclick="camUse()">Utiliser ✅</button></div>
 </div>
 
