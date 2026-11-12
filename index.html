@@ -379,6 +379,18 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 .cam-shoot{width:72px;height:72px;border-radius:50%;border:5px solid #fff;background:#fff;cursor:pointer;}
 .cam-shoot.video{background:#E8304F;}
 .cam-tint{position:absolute;inset:0;pointer-events:none;}
+#s-contenu.pub-focus > *:not(#pub-form){display:none!important;}
+.ed-side{display:none;}
+.ed-overlay.studio .ed-tabs{display:none;}
+.ed-overlay.studio .ed-stage{padding:0 84px 0 8px;}
+.ed-overlay.studio .ed-side{display:flex;position:absolute;right:6px;top:4px;bottom:4px;flex-direction:column;gap:6px;overflow-y:auto;z-index:2;scrollbar-width:none;}
+.ed-side::-webkit-scrollbar{display:none;}
+.ed-side button{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:1px;width:72px;padding:6px 1px;border:none;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;}
+.ed-side button span{font-size:20px;line-height:1.1;}
+.ed-side button b{font-size:9px;font-weight:700;line-height:1.15;text-align:center;}
+.ed-side button.sel{background:var(--gold);color:#1B1E29;}
+.ed-overlay.studio .ed-panel{max-height:30vh;padding-top:8px;}
+.ed-overlay .cam-filters.ed-thumbs{display:flex;padding:2px 0;}
 .pub-ready{margin:10px 0 4px;}
 .pub-ready-top{display:flex;align-items:center;gap:8px;margin:10px 0 8px;}
 .pub-ready-top b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;}
@@ -2092,7 +2104,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.12a';
+const APP_VERSION = '2026.11.12b';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -3021,6 +3033,7 @@ function pubShowForm() {
   form.style.display = 'block';
   document.getElementById('pub-grid').style.display = 'none';
   document.getElementById('pub-hint').style.display = 'none';
+  pubFocus();
 }
 // Toucher une tuile mène tout de suite au bon endroit : la caméra (studio) pour une vidéo ou une photo,
 // les fichiers du téléphone pour une musique, un podcast, un livre, un PDF ou un PowerPoint, le texte pour une publication.
@@ -3075,7 +3088,7 @@ async function studioEdit(tab, extra) {
   if (E.kind === 'video' && ED_SPEEDS.includes(extra.speed)) { E.speed = extra.speed; try { E.vEl.playbackRate = E.speed; } catch (e) {} }
   if (extra.light) E.light = Math.max(-0.5, Math.min(0.5, Number(extra.light) || 0));
   if (extra.retouch) E.retouch = Math.max(0, Math.min(1, Number(extra.retouch) || 0));
-  edRenderPanel(); edDraw();
+  edStudioOn(); edDraw();
 }
 async function pubFilePicked() {
   IMPORTED = null;
@@ -3087,6 +3100,7 @@ function pubBack() {
   document.getElementById('pub-form').style.display = 'none';
   document.getElementById('pub-grid').style.display = '';
   document.getElementById('pub-hint').style.display = '';
+  pubFocus();
 }
 function updateUploadAccept(init) {
   if (init !== true) pubShowForm();
@@ -7484,9 +7498,37 @@ function edTogglePlay() {
   if (E.vEl.paused) edPlay(); else edPause();
 }
 
+// Disposition « studio » (vidéo ajoutée depuis la caméra ou « Ajouter ») : les outils restent sur le côté comme dans la caméra,
+// les filtres en bas montrent l'image elle-même.
+function edStudioOn() {
+  const E = EDITOR; if (!E) return;
+  E.studio = true;
+  edEl('ed-overlay').classList.add('studio');
+  const side = edEl('ed-side');
+  side.innerHTML = [...document.querySelectorAll('#ed-tabs button')].filter((b) => b.style.display !== 'none').map((b) => {
+    const t = b.textContent.trim(), i = t.indexOf(' ');
+    const ic = i > 0 ? t.slice(0, i) : '•', lb = i > 0 ? t.slice(i + 1) : t;
+    return `<button data-t="${b.dataset.t}" onclick="edTab('${b.dataset.t}')"><span>${escapeHtml(ic)}</span><b>${escapeHtml(lb)}</b></button>`;
+  }).join('');
+  if (!E.thumbTimer) E.thumbTimer = setInterval(edThumbs, 400);
+  edRenderPanel();
+}
+function edThumbs() {
+  const E = EDITOR; if (!E || !E.studio || E.tab !== 'filtres') return;
+  const src = E.kind === 'photo' ? E.img : E.vEl;
+  const w = E.kind === 'photo' ? src && src.naturalWidth : src && src.videoWidth, h = E.kind === 'photo' ? src && src.naturalHeight : src && src.videoHeight;
+  if (!w || !h) return;
+  const side = Math.min(w, h), sx = (w - side) / 2, sy = (h - side) / 2;
+  document.querySelectorAll('#ed-panel .ed-thumbs canvas').forEach((cv, i) => {
+    const g = cv.getContext('2d'), f = ED_FILTERS[i];
+    try { g.drawImage(src, sx, sy, side, side, 0, 0, cv.width, cv.height); } catch (e) { return; }
+    if (f && f.tint) { g.save(); g.globalCompositeOperation = 'soft-light'; g.fillStyle = f.tint; g.fillRect(0, 0, cv.width, cv.height); g.restore(); }
+  });
+}
 function edRenderPanel() {
   const E = EDITOR, tab = E.tab, box = edEl('ed-panel');
   document.querySelectorAll('#ed-tabs button').forEach(b => b.classList.toggle('sel', b.dataset.t === tab));
+  document.querySelectorAll('#ed-side button').forEach(b => b.classList.toggle('sel', b.dataset.t === tab));
   const chips = (list, cur, fn) => `<div class="ed-chips">${list.map(x => `<button class="${x.id === cur ? 'sel' : ''}" onclick="${fn}('${x.id}')">${escapeHtml(x.label)}</button>`).join('')}</div>`;
   const slider = (label, id, val, fn, min = 0, max = 1, step = 0.05) =>
     `<label class="ed-slider">${label}<input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}" oninput="${fn}(this.value)"></label>`;
@@ -7505,9 +7547,16 @@ function edRenderPanel() {
   }
   else if (tab === 'soustitres') {
     const n = E.texts.filter((x) => x.sub).length;
-    box.innerHTML = `<p class="ed-note">${escapeHtml(i18nT('Écris tes sous-titres : une phrase par ligne. Ils sont répartis sur toute la vidéo, en bas de l\'image.'))}</p>
+    box.innerHTML = `<div class="ed-row" style="align-items:center;margin-bottom:4px;"><button class="mini-btn" id="ed-sub-gen" onclick="edAutoSubs()" ${E.subBusy ? 'disabled' : ''}>✨ ${escapeHtml(i18nT('Générer automatiquement'))}</button></div>
+      <p class="ed-note" id="ed-sub-msg" style="color:var(--gold);">${escapeHtml(E.subMsg || '')}</p>
+      <p class="ed-note">${escapeHtml(i18nT('Écris tes sous-titres : une phrase par ligne. Ils sont répartis sur toute la vidéo, en bas de l\'image.'))}</p>
       <textarea class="field" id="ed-sub" rows="4" maxlength="6000" placeholder="${escapeHtml(i18nT('Bonjour à tous !'))}">${escapeHtml(E.subsRaw || '')}</textarea>
       <div class="ed-chips"><button onclick="edAddSubs()">💬 ${escapeHtml(i18nT('Mettre les sous-titres'))}</button>${n ? `<button onclick="edRemoveSubs()">✕ ${escapeHtml(i18nT('Retirer'))} (${n})</button>` : ''}</div>`;
+  }
+  else if (tab === 'filtres' && E.studio) {
+    box.innerHTML = `<div class="cam-filters ed-thumbs">${ED_FILTERS.map((x) => `<button data-f="${x.id}" class="${x.id === E.filter ? 'sel' : ''}" onclick="edSetFilter('${x.id}')"><canvas width="96" height="96" style="filter:${x.css === 'none' ? 'none' : x.css};"></canvas><span>${escapeHtml(i18nT(x.label))}</span></button>`).join('')}</div>`
+      + (E.canFilter ? '' : '<p class="ed-note">Ton téléphone n\'applique que les teintes (Chaud, Froid, Rêve).</p>');
+    edThumbs();
   }
   else if (tab === 'filtres') box.innerHTML = chips(ED_FILTERS, E.filter, 'edSetFilter') + (E.canFilter ? '' : '<p class="ed-note">Ton téléphone n\'applique que les teintes (Chaud, Froid, Rêve).</p>');
   else if (tab === 'effets') box.innerHTML = chips(ED_EFFECTS, E.effect, 'edSetEffect');
@@ -7535,7 +7584,12 @@ function edRenderPanel() {
       ${E.voUrl ? slider('Volume de ma voix', 'ed-vovol', E.voGain.gain.value, 'edSetVoVol', 0, 2) : ''}`;
   }
 }
-function edTab(t) { if (EDITOR && !EDITOR.busy) { EDITOR.tab = t; edRenderPanel(); } }
+function edTab(t) {
+  if (!EDITOR || EDITOR.busy) return;
+  EDITOR.tab = t; edRenderPanel();
+  // Sous-titres : générés tout seuls la première fois (langue reconnue automatiquement).
+  if (t === 'soustitres' && EDITOR.kind === 'video' && !EDITOR.subTried && !EDITOR.texts.some((x) => x.sub)) edAutoSubs();
+}
 function edSetFilter(id) { EDITOR.filter = id; edRenderPanel(); edDraw(); }
 function edSetSpeed(v) { const E = EDITOR; if (!E || E.busy || E.kind !== 'video') return; E.speed = ED_SPEEDS.includes(Number(v)) ? Number(v) : 1; try { E.vEl.playbackRate = E.speed; } catch (e) {} if (!E.vEl.paused) { edPause(); } if (E.tab === 'vitesse') edRenderPanel(); }
 function edSetLight(v) { const E = EDITOR; if (!E) return; E.light = Math.max(-0.5, Math.min(0.5, Number(v) || 0)); edDraw(); }
@@ -7543,13 +7597,93 @@ function edSetRetouch(v) { const E = EDITOR; if (!E) return; E.retouch = Math.ma
 // 💬 Sous-titres : une phrase par ligne, réparties sur toute la vidéo (en bas de l'image).
 function edAddSubs() {
   const E = EDITOR; if (!E || E.kind !== 'video') return;
-  const lines = edEl('ed-sub').value.split('\n').map((l) => l.trim().slice(0, 120)).filter(Boolean).slice(0, 60);
-  if (!lines.length) return edMsg(i18nT('Écris tes sous-titres : une phrase par ligne.'));
-  const a = E.trimStart || 0, b = E.trimEnd || E.duration || 0, each = (b - a) / lines.length;
+  const raw = edEl('ed-sub').value.split('\n').map((l) => l.trim()).filter(Boolean).slice(0, 300);
+  if (!raw.length) return edMsg(i18nT('Écris tes sous-titres : une phrase par ligne.'));
+  const a = E.trimStart || 0, b = E.trimEnd || E.duration || 0;
+  // Une ligne peut commencer par son moment : « [00:03.2] Bonjour » (c'est le cas des sous-titres générés).
+  const rows = raw.map((l) => { const m = /^\[(\d{1,2}):(\d{1,2}(?:[.,]\d+)?)\]\s*(.*)$/.exec(l); return m ? { t: Number(m[1]) * 60 + Number(m[2].replace(',', '.')), text: m[3].slice(0, 120) } : { t: null, text: l.slice(0, 120) }; }).filter((r) => r.text);
+  const timed = rows.length && rows.every((r) => r.t != null);
+  const each = (b - a) / rows.length;
   E.texts = E.texts.filter((x) => !x.sub);
-  lines.forEach((text, i) => E.texts.push({ text, start: Math.round((a + i * each) * 10) / 10, end: Math.round((a + (i + 1) * each) * 10) / 10 - 0.05, anim: 'fixe', pos: 'bas', color: '#FFFFFF', size: 'petit', box: true, sub: true }));
-  E.subsRaw = lines.join('\n'); edMsg('');
+  rows.forEach((r, i) => {
+    const start = timed ? r.t : a + i * each;
+    const end = timed ? (rows[i + 1] ? Math.min(rows[i + 1].t, r.t + 6) : Math.min(b || r.t + 4, r.t + 6)) : a + (i + 1) * each;
+    E.texts.push({ text: r.text, start: Math.round(start * 10) / 10, end: Math.round(end * 10) / 10 - 0.05, anim: 'fixe', pos: 'bas', color: '#FFFFFF', size: 'petit', box: true, sub: true });
+  });
+  E.subsRaw = raw.join('\n'); edMsg('');
   edRenderPanel(); edDraw();
+}
+// Langue d'un texte reconnu (écriture, puis petits mots les plus courants).
+const SUB_LANG_WORDS = {
+  fr: 'le la les de des du et est un une que qui pour pas je tu nous vous dans ce cette avec sur mais bonjour merci',
+  en: 'the and is are you to of in that it for this with was have not hello thank we they',
+  ln: 'na ya mpe ezali oyo te ngai yo bango kaka mpo boni nini moko bato mbote malamu lelo',
+  sw: 'ni wa kwa za katika hii hiyo sana ndiyo watu habari asante na ya la tu',
+  es: 'el los las que y en es por para una no con pero hola gracias muy',
+  pt: 'o os as que e em não um uma para com mas olá obrigado muito você',
+  de: 'der die das und ist nicht ich du ein eine zu mit auf hallo danke wir',
+  kg: 'kele ke mpi yai ve diambu bantu beno beto mambu ntangu',
+  lu: 'tshi bua ne udi badi kudi bualu malu bantu mu',
+};
+function subDetectLang(text) {
+  const t = String(text || '');
+  if (/[\u0600-\u06FF]/.test(t)) return 'ar';
+  if (/[\u4E00-\u9FFF]/.test(t)) return 'zh';
+  if (/[\u0900-\u097F]/.test(t)) return 'hi';
+  if (/[\u0400-\u04FF]/.test(t)) return 'ru';
+  const words = t.toLowerCase().split(/[^a-zà-ÿœ']+/).filter(Boolean);
+  let best = null, score = 0;
+  for (const [code, list] of Object.entries(SUB_LANG_WORDS)) {
+    const set = new Set(list.split(' '));
+    const n = words.filter((w) => set.has(w)).length;
+    if (n > score) { best = code; score = n; }
+  }
+  return score ? best : null;
+}
+function subLangName(code) {
+  if (!code) return '';
+  if (typeof I18N_LANGS === 'object' && I18N_LANGS[code]) return I18N_LANGS[code];
+  try { return new Intl.DisplayNames([i18nStored() || 'fr'], { type: 'language' }).of(code); } catch (e) { return code; }
+}
+const subClock = (t) => `${String(Math.floor(t / 60)).padStart(2, '0')}:${(t % 60).toFixed(1).padStart(4, '0')}`;
+// ✨ Génère les sous-titres en écoutant la vidéo (dans le téléphone : rien n'est envoyé).
+async function edAutoSubs() {
+  const E = EDITOR; if (!E || E.kind !== 'video' || E.subBusy) return;
+  E.subBusy = true; E.subTried = true;
+  const say = (m) => { const el = edEl('ed-sub-msg'); if (el && EDITOR === E) el.textContent = m; E.subMsg = m; };
+  const btn = edEl('ed-sub-gen'); if (btn) btn.disabled = true;
+  try {
+    say(i18nT('Préparation de la reconnaissance de la voix (la première fois, environ 40 Mo à télécharger)…'));
+    const engine = await mpAsr();
+    say(i18nT('Écoute de la vidéo…'));
+    let pcm;
+    try { pcm = await mpPcm16k(E.file, EDITOR_MAX_SECONDS); } catch (e) { throw new Error(i18nT('Aucun son dans cette vidéo : écris les sous-titres toi-même.')); }
+    say(i18nT('Écriture des sous-titres… (1 à 3 minutes)'));
+    const chunks = (await engine.transcribe(pcm)).map((c) => ({ start: Number(c.start) || 0, end: c.end != null ? Number(c.end) : null, text: String(c.text || '').replace(/\s+/g, ' ').trim() }))
+      .filter((c) => c.text && !/^[\[(].*[\])]$/.test(c.text)); // « [Musique] », « (rires) »… ne sont pas des paroles
+    if (EDITOR !== E) return;
+    if (!chunks.length) throw new Error(i18nT('Aucune parole reconnue dans cette vidéo : écris les sous-titres toi-même.'));
+    const end = E.duration || 0, lines = [];
+    chunks.forEach((c, i) => {
+      const stop = Math.min(end || Infinity, c.end != null && c.end > c.start ? c.end : (chunks[i + 1] ? chunks[i + 1].start : end || c.start + 3));
+      // Les phrases longues sont coupées en morceaux lisibles (environ 42 lettres), le temps est partagé.
+      const words = c.text.split(' '), parts = [];
+      let cur = '';
+      for (const w of words) { if ((cur + ' ' + w).trim().length > 42 && cur) { parts.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); }
+      if (cur) parts.push(cur);
+      const each = Math.max(0.4, (stop - c.start) / parts.length);
+      parts.forEach((t, k) => lines.push({ text: t.slice(0, 120), start: Math.round((c.start + k * each) * 10) / 10, end: Math.round((c.start + (k + 1) * each) * 10) / 10 - 0.05 }));
+    });
+    E.texts = E.texts.filter((x) => !x.sub);
+    lines.forEach((l) => E.texts.push({ ...l, anim: 'fixe', pos: 'bas', color: '#FFFFFF', size: 'petit', box: true, sub: true }));
+    E.subsRaw = lines.map((l) => `[${subClock(l.start)}] ${l.text}`).join('\n');
+    const lang = subDetectLang(chunks.map((c) => c.text).join(' '));
+    E.subLang = lang;
+    say((lang ? i18nF('Langue détectée : {0}.', subLangName(lang)) + ' ' : '') + i18nT('Sous-titres ajoutés : vérifie-les et corrige si besoin.'));
+    if (E.tab === 'soustitres') edRenderPanel();
+    edDraw();
+  } catch (e) { say((e && e.message) || i18nT('Reconnaissance impossible pour le moment.')); }
+  finally { E.subBusy = false; const b = edEl('ed-sub-gen'); if (b) b.disabled = false; }
 }
 function edRemoveSubs() { const E = EDITOR; if (!E) return; E.texts = E.texts.filter((x) => !x.sub); E.subsRaw = ''; edRenderPanel(); edDraw(); }
 function edSetEffect(id) { EDITOR.effect = id; edRenderPanel(); edDraw(); }
@@ -8121,6 +8255,7 @@ async function openEditor(wantTab) {
   const duration = kind === 'video' ? await readVideoDuration(file) : 0;
   if (kind === 'video' && duration > EDITOR_MAX_SECONDS) return showToast('L\'éditeur accepte les vidéos de 10 minutes maximum.');
   closeEditor(true);
+  edEl('ed-overlay').classList.remove('studio');
   const url = URL.createObjectURL(file);
   const canvas = edEl('ed-canvas');
   const E = EDITOR = {
@@ -8173,6 +8308,7 @@ function closeEditor(silent) {
   const E = EDITOR; if (!E) return;
   if (E.busy && !silent) return;
   cancelAnimationFrame(E.raf);
+  if (E.thumbTimer) clearInterval(E.thumbTimer);
   if (E.voRec && E.recording) { try { E.voRec.stop(); } catch (e) {} }
   if (E.vEl) { E.vEl.pause(); E.musicEl.pause(); E.voEl.pause(); E.ac.close().catch(() => {}); }
   URL.revokeObjectURL(E.url);
@@ -8181,6 +8317,7 @@ function closeEditor(silent) {
   (E.tts || []).forEach((c) => { c.el.pause(); URL.revokeObjectURL(c.url); });
   EDITOR = null;
   edEl('ed-overlay').style.display = 'none';
+  edEl('ed-overlay').classList.remove('studio');
 }
 
 // --- Durée inscrite dans les vidéos WebM enregistrées par le téléphone (sinon la barre de lecture ne marche pas) ---
@@ -8339,6 +8476,7 @@ function pubRenderReady() {
   box.style.display = f ? 'block' : 'none';
   edEl('up-pick-wrap').style.display = f ? 'none' : '';
   edEl('up-alt-row').style.display = f ? 'none' : 'flex';
+  pubFocus();
   if (PUB_PREV.file === f) return;
   if (PUB_PREV.url) URL.revokeObjectURL(PUB_PREV.url);
   PUB_PREV = { file: f, url: f ? URL.createObjectURL(f) : null };
@@ -8351,6 +8489,15 @@ function pubRenderReady() {
   else if (f.type.startsWith('audio/')) { media.innerHTML = `<div class="pub-ready-doc">🎵</div><audio src="${u}" autoplay controls></audio>`; }
   else media.innerHTML = `<div class="pub-ready-doc">${PUB_ICONS[edEl('up-type').value] || '📄'}</div>`;
   const m = media.querySelector('video,audio'); if (m) { const pr = m.play(); if (pr && pr.catch) pr.catch(() => {}); }
+}
+// Contenu prêt : la page « Contenu » n'affiche plus que la publication en cours (titre, qui peut voir, Publier).
+function pubFocus() {
+  const sc = edEl('s-contenu'), form = edEl('pub-form'); if (!sc || !form) return;
+  const f = (EDITED && EDITED.file) || edEl('up-file').files[0];
+  const on = Boolean(f) && form.style.display === 'block';
+  const was = sc.classList.contains('pub-focus');
+  sc.classList.toggle('pub-focus', on);
+  if (on && !was) { window.scrollTo(0, 0); if (form.scrollIntoView) form.scrollIntoView({ block: 'start' }); }
 }
 function pubChangeFile() {
   const t = edEl('up-type').value;
@@ -11688,8 +11835,9 @@ async function mpAsr() {
     const T = await import(MP_ASR_LIB);
     const p = await T.pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny');
     return { transcribe: async (pcm) => {
+      // Aucune langue imposée : Whisper reconnaît lui-même la langue parlée et écrit dans cette langue.
       const o = await p(pcm, { chunk_length_s: 30, stride_length_s: 5, return_timestamps: true });
-      return (o.chunks && o.chunks.length ? o.chunks : [{ timestamp: [0, 0], text: o.text || '' }]).map((c) => ({ start: (c.timestamp && c.timestamp[0]) || 0, text: c.text || '' }));
+      return (o.chunks && o.chunks.length ? o.chunks : [{ timestamp: [0, 0], text: o.text || '' }]).map((c) => ({ start: (c.timestamp && c.timestamp[0]) || 0, end: c.timestamp && c.timestamp[1] != null ? c.timestamp[1] : null, text: c.text || '' }));
     } };
   })().catch((e) => { MP_ASR = null; throw e; });
   return MP_ASR;
@@ -13462,7 +13610,7 @@ if (PLAY_APP) {
 <!-- Éditeur avant publication -->
 <div class="ed-overlay" id="ed-overlay">
   <div class="ed-top"><button class="ed-x" onclick="closeEditor()" aria-label="Fermer">✕</button><b>Modifier avant de publier</b><button class="ed-done" id="ed-done" onclick="finishEditor()">Valider ✅</button></div>
-  <div class="ed-stage"><canvas id="ed-canvas" width="720" height="1280"></canvas><button class="ed-play" id="ed-play" onclick="edTogglePlay()">▶</button></div>
+  <div class="ed-stage"><canvas id="ed-canvas" width="720" height="1280"></canvas><button class="ed-play" id="ed-play" onclick="edTogglePlay()">▶</button><div class="ed-side" id="ed-side"></div></div>
   <div class="ed-progress" id="ed-progress"><div></div></div>
   <div class="ed-tabs" id="ed-tabs">
     <button data-t="couper" onclick="edTab('couper')">✂️ Couper</button>
