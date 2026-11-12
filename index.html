@@ -380,6 +380,16 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 .cam-shoot.video{background:#E8304F;}
 .cam-tint{position:absolute;inset:0;pointer-events:none;}
 #s-contenu.pub-focus > *:not(#pub-form){display:none!important;}
+.pub-more{display:none;margin:2px 0 8px;}
+#s-contenu.pub-focus .pub-more{display:inline-block;}
+#s-contenu.pub-focus #pub-form:not(.opts-open) .pub-opt{display:none!important;}
+#s-contenu.pub-focus .pub-head,#s-contenu.pub-focus #up-btn,#s-contenu.pub-focus #up-duration{display:none!important;}
+.pub-x{border:none;background:rgba(0,0,0,.08);border-radius:50%;width:34px;height:34px;font-size:16px;cursor:pointer;flex:0 0 auto;}
+.pub-wait{position:fixed;inset:0;z-index:80;background:#0b0b10;display:none;align-items:center;justify-content:center;}
+.pub-wait-in{display:flex;flex-direction:column;align-items:center;gap:14px;color:#fff;font-size:14px;}
+.pub-wait-in p{margin:0;}
+.pub-spin{width:42px;height:42px;border-radius:50%;border:4px solid rgba(255,255,255,.2);border-top-color:var(--gold);animation:pubspin 0.9s linear infinite;}
+@keyframes pubspin{to{transform:rotate(360deg);}}
 .ed-side{display:none;}
 .ed-overlay.studio .ed-tabs{display:none;}
 .ed-overlay.studio .ed-stage{padding:0 84px 0 8px;}
@@ -1495,7 +1505,7 @@ window.eajiLoader = (function () {
       <div id="pub-form" style="display:none;">
       <div class="pub-head"><span class="pub-head-ic" id="pub-head-ic">📹</span><b id="pub-head-label">Vidéo courte</b><button class="mini-btn" onclick="pubBack()">← Changer de type</button></div>
       <div id="pub-ready" style="display:none;">
-        <div class="pub-ready-top"><b id="pub-ready-name"></b><button class="mini-btn" id="pub-change" onclick="pubChangeFile()">Changer</button><button class="pub-go" id="pub-go" onclick="pubGo()">Publier</button></div>
+        <div class="pub-ready-top"><button class="pub-x" id="pub-cancel" onclick="pubCancel()" aria-label="Annuler">✕</button><b id="pub-ready-name"></b><button class="mini-btn" id="pub-change" onclick="pubChangeFile()">Changer</button><button class="pub-go" id="pub-go" onclick="pubGo()">Publier</button></div>
         <div class="pub-ready-media" id="pub-ready-media"></div>
       </div>
       <div id="up-type-wrap" style="display:none;">
@@ -1522,8 +1532,9 @@ window.eajiLoader = (function () {
       <textarea class="field grow-ta" id="up-title" rows="1" data-max-words="5000" data-max-h="0.7" placeholder="Titre de ton contenu"></textarea>
       <p class="ta-count" id="up-title-count"></p>
       <p class="feed-type" id="up-tags-hint" style="margin:-4px 0 8px;font-size:11px;">Astuce : ajoute des #hashtags pour être trouvé plus facilement (ex. : #kinshasa #musique).</p>
-      <label class="field-label" for="up-visibility" style="margin-top:10px;">Qui peut voir</label>
-      <select class="field" id="up-visibility">
+      <button class="mini-btn pub-more" id="pub-more" onclick="pubMoreToggle()">⚙️ Plus d'options</button>
+      <label class="field-label pub-opt" for="up-visibility" style="margin-top:10px;">Qui peut voir</label>
+      <select class="field pub-opt" id="up-visibility">
         <option value="public">Tout le monde</option>
         <option value="abonnes">Mes abonnés seulement</option>
       </select>
@@ -1543,7 +1554,7 @@ window.eajiLoader = (function () {
         <button class="mini-btn" id="up-collage-btn" onclick="openCollage()">🧩 Faire un collage</button>
         <button class="mini-btn" id="up-montage-btn" onclick="openMontage()">🤖 Montage IA</button>
       </div>
-      <div id="up-edit-wrap" style="display:none;margin:-2px 0 12px;">
+      <div id="up-edit-wrap" class="pub-opt" style="display:none;margin:-2px 0 12px;">
         <div class="tool-box" id="up-tools">
           <div class="tool-title">🛠️ Outils du créateur</div>
           <div class="tool-row">
@@ -1556,7 +1567,7 @@ window.eajiLoader = (function () {
         <p class="feed-type" id="up-edit-info" style="margin:6px 0 0;"></p>
       </div>
       </div>
-      <div id="up-price-wrap" style="opacity:.55;">
+      <div id="up-price-wrap" class="pub-opt" style="opacity:.55;">
         <label class="field-label" for="up-price">Prix de vente en dollars (optionnel, membres premium)</label>
         <input class="field" id="up-price" inputmode="decimal" placeholder="Laisse vide pour un contenu gratuit">
       </div>
@@ -2104,7 +2115,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.12b';
+const APP_VERSION = '2026.11.12c';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -3050,7 +3061,7 @@ function pickPubType(t, formOnly) {
 }
 function pubPickFile() {
   const input = document.getElementById('up-file');
-  if (!input.dataset.cancelHook) { input.dataset.cancelHook = '1'; input.addEventListener('cancel', () => { PUB_AUTO = null; pubNothingChosen(); }); }
+  if (!input.dataset.cancelHook) { input.dataset.cancelHook = '1'; input.addEventListener('cancel', () => { PUB_AUTO = null; pubWait(false); pubNothingChosen(); }); }
   input.click();
 }
 // Studio : la caméra plein écran avec « Ajouter » (fichiers du téléphone), les outils sur le côté et les filtres en bas.
@@ -3061,6 +3072,10 @@ function openStudio(t) {
   openCamera(studioDone, { mode: photo ? 'photo' : 'video', only: photo ? 'photo' : 'video', studio: true, facing: 'environment' });
 }
 async function studioDone(file, extra) {
+  pubWait(true, i18nT('Préparation de ta vidéo…'));
+  try { await studioDone2(file, extra); } finally { pubWait(false); }
+}
+async function studioDone2(file, extra) {
   extra = extra || {};
   IMPORTED = null;
   const type = document.getElementById('up-type');
@@ -3093,8 +3108,12 @@ async function studioEdit(tab, extra) {
 async function pubFilePicked() {
   IMPORTED = null;
   const auto = PUB_AUTO; PUB_AUTO = null;
-  await onUploadFileChange();
-  if (auto && Date.now() - auto.at < 5 * 60 * 1000) await studioEdit('filtres', auto);
+  const studio = auto && Date.now() - auto.at < 5 * 60 * 1000 && edEl('up-file').files[0];
+  if (studio) pubWait(true, i18nT('Préparation de ta vidéo…'));
+  try {
+    await onUploadFileChange();
+    if (studio) await studioEdit('filtres', auto);
+  } finally { pubWait(false); }
 }
 function pubBack() {
   document.getElementById('pub-form').style.display = 'none';
@@ -7417,7 +7436,16 @@ function edDraw() {
   // Éclairage sur un téléphone sans filtres : un voile clair ou sombre.
   if (!E.canFilter && E.light) { g.save(); g.fillStyle = E.light > 0 ? `rgba(255,255,255,${Math.min(0.45, E.light * 0.7)})` : `rgba(0,0,0,${Math.min(0.5, -E.light * 0.8)})`; g.fillRect(0, 0, W, H); g.restore(); }
   // Retouche : l'image adoucie est reposée par-dessus (peau plus lisse, teint plus lumineux).
-  if (E.retouch > 0 && E.canFilter) { g.save(); g.globalAlpha = 0.5 * E.retouch; g.filter = `blur(${Math.round(2 + 5 * E.retouch)}px) brightness(${1 + 0.08 * E.retouch}) saturate(1.06)`; g.drawImage(E.canvas, 0, 0, W, H); g.restore(); }
+  if (E.retouch > 0) {
+    // Adoucissement sur une petite copie agrandie (léger pour le téléphone, même à chaque image).
+    const r = E.rtC || (E.rtC = document.createElement('canvas'));
+    const rw = Math.max(1, Math.round(W / (5 + 3 * E.retouch))), rh = Math.max(1, Math.round(H / (5 + 3 * E.retouch)));
+    if (r.width !== rw || r.height !== rh) { r.width = rw; r.height = rh; }
+    const rg = r.getContext('2d'); rg.imageSmoothingEnabled = true;
+    if (E.canFilter) rg.filter = `brightness(${1 + 0.08 * E.retouch}) saturate(1.06)`;
+    rg.drawImage(E.canvas, 0, 0, rw, rh);
+    g.save(); g.globalAlpha = 0.5 * E.retouch; g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(r, 0, 0, W, H); g.restore();
+  }
   if (f.tint) { g.save(); g.globalCompositeOperation = 'soft-light'; g.fillStyle = f.tint; g.fillRect(0, 0, W, H); g.restore(); }
   if (f.vignette && E.effect !== 'vignette') { const save = E.effect; E.effect = 'vignette'; edDrawEffect(g, W, H, t); E.effect = save; }
   edDrawEffect(g, W, H, t);
@@ -7698,8 +7726,8 @@ async function edSetBg(id) {
   if (EDITOR !== E) return;
   E.bg = id; E.bgState = {};
   edDraw(); edRenderPanel();
-  // La détection de la personne se fait à la première image : on réaffiche le réglage juste après.
-  setTimeout(() => { if (EDITOR === E && E.tab === 'fond') { edDraw(); edRenderPanel(); } }, 400);
+  // La détection de la personne se fait à la première image : on réaffiche le réglage juste après (seulement s'il change).
+  setTimeout(() => { if (EDITOR === E && E.tab === 'fond' && E.bg !== 'aucun' && E.bgState && E.bgState.cover !== undefined && E.bgState.cover < 0.02) edRenderPanel(); }, 400);
 }
 function edSetVoice(id) { EDITOR.voice = id; edApplyVoice(); edRenderPanel(); }
 function edSetVol(v) { EDITOR.vGain.gain.value = Number(v); }
@@ -8499,6 +8527,14 @@ function pubFocus() {
   sc.classList.toggle('pub-focus', on);
   if (on && !was) { window.scrollTo(0, 0); if (form.scrollIntoView) form.scrollIntoView({ block: 'start' }); }
 }
+// « Plus d'options » : qui peut voir, outils du créateur et prix, repliés tant qu'on ne les demande pas.
+function pubMoreToggle() {
+  const f = edEl('pub-form'), open = !f.classList.contains('opts-open');
+  f.classList.toggle('opts-open', open);
+  edEl('pub-more').textContent = open ? '⚙️ ' + i18nT('Moins d\'options') : '⚙️ ' + i18nT('Plus d\'options');
+}
+// ✕ : on abandonne ce contenu et on revient aux tuiles.
+function pubCancel() { resetUploadForm(); edEl('pub-form').classList.remove('opts-open'); edEl('pub-more').textContent = '⚙️ ' + i18nT('Plus d\'options'); pubBack(); }
 function pubChangeFile() {
   const t = edEl('up-type').value;
   if (['video_courte', 'video_longue', 'film', 'photo'].includes(t)) openStudio(t); else pubPickFile();
@@ -8943,14 +8979,23 @@ function bgSegmenter() {
       const make = (delegate) => ImageSegmenter.createFromOptions(files, {
         baseOptions: { modelAssetPath: MP_MODEL, delegate }, runningMode: 'VIDEO', outputConfidenceMasks: true, outputCategoryMask: false,
       });
+      // Processeur (CPU) : plus sûr sur les téléphones (la carte graphique pouvait faire planter certains modèles).
       let seg;
-      try { seg = await make('GPU'); } catch (e) { seg = await make('CPU'); }
+      try { seg = await make('CPU'); } catch (e) { seg = await make('GPU'); }
       let last = 0;
+      // La personne est cherchée sur une petite copie de l'image (256 points) : 10 à 30 fois moins de calcul.
+      const small = document.createElement('canvas'), sg = small.getContext('2d', { willReadFrequently: true });
       BG_SEG = {
         mask(src) {
           let out = null;
+          const sw = src.videoWidth || src.naturalWidth || src.width, sh = src.videoHeight || src.naturalHeight || src.height;
+          if (!sw || !sh) return null;
+          const k = Math.min(1, 256 / Math.max(sw, sh));
+          const w = Math.max(1, Math.round(sw * k)), h = Math.max(1, Math.round(sh * k));
+          if (small.width !== w || small.height !== h) { small.width = w; small.height = h; }
+          sg.drawImage(src, 0, 0, w, h);
           const ts = Math.max(performance.now(), last + 1); last = ts;
-          seg.segmentForVideo(src, ts, (r) => {
+          seg.segmentForVideo(small, ts, (r) => {
             const m = r.confidenceMasks && r.confidenceMasks[0];
             if (m) out = { data: m.getAsFloat32Array(), width: m.width, height: m.height };
           });
@@ -8959,6 +9004,8 @@ function bgSegmenter() {
       };
       return BG_SEG;
     })();
+    // Réseau trop lent : on n'attend pas indéfiniment.
+    BG_SEG_PROMISE = Promise.race([BG_SEG_PROMISE, new Promise((_, no) => setTimeout(() => no(new Error('délai dépassé')), 45000))]);
     BG_SEG_PROMISE.catch(() => { BG_SEG_PROMISE = null; });
   }
   return BG_SEG_PROMISE;
@@ -9093,10 +9140,13 @@ function bgCompose(src, w, h, id, st, still) {
   const { frame, person, maskC } = st;
   if (frame.width !== w || frame.height !== h) { frame.width = person.width = w; frame.height = person.height = h; st.maskSrc = null; }
   const fg = frame.getContext('2d'), pg = person.getContext('2d');
-  // Une photo ne change pas : la personne n'est détectée qu'une fois.
-  if (!(still && st.maskSrc === src)) {
+  // Une photo ne change pas : la personne n'est détectée qu'une fois. Une vidéo : environ 8 fois par seconde (pas à chaque image).
+  const now = performance.now();
+  const due = still ? st.maskSrc !== src : (!st.maskAt || now - st.maskAt > 120 || now < st.maskAt);
+  if (due) {
     const m = BG_SEG && BG_SEG.mask(src);
-    if (!m) { fg.drawImage(src, 0, 0, w, h); return frame; }
+    if (!m && !st.hasMask) { fg.drawImage(src, 0, 0, w, h); return frame; }
+  if (m) {
     if (maskC.width !== m.width || maskC.height !== m.height) { maskC.width = m.width; maskC.height = m.height; }
     const mg = maskC.getContext('2d'), img = mg.createImageData(m.width, m.height), d = img.data;
     let sum = 0;
@@ -9106,12 +9156,17 @@ function bgCompose(src, w, h, id, st, still) {
     }
     st.cover = m.data.length ? sum / m.data.length : 0; // part de l'image occupée par la personne
     mg.putImageData(img, 0, 0);
-    st.maskSrc = src;
+    st.maskSrc = src; st.maskAt = now; st.hasMask = true;
+  }
   }
   fg.save();
   if (id === 'flou') {
-    if (typeof fg.filter === 'string') { fg.filter = `blur(${Math.round(w / 40)}px)`; fg.drawImage(src, 0, 0, w, h); }
-    else { fg.imageSmoothingEnabled = true; fg.drawImage(src, 0, 0, w / 16, h / 16); fg.drawImage(frame, 0, 0, w / 16, h / 16, 0, 0, w, h); }
+    // Flou calculé sur une petite image agrandie : même effet, beaucoup moins de calcul.
+    const sm = st.blurC || (st.blurC = document.createElement('canvas'));
+    const bw = Math.max(1, Math.round(w / 14)), bh = Math.max(1, Math.round(h / 14));
+    if (sm.width !== bw || sm.height !== bh) { sm.width = bw; sm.height = bh; }
+    const sgx = sm.getContext('2d'); sgx.imageSmoothingEnabled = true; sgx.drawImage(src, 0, 0, bw, bh);
+    fg.imageSmoothingEnabled = true; fg.imageSmoothingQuality = 'high'; fg.drawImage(sm, 0, 0, w, h);
   } else {
     const bg = BG_CACHE[id] || (id === 'perso' ? BG_PERSO : null);
     if (bg) bgCover(fg, bg, w, h); else { fg.fillStyle = '#111'; fg.fillRect(0, 0, w, h); }
@@ -9554,11 +9609,30 @@ function camPromptRun() {
   requestAnimationFrame(step);
 }
 // « Ajouter » : choisir la photo ou la vidéo dans les fichiers du téléphone (l'éditeur s'ouvre ensuite).
+function pubWait(on, text) {
+  const w = edEl('pub-wait'); if (!w) return;
+  clearTimeout(pubWait.t);
+  if (!on) { w.style.display = 'none'; return; }
+  edEl('pub-wait-txt').textContent = text || '';
+  w.style.display = 'flex';
+  pubWait.t = setTimeout(() => { w.style.display = 'none'; }, 90000); // sécurité : jamais bloqué
+}
+// Le choix dans les fichiers est terminé sans rien choisir (le téléphone ne prévient pas toujours) : on enlève l'écran d'attente.
+function pubWaitBack() {
+  const back = () => {
+    if (document.visibilityState === 'hidden') return;
+    window.removeEventListener('focus', back); document.removeEventListener('visibilitychange', back);
+    setTimeout(() => { if (PUB_AUTO && !edEl('up-file').files[0]) { PUB_AUTO = null; pubWait(false); pubNothingChosen(); } }, 4000);
+  };
+  setTimeout(() => { window.addEventListener('focus', back); document.addEventListener('visibilitychange', back); }, 800);
+}
 function camGallery() {
   const C = CAM; if (!C || C.rec) return;
+  pubWait(true, i18nT('Ouverture de tes fichiers…'));
   PUB_AUTO = { filter: C.filter, speed: C.speed, light: C.light, retouch: C.retouch, at: Date.now() };
   closeCamera();
   pubPickFile();
+  pubWaitBack();
 }
 // Après la prise : un outil du côté ouvre l'éditeur directement au bon endroit.
 function camUseWith(tab) { if (!CAM || !CAM.file) return; CAM.wantTab = tab; camUse(); }
@@ -12834,22 +12908,31 @@ function boostElement(el, on) {
   if (existing && existing.stream === el.srcObject) return;
   if (existing) { try { existing.out.disconnect(); existing.src.disconnect(); } catch (e) {} }
   try {
-    const src = ctx.createMediaStreamSource(el.srcObject);
-    const gain = ctx.createGain(); gain.gain.value = 3; // environ 3 fois plus fort
+    // Le son amplifié s'ajoute au son normal, qui n'est jamais coupé : l'élément audio reste actif et non muet.
+    const src = ctx.createMediaStreamSource(el.srcObject.clone ? new MediaStream(el.srcObject.getAudioTracks()) : el.srcObject);
+    const gain = ctx.createGain(); gain.gain.value = 2.5; // environ 2,5 fois plus fort
     const comp = ctx.createDynamicsCompressor(); // évite que le son sature
     src.connect(gain); gain.connect(comp); comp.connect(ctx.destination);
     BOOSTS.set(el, { src, out: comp, stream: el.srcObject });
-    // L'élément reste actif : sur certains téléphones, l'amplificateur seul restait muet (on n'entendait plus l'autre).
   } catch (e) { /* ce téléphone ne permet pas l'amplification : le volume normal reste actif */ }
+  el.muted = false;
+  if (el.paused) el.play().catch(() => {});
+  // Si l'amplificateur ne démarre pas (téléphone qui le bloque), on le retire : le son normal continue.
+  setTimeout(() => { const b = BOOSTS.get(el); if (b && ctx.state !== 'running') { try { b.out.disconnect(); b.src.disconnect(); } catch (e) {} BOOSTS.delete(el); } }, 1500);
 }
 async function chooseSpeakerOutput(el, on) {
   // Sur les téléphones qui le permettent, on choisit la sortie « haut-parleur ».
+  // On ne change la sortie que si un vrai haut-parleur est proposé (changer de sortie pour rien coupait le son sur certains téléphones),
+  // et on relance la lecture juste après.
   if (!el || !el.setSinkId || !navigator.mediaDevices?.enumerateDevices) return;
   try {
     const outs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audiooutput');
     const spk = outs.find((d) => /speaker|haut|loud|parleur/i.test(d.label));
-    await el.setSinkId(on && spk ? spk.deviceId : 'default');
+    const want = on && spk ? spk.deviceId : (el.sinkId ? 'default' : null);
+    if (want === null || el.sinkId === want || (want === 'default' && !el.sinkId)) return;
+    await el.setSinkId(want);
   } catch (e) {}
+  if (el.srcObject && el.paused) el.play().catch(() => {});
 }
 function speakerTargets() {
   return [document.getElementById('remote-audio'), ...document.querySelectorAll('#gcall-audios audio')];
@@ -12862,7 +12945,12 @@ function applySpeaker() {
     b.setAttribute('aria-pressed', SPEAKER_ON ? 'true' : 'false');
   });
 }
-function toggleSpeaker() { audioCtx(); SPEAKER_ON = !SPEAKER_ON; applySpeaker(); }
+function toggleSpeaker() {
+  const ctx = audioCtx(); if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {});
+  SPEAKER_ON = !SPEAKER_ON; applySpeaker();
+  // Sécurité : après le changement, le son de l'autre personne doit toujours jouer.
+  setTimeout(() => speakerTargets().forEach((el) => { if (el && el.srcObject) { el.muted = false; if (el.paused) el.play().catch(() => {}); } }), 300);
+}
 function resetSpeaker() { SPEAKER_ON = false; speakerTargets().forEach((el) => boostElement(el, false)); applySpeaker(); }
 
 // ==== Messages non lus : badge sur l'onglet Messages ====
@@ -13639,6 +13727,9 @@ if (PLAY_APP) {
   <p class="feed-type" style="margin:6px 0 10px;">Choisis la langue de l'application. Les autres langues (kikongo, tshiluba, kinyarwanda…) ne sont pas encore traduites : l'application s'affiche alors dans la langue la plus proche.</p>
   <div class="lang-list" id="lang-list" translate="no"></div></div>
 </div>
+
+<!-- Écran d'attente (ouverture des fichiers, préparation de la vidéo) : rien d'autre ne s'affiche entre-temps -->
+<div class="pub-wait" id="pub-wait"><div class="pub-wait-in"><span class="pub-spin"></span><p id="pub-wait-txt"></p></div></div>
 
 <!-- Caméra intégrée -->
 <div class="cam-overlay" id="cam-overlay">
