@@ -379,6 +379,38 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 .cam-shoot{width:72px;height:72px;border-radius:50%;border:5px solid #fff;background:#fff;cursor:pointer;}
 .cam-shoot.video{background:#E8304F;}
 .cam-tint{position:absolute;inset:0;pointer-events:none;}
+/* Caméra du studio en plein écran (sans bandes noires) */
+.cam-overlay.studio .cam-top{position:relative;z-index:3;background:linear-gradient(rgba(0,0,0,.45),transparent);margin-bottom:auto;}
+.cam-overlay.studio .cam-stage{position:absolute;inset:0;}
+.cam-overlay.studio .cam-stage video,.cam-overlay.studio .cam-preview img,.cam-overlay.studio .cam-preview video{width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;}
+.cam-overlay.studio .cam-preview{position:absolute;inset:0;}
+.cam-overlay.studio .cam-filters,.cam-overlay.studio .cam-bar,.cam-overlay.studio .cam-light-row,.cam-overlay.studio #cam-msg{position:relative;z-index:3;}
+.cam-overlay.studio .cam-bar{background:linear-gradient(transparent,rgba(0,0,0,.55));}
+.cam-overlay.studio .cam-side{top:calc(58px + env(safe-area-inset-top,0px));bottom:auto;transform:none;max-height:calc(100% - 300px);}
+.cam-overlay.studio .cam-prompt{top:calc(58px + env(safe-area-inset-top,0px));}
+.cam-grid{display:none;position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:linear-gradient(to right,transparent calc(33.33% - 1px),rgba(255,255,255,.55) 33.33%,transparent calc(33.33% + 1px),transparent calc(66.66% - 1px),rgba(255,255,255,.55) 66.66%,transparent calc(66.66% + 1px)),
+  linear-gradient(to bottom,transparent calc(33.33% - 1px),rgba(255,255,255,.55) 33.33%,transparent calc(33.33% + 1px),transparent calc(66.66% - 1px),rgba(255,255,255,.55) 66.66%,transparent calc(66.66% + 1px));}
+.cam-pause{display:none;width:52px;height:52px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.45);color:#fff;font-size:20px;cursor:pointer;}
+.cam-overlay.studio.recording .cam-pause{display:block;}
+.cam-overlay.studio.recording .cam-gal{visibility:hidden;}
+.cam-overlay.recording .cam-side-live{opacity:.35;pointer-events:none;}
+/* Éditeur en plein écran (disposition studio) */
+.ed-overlay.studio .ed-stage{position:absolute;inset:0;padding:0;}
+.ed-overlay.studio .ed-stage canvas{width:100%;height:100%;max-width:none;max-height:none;border-radius:0;object-fit:contain;}
+.ed-overlay.studio .ed-stage canvas.cover{object-fit:cover;}
+.ed-overlay.studio .ed-top{position:relative;z-index:3;background:linear-gradient(rgba(0,0,0,.55),transparent);margin-bottom:auto;}
+.ed-overlay.studio .ed-progress,.ed-overlay.studio .ed-panel,.ed-overlay.studio .ed-msg{position:relative;z-index:3;}
+.ed-overlay.studio .ed-panel{background:rgba(11,11,16,.72);}
+.ed-overlay.studio .ed-msg{background:rgba(11,11,16,.72);}
+.ed-overlay.studio .ed-play{top:50%;bottom:auto;transform:translate(-50%,-50%);}
+.ed-overlay.studio .ed-side{top:calc(64px + env(safe-area-inset-top,0px));bottom:calc(30vh + 60px);z-index:4;}
+/* Découvrir : publications bord à bord, vidéos et photos sur toute la largeur (sans jaune ni cadre autour) */
+#s-decouvrir #feed-list .feed-card{margin:0 -20px;border-radius:0;border-left:0;border-right:0;border-top:0;border-bottom:6px solid #0b0b10;}
+#s-decouvrir #feed-list .fv-wrap{width:calc(100% + 32px);max-width:none;margin:8px -16px;border-radius:0;max-height:82vh;}
+#s-decouvrir #feed-list .fv-wrap video{object-fit:cover;}
+#s-decouvrir #feed-list .ph-wrap{margin:8px -16px;border-radius:0;}
+#s-decouvrir #feed-list .ph-wrap img{border-radius:0;}
 #s-contenu.pub-focus > *:not(#pub-form){display:none!important;}
 .pub-more{display:none;margin:2px 0 8px;}
 #s-contenu.pub-focus .pub-more{display:inline-block;}
@@ -392,8 +424,8 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 @keyframes pubspin{to{transform:rotate(360deg);}}
 .ed-side{display:none;}
 .ed-overlay.studio .ed-tabs{display:none;}
-.ed-overlay.studio .ed-stage{padding:0 84px 0 8px;}
-.ed-overlay.studio .ed-side{display:flex;position:absolute;right:6px;top:4px;bottom:4px;flex-direction:column;gap:6px;overflow-y:auto;z-index:2;scrollbar-width:none;}
+
+.ed-overlay.studio .ed-side{display:flex;position:absolute;right:6px;top:calc(64px + env(safe-area-inset-top,0px));flex-direction:column;gap:6px;overflow-y:auto;z-index:2;scrollbar-width:none;}
 .ed-side::-webkit-scrollbar{display:none;}
 .ed-side button{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:1px;width:72px;padding:6px 1px;border:none;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;}
 .ed-side button span{font-size:20px;line-height:1.1;}
@@ -2115,7 +2147,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.12c';
+const APP_VERSION = '2026.11.12d';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -3061,7 +3093,7 @@ function pickPubType(t, formOnly) {
 }
 function pubPickFile() {
   const input = document.getElementById('up-file');
-  if (!input.dataset.cancelHook) { input.dataset.cancelHook = '1'; input.addEventListener('cancel', () => { PUB_AUTO = null; pubWait(false); pubNothingChosen(); }); }
+  if (!input.dataset.cancelHook) { input.dataset.cancelHook = '1'; input.addEventListener('cancel', () => { PUB_AUTO = null; pubCaptureOff(); pubWait(false); pubNothingChosen(); }); }
   input.click();
 }
 // Studio : la caméra plein écran avec « Ajouter » (fichiers du téléphone), les outils sur le côté et les filtres en bas.
@@ -3107,6 +3139,7 @@ async function studioEdit(tab, extra) {
 }
 async function pubFilePicked() {
   IMPORTED = null;
+  pubCaptureOff();
   const auto = PUB_AUTO; PUB_AUTO = null;
   const studio = auto && Date.now() - auto.at < 5 * 60 * 1000 && edEl('up-file').files[0];
   if (studio) pubWait(true, i18nT('Préparation de ta vidéo…'));
@@ -7532,6 +7565,8 @@ function edStudioOn() {
   const E = EDITOR; if (!E) return;
   E.studio = true;
   edEl('ed-overlay').classList.add('studio');
+  // Vidéo en hauteur : elle remplit tout l'écran (sans bandes noires). En largeur : entière.
+  E.canvas.classList.toggle('cover', E.canvas.height >= E.canvas.width);
   const side = edEl('ed-side');
   side.innerHTML = [...document.querySelectorAll('#ed-tabs button')].filter((b) => b.style.display !== 'none').map((b) => {
     const t = b.textContent.trim(), i = t.indexOf(' ');
@@ -7541,6 +7576,13 @@ function edStudioOn() {
   if (!E.thumbTimer) E.thumbTimer = setInterval(edThumbs, 400);
   edRenderPanel();
 }
+// La colonne d'outils s'arrête toujours au-dessus du réglage du bas (qui change de hauteur selon l'outil).
+function edSideFit() {
+  const side = edEl('ed-side'), bar = edEl('ed-progress');
+  if (!EDITOR || !EDITOR.studio || !side || !bar) return;
+  side.style.bottom = Math.max(8, Math.round(innerHeight - bar.getBoundingClientRect().top + 8)) + 'px';
+}
+window.addEventListener('resize', () => { if (EDITOR && EDITOR.studio) edSideFit(); });
 function edThumbs() {
   const E = EDITOR; if (!E || !E.studio || E.tab !== 'filtres') return;
   const src = E.kind === 'photo' ? E.img : E.vEl;
@@ -7557,6 +7599,7 @@ function edRenderPanel() {
   const E = EDITOR, tab = E.tab, box = edEl('ed-panel');
   document.querySelectorAll('#ed-tabs button').forEach(b => b.classList.toggle('sel', b.dataset.t === tab));
   document.querySelectorAll('#ed-side button').forEach(b => b.classList.toggle('sel', b.dataset.t === tab));
+  if (E.studio) requestAnimationFrame(edSideFit);
   const chips = (list, cur, fn) => `<div class="ed-chips">${list.map(x => `<button class="${x.id === cur ? 'sel' : ''}" onclick="${fn}('${x.id}')">${escapeHtml(x.label)}</button>`).join('')}</div>`;
   const slider = (label, id, val, fn, min = 0, max = 1, step = 0.05) =>
     `<label class="ed-slider">${label}<input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}" oninput="${fn}(this.value)"></label>`;
@@ -9297,12 +9340,25 @@ function collageCells(n, W, H) {
   return rows(2, n);
 }
 
+// « Superposé » : le 1er élément remplit l'écran, les autres sont posés par-dessus en petit (à droite, puis à gauche).
+function collageOverlayCells(n, W, H) {
+  const cells = [{ x: 0, y: 0, w: W, h: H }];
+  const w = W * 0.3, h = H * 0.17, m = W * 0.035, gap = H * 0.015, top = H * 0.05;
+  for (let i = 1; i < Math.min(n, 6); i++) {
+    const k = i - 1, right = k < 3, row = right ? k : k - 3;
+    cells.push({ x: right ? W - w - m : m, y: top + row * (h + gap), w, h, border: true });
+  }
+  return cells;
+}
+function collageCellsFor(layout, n, W, H) { return layout === 'superpose' ? collageOverlayCells(n, W, H) : collageCells(n, W, H); }
 function collageDrawCell(g, el, c) {
   const iw = el.videoWidth || el.naturalWidth, ih = el.videoHeight || el.naturalHeight;
   g.fillStyle = '#111'; g.fillRect(c.x, c.y, c.w, c.h);
-  if (!iw || !ih) return;
-  const s = Math.max(c.w / iw, c.h / ih), sw = c.w / s, sh = c.h / s;
-  g.drawImage(el, (iw - sw) / 2, (ih - sh) / 2, sw, sh, c.x, c.y, c.w, c.h);
+  if (iw && ih) {
+    const s = Math.max(c.w / iw, c.h / ih), sw = c.w / s, sh = c.h / s;
+    g.drawImage(el, (iw - sw) / 2, (ih - sh) / 2, sw, sh, c.x, c.y, c.w, c.h);
+  }
+  if (c.border) { g.save(); g.strokeStyle = '#fff'; g.lineWidth = Math.max(3, c.w * 0.02); g.strokeRect(c.x, c.y, c.w, c.h); g.restore(); }
 }
 
 function openCollage() {
@@ -9346,8 +9402,8 @@ function clLayout(l) { COLLAGE.layout = l; renderCollage(); }
 
 function collageOutput() {
   const items = COLLAGE.items, photosOnly = items.every(it => it.kind === 'photo');
-  const asPhoto = photosOnly && COLLAGE.layout === 'grille';
-  const duration = COLLAGE.layout === 'grille' ? Math.max(0, ...items.map(it => it.kind === 'video' ? it.duration : 0)) || COLLAGE_PHOTO_SECONDS
+  const asPhoto = photosOnly && COLLAGE.layout !== 'suite';
+  const duration = COLLAGE.layout !== 'suite' ? Math.max(0, ...items.map(it => it.kind === 'video' ? it.duration : 0)) || COLLAGE_PHOTO_SECONDS
     : items.reduce((s, it) => s + it.duration, 0);
   return { asPhoto, duration, W: asPhoto ? 1080 : 720, H: asPhoto ? 1350 : 1280 };
 }
@@ -9357,7 +9413,7 @@ function renderCollage() {
   edEl('cl-items').innerHTML = C.items.map((it, i) => `<div class="cl-item"><span>${it.kind === 'photo' ? '🖼️' : '🎬'} ${escapeHtml(it.file.name.slice(0, 24))}${it.kind === 'video' ? ` · ${Math.round(it.duration)} s` : ''}</span>
     ${i ? `<button onclick="clMove(${i})" aria-label="Monter">↑</button>` : ''}<button onclick="clRemove(${i})" aria-label="Retirer">✕</button></div>`).join('')
     || '<p class="ed-note">Ajoute 2 à 6 photos ou vidéos.</p>';
-  edEl('cl-layouts').innerHTML = [['grille', '🔲 Grille (tout en même temps)'], ['suite', '▶️ À la suite (l\'un après l\'autre)']]
+  edEl('cl-layouts').innerHTML = [['grille', '🔲 Grille (2 à 6 carrés)'], ['superpose', '🪟 Superposé (une grande, les autres en petit)'], ['suite', '▶️ À la suite (l\'un après l\'autre)']]
     .map(([id, l]) => `<button class="${C.layout === id ? 'sel' : ''}" onclick="clLayout('${id}')">${l}</button>`).join('');
   const out = collageOutput();
   edEl('cl-info').textContent = C.items.length < 2 ? '' : out.asPhoto ? 'Résultat : une photo.'
@@ -9365,7 +9421,7 @@ function renderCollage() {
   // Aperçu (première image de chaque élément)
   const cv = edEl('cl-canvas'); cv.width = out.W; cv.height = out.H;
   const g = cv.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, out.W, out.H);
-  if (C.layout === 'grille' && C.items.length) collageCells(C.items.length, out.W, out.H).forEach((c, i) => collageDrawCell(g, C.items[i].el, c));
+  if (C.layout !== 'suite' && C.items.length) collageCellsFor(C.layout, C.items.length, out.W, out.H).forEach((c, i) => collageDrawCell(g, C.items[i].el, c));
   else if (C.items[0]) collageDrawCell(g, C.items[0].el, { x: 0, y: 0, w: out.W, h: out.H });
 }
 
@@ -9381,7 +9437,7 @@ async function makeCollage() {
     cv.width = out.W; cv.height = out.H;
     let file;
     if (out.asPhoto) {
-      collageCells(C.items.length, out.W, out.H).forEach((c, i) => collageDrawCell(g, C.items[i].el, c));
+      collageCellsFor(C.layout, C.items.length, out.W, out.H).forEach((c, i) => collageDrawCell(g, C.items[i].el, c));
       const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.92));
       file = new File([blob], 'eaji-collage.jpg', { type: 'image/jpeg' });
     } else {
@@ -9402,12 +9458,12 @@ async function makeCollage() {
       const chunks = []; rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
       const stopped = new Promise(r => { rec.onstop = r; });
       const t0 = performance.now();
-      const cells = collageCells(C.items.length, out.W, out.H);
+      const cells = collageCellsFor(C.layout, C.items.length, out.W, out.H);
       let current = 0, itemStart = 0;
       const draw = () => {
         const t = (performance.now() - t0) / 1000;
         g.fillStyle = '#000'; g.fillRect(0, 0, out.W, out.H);
-        if (C.layout === 'grille') C.items.forEach((it, i) => collageDrawCell(g, it.el, cells[i]));
+        if (C.layout !== 'suite') C.items.forEach((it, i) => collageDrawCell(g, it.el, cells[i]));
         else {
           const it = C.items[current];
           if (it && it.kind === 'photo') {
@@ -9421,7 +9477,7 @@ async function makeCollage() {
       draw();
       rec.start(1000);
       const timer = setInterval(draw, 33);
-      if (C.layout === 'grille') {
+      if (C.layout !== 'suite') {
         const videos = C.items.filter(it => it.kind === 'video');
         await Promise.all(videos.map(it => it.el.play().catch(() => {})));
         if (videos.length) await Promise.all(videos.map(it => new Promise(r => { if (it.el.ended) r(); it.el.onended = r; })));
@@ -9503,7 +9559,7 @@ async function camStart() {
   v.play().catch(() => {});
   document.getElementById('cam-msg').textContent = '';
   camRenderModes();
-  C.torch = false; camRenderStudio();
+  C.torch = false; C.zoomLevels = null; C.zoom = 1; camRenderStudio();
 }
 // ---- Studio (page Publier) : filtres en direct, minuteur, flash, fichiers du téléphone, outils après la prise ----
 function camFilterCss(id) {
@@ -9531,6 +9587,14 @@ function camRenderStudio() {
   const track = C.stream && C.stream.getVideoTracks()[0];
   const caps = track && track.getCapabilities ? track.getCapabilities() : {};
   C.canTorch = Boolean(caps.torch);
+  if (caps.zoom && !C.zoomLevels) {
+    const lv = [caps.zoom.min || 1, 2, 4, 8].filter((z, i, a) => z >= (caps.zoom.min || 1) && z <= caps.zoom.max && a.indexOf(z) === i);
+    if (lv.length > 1) { C.zoomLevels = lv; C.zoom = lv[0]; }
+  }
+  edEl('cam-zoom').style.display = C.zoomLevels ? '' : 'none';
+  if (C.zoomLevels) { edEl('cam-zoom-label').textContent = `${String(C.zoom).replace('.', ',')}×`; edEl('cam-zoom').classList.toggle('on', C.zoom !== C.zoomLevels[0]); }
+  edEl('cam-grid').style.display = C.grid && !C.file ? 'block' : 'none';
+  edEl('cam-grid-btn').classList.toggle('on', Boolean(C.grid));
   document.getElementById('cam-torch').classList.toggle('on', C.torch);
   document.getElementById('cam-overlay').classList.toggle('photo-mode', C.mode === 'photo');
   document.getElementById('cam-speed-label').textContent = `${String(C.speed).replace('.', ',')}×`;
@@ -9564,6 +9628,44 @@ async function camTorch() {
   if (!C.canTorch) return showToast(i18nT('Le flash n\'est pas disponible sur cette caméra.'));
   try { await track.applyConstraints({ advanced: [{ torch: !C.torch }] }); C.torch = !C.torch; } catch (e) { showToast(i18nT('Le flash n\'est pas disponible sur cette caméra.')); }
   camRenderStudio();
+}
+// Zoom de la caméra (quand le téléphone le permet) : 1×, 2×, 4×…
+function camZoom() {
+  const C = CAM; if (!C || !C.stream || !C.zoomLevels) return;
+  const i = C.zoomLevels.indexOf(C.zoom); C.zoom = C.zoomLevels[(i + 1) % C.zoomLevels.length];
+  const track = C.stream.getVideoTracks()[0];
+  track.applyConstraints({ advanced: [{ zoom: C.zoom }] }).catch(() => {});
+  camRenderStudio();
+}
+// Grille : lignes d'aide pour bien cadrer (elles ne sont pas enregistrées).
+function camGrid() { const C = CAM; if (!C) return; C.grid = !C.grid; camRenderStudio(); }
+// Pause pendant l'enregistrement d'une vidéo, puis reprise dans le même fichier.
+function camPause() {
+  const C = CAM; if (!C || !C.rec || !C.rec.pause) return;
+  if (C.rec.state === 'recording') { C.rec.pause(); C.pauseAt = performance.now(); }
+  else if (C.rec.state === 'paused') { C.rec.resume(); C.pausedMs = (C.pausedMs || 0) + performance.now() - C.pauseAt; C.pauseAt = null; }
+  edEl('cam-pause').textContent = C.pauseAt ? '▶️' : '⏸';
+  edEl('cam-overlay').classList.toggle('paused', Boolean(C.pauseAt));
+}
+const camRecSeconds = (C, t0) => (performance.now() - t0 - (C.pausedMs || 0) - (C.pauseAt ? performance.now() - C.pauseAt : 0)) / 1000;
+// Caméra du téléphone : ouvre l'appareil photo du téléphone avec toutes ses fonctions (zoom, HDR, portrait…).
+function camNative() {
+  const C = CAM; if (!C || C.rec) return;
+  const photo = C.mode === 'photo', facing = C.facing;
+  pubWait(true, i18nT('Ouverture de l\'appareil photo du téléphone…'));
+  PUB_AUTO = { filter: C.filter, speed: C.speed, light: C.light, retouch: C.retouch, at: Date.now() };
+  closeCamera();
+  const input = edEl('up-file');
+  input.setAttribute('capture', facing === 'user' ? 'user' : 'environment');
+  if (input.dataset.acceptSave == null) input.dataset.acceptSave = input.getAttribute('accept') || '';
+  input.setAttribute('accept', photo ? 'image/*' : 'video/*');
+  pubPickFile();
+  pubWaitBack();
+}
+function pubCaptureOff() {
+  const i = edEl('up-file'); if (!i) return;
+  i.removeAttribute('capture');
+  if (i.dataset.acceptSave != null) { i.setAttribute('accept', i.dataset.acceptSave); delete i.dataset.acceptSave; }
 }
 function camSpeed() { const C = CAM; if (!C || C.rec) return; const i = ED_SPEEDS.indexOf(C.speed); C.speed = ED_SPEEDS[(i + 1) % ED_SPEEDS.length]; camRenderStudio(); }
 function camRetouch() { const C = CAM; if (!C) return; C.retouch = C.retouch === 0 ? 0.5 : C.retouch === 0.5 ? 1 : 0; camRenderStudio(); }
@@ -9599,10 +9701,11 @@ function camPromptShow() {
 function camPromptRun() {
   const C = CAM; if (!C || !C.prompt) return;
   const box = document.getElementById('cam-prompt'), inner = box.firstElementChild, t0 = performance.now();
+  // Le texte s'arrête de défiler pendant la pause.
   const pxs = { 1: 14, 2: 24, 3: 38 }[C.promptSpeed || 2];
   const step = () => {
     if (CAM !== C || !C.rec) return;
-    const y = Math.min(Math.max(0, inner.scrollHeight - box.clientHeight * 0.4), ((performance.now() - t0) / 1000) * pxs);
+    const y = Math.min(Math.max(0, inner.scrollHeight - box.clientHeight * 0.4), camRecSeconds(C, t0) * pxs);
     inner.style.transform = `translateY(${-y}px)`;
     requestAnimationFrame(step);
   };
@@ -9622,7 +9725,7 @@ function pubWaitBack() {
   const back = () => {
     if (document.visibilityState === 'hidden') return;
     window.removeEventListener('focus', back); document.removeEventListener('visibilitychange', back);
-    setTimeout(() => { if (PUB_AUTO && !edEl('up-file').files[0]) { PUB_AUTO = null; pubWait(false); pubNothingChosen(); } }, 4000);
+    setTimeout(() => { if (PUB_AUTO && !edEl('up-file').files[0]) { PUB_AUTO = null; pubCaptureOff(); pubWait(false); pubNothingChosen(); } }, 4000);
   };
   setTimeout(() => { window.addEventListener('focus', back); document.addEventListener('visibilitychange', back); }, 800);
 }
@@ -9697,18 +9800,22 @@ async function camShoot() {
     clearInterval(C.timer);
     const type = mime.split(';')[0];
     let blob = new Blob(C.chunks, { type });
-    if (type === 'video/webm') blob = await fixWebmDuration(blob, performance.now() - t0);
+    if (C.pauseAt) { C.pausedMs = (C.pausedMs || 0) + performance.now() - C.pauseAt; C.pauseAt = null; }
+    if (type === 'video/webm') blob = await fixWebmDuration(blob, performance.now() - t0 - (C.pausedMs || 0));
     C.rec = null;
     document.getElementById('cam-shoot').classList.remove('rec');
+    edEl('cam-overlay').classList.remove('recording', 'paused'); edEl('cam-pause').textContent = '⏸';
     C.file = new File([blob], `video-${Date.now()}.${type === 'video/mp4' ? 'mp4' : 'webm'}`, { type });
     camShowResult();
   };
+  C.pausedMs = 0; C.pauseAt = null;
   C.rec.start(1000);
   if (C.studio) camPromptRun();
   document.getElementById('cam-shoot').classList.add('rec');
+  edEl('cam-overlay').classList.add('recording');
   const tick = () => {
-    const sec = Math.floor((performance.now() - t0) / 1000);
-    document.getElementById('cam-msg').textContent = `🔴 ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')} — touche encore pour arrêter`;
+    const sec = Math.floor(camRecSeconds(C, t0));
+    document.getElementById('cam-msg').textContent = C.pauseAt ? `⏸ ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')} — ${i18nT('En pause : touche ▶️ pour reprendre')}` : `🔴 ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')} — touche encore pour arrêter`;
     if (sec >= C.maxSeconds && C.rec) C.rec.stop(); // 10 minutes au maximum (1 minute pour un statut)
   };
   tick(); C.timer = setInterval(tick, 500);
@@ -9756,7 +9863,8 @@ function closeCamera() {
   document.getElementById('cam-prompt').style.display = 'none';
   document.getElementById('cam-prompt-edit').style.display = 'none';
   document.getElementById('cam-light-row').style.display = 'none';
-  document.getElementById('cam-overlay').classList.remove('studio', 'taken', 'taken-photo', 'photo-mode');
+  document.getElementById('cam-overlay').classList.remove('studio', 'taken', 'taken-photo', 'photo-mode', 'recording', 'paused');
+  edEl('cam-grid').style.display = 'none';
   document.getElementById('cam-overlay').style.display = 'none';
   document.getElementById('cam-shoot').classList.remove('rec');
 }
@@ -13741,11 +13849,15 @@ if (PLAY_APP) {
       <button id="cam-speed" class="vid-only" onclick="camSpeed()"><span>⏩</span><b><i>Vitesse</i> <i id="cam-speed-label">1×</i></b></button>
       <button id="cam-timer" onclick="camTimer()"><span>⏱️</span><b id="cam-timer-label">Minuteur</b></button>
       <button id="cam-torch" onclick="camTorch()"><span>⚡</span><b>Flash</b></button>
+      <button id="cam-zoom" onclick="camZoom()" style="display:none;"><span>🔍</span><b><i>Zoom</i> <i id="cam-zoom-label">1×</i></b></button>
       <button id="cam-light" onclick="camLightToggle()"><span>💡</span><b>Éclairage</b></button>
       <button id="cam-retouch" onclick="camRetouch()"><span>🪄</span><b id="cam-retouch-label">Retouche</b></button>
       <button id="cam-prompt-btn" class="vid-only" onclick="camPromptOpen()"><span>📜</span><b>Téléprompteur</b></button>
+      <button id="cam-grid-btn" onclick="camGrid()"><span>#️⃣</span><b>Grille</b></button>
       <button onclick="camLayout()"><span>🧩</span><b>Disposition</b></button>
+      <button id="cam-native" onclick="camNative()"><span>📱</span><b>Caméra du téléphone</b></button>
     </div>
+    <div class="cam-grid" id="cam-grid"></div>
     <div class="cam-prompt" id="cam-prompt"><div></div></div>
     <div class="cam-prompt-edit" id="cam-prompt-edit">
       <b>📜 Téléprompteur</b>
@@ -13772,7 +13884,7 @@ if (PLAY_APP) {
   <div class="cam-modes" id="cam-modes"><button data-m="photo" onclick="camSetMode('photo')">Photo</button><button data-m="video" onclick="camSetMode('video')">Vidéo</button></div>
   <label class="cam-light-row" id="cam-light-row" style="display:none;"><span>💡</span><input type="range" id="cam-light-range" min="-0.5" max="0.5" step="0.02" value="0" oninput="camSetLight(this.value)" aria-label="Éclairage"></label>
   <div class="cam-filters" id="cam-filters"></div>
-  <div class="cam-bar" id="cam-live-bar"><button class="cam-gal" id="cam-gal" onclick="camGallery()"><span>🖼️</span><b>Ajouter</b></button><button class="cam-shoot" id="cam-shoot" onclick="camShoot()" aria-label="Prendre"></button><span class="cam-gal-space"></span></div>
+  <div class="cam-bar" id="cam-live-bar"><button class="cam-gal" id="cam-gal" onclick="camGallery()"><span>🖼️</span><b>Ajouter</b></button><button class="cam-shoot" id="cam-shoot" onclick="camShoot()" aria-label="Prendre"></button><span class="cam-gal-space"><button class="cam-pause" id="cam-pause" onclick="camPause()" aria-label="Pause">⏸</button></span></div>
   <div class="cam-bar" id="cam-done-bar" style="display:none;"><button class="mini-btn" onclick="camRetake()">↺ Reprendre</button><button class="ed-done" onclick="camUse()">Utiliser ✅</button></div>
 </div>
 
