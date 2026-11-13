@@ -2147,7 +2147,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.12d';
+const APP_VERSION = '2026.11.13a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -2558,12 +2558,20 @@ function escapeHtml(v) {
 }
 
 let toastTimer = null;
-function showToast(msg) {
+function showToast(msg, ms) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.style.display = 'block';
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.style.display = 'none'; }, 3500);
+  toastTimer = setTimeout(() => { el.style.display = 'none'; }, ms || 3500);
+}
+// Publication terminée : retour direct sur « Découvrir », avec le message en bas de l'écran.
+function pubGoDiscover(msg) {
+  if (typeof pubBack === 'function') pubBack();
+  const tab = document.querySelector('.tab[data-target="s-decouvrir"]');
+  if (tab && !tab.classList.contains('active')) tab.click();
+  document.querySelector('.screens').scrollTop = 0;
+  showToast(msg, 6000);
 }
 
 // Identifiant aléatoire de cet appareil (gardé sur le téléphone, chiffré par le serveur) : sert seulement
@@ -3012,6 +3020,7 @@ async function publishTextPost(text, visibilityScope) {
     const ta = document.getElementById('up-title'); ta.value = ''; growTa(ta);
     if (typeof loadFeed === 'function') loadFeed();
     loadMyContent();
+    pubGoDiscover(successEl.textContent);
   } catch (e) {
     if (isOfflineErr(e)) {
       // Pas d'Internet : la publication attend sur le téléphone et sera publiée toute seule.
@@ -3020,6 +3029,7 @@ async function publishTextPost(text, visibilityScope) {
         successEl.textContent = i18nT("📴 Pas d'Internet : ta publication est en attente. Elle sera publiée toute seule dès le retour de la connexion.");
         successEl.style.display = 'block';
         const ta = document.getElementById('up-title'); ta.value = ''; growTa(ta);
+        pubGoDiscover(successEl.textContent);
         return;
       } catch (e2) { e = e2; }
     }
@@ -3082,6 +3092,9 @@ function pubShowForm() {
 // les fichiers du téléphone pour une musique, un podcast, un livre, un PDF ou un PowerPoint, le texte pour une publication.
 // « formOnly » : seulement afficher le formulaire (sans ouvrir la caméra ni les fichiers).
 function pickPubType(t, formOnly) {
+  const ctab = document.querySelector('.tab[data-target="s-contenu"]');
+  if (ctab && !document.getElementById('s-contenu').classList.contains('active')) ctab.click();
+  document.getElementById('up-success').style.display = 'none';
   const sel = document.getElementById('up-type');
   if (sel.value !== t) { sel.value = t; updateUploadAccept(); } else pubShowForm();
   const form = document.getElementById('pub-form');
@@ -3307,15 +3320,17 @@ async function uploadContent() {
       successEl.textContent = i18nT("📴 Pas d'Internet : ta publication est en attente. Elle sera publiée toute seule dès le retour de la connexion.");
       successEl.style.display = 'block';
       resetUploadForm();
+      pubGoDiscover(successEl.textContent);
       return;
     }
     successEl.textContent = d3.status === 'en_revue'
-      ? 'Publication envoyée : elle sera visible après une vérification rapide par l\'équipe Eaji.'
-      : 'Publication en ligne !';
+      ? i18nT('Publication envoyée : elle sera visible après une vérification rapide par l\'équipe Eaji.')
+      : i18nT('Publication en ligne !');
     successEl.style.display = 'block';
     resetUploadForm();
     if (typeof loadFeed === 'function') loadFeed();
     loadMyContent();
+    pubGoDiscover(successEl.textContent);
   } catch (e) {
     errorEl.textContent = e.message === 'Failed to fetch'
       ? 'Impossible de joindre le serveur. Vérifie ta connexion internet.'

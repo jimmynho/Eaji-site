@@ -3,7 +3,7 @@
 // la copie gardée sur le téléphone ne sert que si la connexion est coupée.
 // Les échanges avec le serveur (API) ne sont pas mis en cache ici (l'application garde elle-même le fil et les messages).
 // Les images déjà vues (photos des publications, photos de profil) sont gardées pour le mode hors connexion.
-const CACHE_NAME = 'eaji-v46';
+const CACHE_NAME = 'eaji-v47';
 const IMG_CACHE = 'eaji-images';
 const IMG_MAX = 120; // images gardées au maximum (les plus anciennes sont retirées)
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
