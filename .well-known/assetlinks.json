@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "org.eaji.app",
       "sha256_cert_fingerprints": [
-        "D7:6D:9E:7D:77:24:C1:C7:CD:03:D0:5E:D0:68:BD:58:D8:BC:A0:A9:83:A1:AD:10:0B:BC:2D:16:CE:01:7A:A3"
+        "D7:6D:9E:7D:77:24:C1:C7:CD:03:D0:5E:D0:68:BD:58:D8:BC:A0:A9:83:A1:AD:10:0B:BC:2D:16:CE:01:7A:A3",
+        "19:74:99:7C:2C:DC:91:82:6A:C2:39:DD:61:4B:56:6D:75:A8:8E:1F:4F:44:82:E4:0E:EE:B6:0A:83:F9:2C:E5"
       ]
     }
   }
