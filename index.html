@@ -253,6 +253,8 @@ select.field{appearance:none;}
 #call-mute{background:var(--surface2);color:var(--text);}
 .feed-empty{color:var(--muted);font-size:13px;text-align:center;padding:30px 10px;}
 .comment-line{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.cm-del{border:none;background:transparent;cursor:pointer;font-size:12px;padding:0 4px;opacity:.7;}
+.cm-del:hover{opacity:1;}
 .comment-line b{color:var(--text);}
 .comment-input-row{display:flex;gap:8px;margin-top:8px;}
 .comment-input-row input{flex:1;margin-bottom:0;padding:9px 12px;font-size:12px;}
@@ -1952,6 +1954,7 @@ window.eajiLoader = (function () {
       <div class="avatar-edit" id="avatar-edit" onclick="document.getElementById('prof-photo-input').click()">A</div>
       <input type="file" id="prof-photo-input" accept="image/*" style="display:none;" onchange="uploadProfilePhoto(this)" />
       <p class="avatar-edit-label">Touche pour changer ta photo · <a href="#" onclick="cameraForProfile();return false;">📷 Prendre une photo</a></p>
+      <p class="avatar-edit-label" id="photo-remove-wrap" style="margin:-8px 0 12px;display:none;"><a href="#" onclick="removeProfilePhoto();return false;">🗑️ Retirer ma photo</a></p>
       <p class="avatar-edit-label" id="photo-status" style="margin:-10px 0 16px;"></p>
 
       <div class="settings-block" id="saves-block">
@@ -2147,7 +2150,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.13a';
+const APP_VERSION = '2026.11.14a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -3660,20 +3663,37 @@ async function toggleComments(contentId, btn) {
   try {
     const data = await apiCall(`/api/content/${contentId}/comments`);
     listEl.innerHTML = (data.comments || []).map(c =>
-      `<div class="comment-line" translate="no"><b>${escapeHtml(c.creator_name)}</b> ${escapeHtml(c.text)}</div>`).join('')
+      `<div class="comment-line" translate="no"><b>${escapeHtml(c.creator_name)}</b> ${escapeHtml(c.text)}${commentDelBtn(contentId, c)}</div>`).join('')
       || '<div class="comment-line comment-empty" style="color:var(--muted);">Aucun commentaire pour le moment.</div>';
   } catch (e) {
     listEl.innerHTML = `<div class="comment-line" style="color:var(--coral);">${escapeHtml(e.message)}</div>`;
   }
 }
 
+// 🗑️ à côté de ses propres commentaires : on peut les supprimer sans supprimer son compte.
+function commentDelBtn(contentId, c) {
+  if (!CREATOR_TOKEN || !c || !c.id || c.creator_id !== CREATOR_ID) return '';
+  return ` <button class="cm-del" title="${escapeHtml(i18nT('Supprimer'))}" aria-label="${escapeHtml(i18nT('Supprimer'))}" onclick="deleteComment('${escapeHtml(String(contentId))}', '${escapeHtml(String(c.id))}', this)">🗑️</button>`;
+}
+async function deleteComment(contentId, commentId, btn) {
+  if (!window.confirm(i18nT('Supprimer ce commentaire ?'))) return;
+  try { await apiCall(`/api/content/${contentId}/comments/${commentId}`, { method: 'DELETE' }); }
+  catch (e) { return showToast(e.message); }
+  const line = btn.closest('.comment-line');
+  const card = line && line.closest('.feed-card');
+  const countEl = card && card.querySelector('.comment-count');
+  if (countEl && /^\d+$/.test(countEl.textContent.trim())) countEl.textContent = Math.max(0, Number(countEl.textContent.trim()) - 1);
+  if (line) line.remove();
+  showToast(i18nT('Commentaire supprimé.'));
+}
 async function postComment(contentId, btn) {
   if (!CREATOR_TOKEN) return showToast('Connecte-toi pour commenter.');
   const input = inCard(btn, `comment-input-${contentId}`);
   const text = input.value.trim();
   if (!text) return;
+  let posted;
   try {
-    await apiCall(`/api/content/${contentId}/comments`, { method: 'POST', body: { text } });
+    posted = await apiCall(`/api/content/${contentId}/comments`, { method: 'POST', body: { text } });
   } catch (e) {
     return showToast(e.message);
   }
@@ -3681,7 +3701,7 @@ async function postComment(contentId, btn) {
   const listEl = inCard(btn, `comments-list-${contentId}`);
   const myName = document.getElementById('prof-name').value || 'Moi';
   if (listEl.querySelector('.comment-empty')) listEl.innerHTML = '';
-  listEl.insertAdjacentHTML('beforeend', `<div class="comment-line" translate="no"><b>${escapeHtml(myName)}</b> ${escapeHtml(text)}</div>`);
+  listEl.insertAdjacentHTML('beforeend', `<div class="comment-line" translate="no"><b>${escapeHtml(myName)}</b> ${escapeHtml(text)}${commentDelBtn(contentId, { id: posted && posted.commentId, creator_id: CREATOR_ID })}</div>`);
   const countEl = listEl.closest('.feed-card').querySelector('.comment-count');
   countEl.textContent = (parseInt(countEl.textContent) || 0) + 1;
 }
@@ -4183,6 +4203,7 @@ async function saveProfile() {
 let MY_PHOTO_URL = null;
 function setAvatarImage(url) {
   MY_PHOTO_URL = url;
+  const rw = document.getElementById('photo-remove-wrap'); if (rw) rw.style.display = url ? '' : 'none';
   document.querySelectorAll('.avatar, #avatar-edit').forEach((el) => {
     el.textContent = '';
     el.style.backgroundImage = `url("${url}")`;
@@ -4191,6 +4212,17 @@ function setAvatarImage(url) {
   });
 }
 
+// Retirer sa photo de profil : on revient à l'initiale du nom.
+async function removeProfilePhoto() {
+  if (!CREATOR_TOKEN || !window.confirm(i18nT('Retirer ta photo de profil ?'))) return;
+  try { await apiCall('/api/creators/me/profile', { method: 'PATCH', body: { removePhoto: true } }); }
+  catch (e) { return showToast(e.message); }
+  MY_PHOTO_URL = null;
+  const initial = ((document.getElementById('prof-name') && document.getElementById('prof-name').value) || 'A').trim()[0] || 'A';
+  document.querySelectorAll('.avatar, #avatar-edit').forEach((el) => { el.style.backgroundImage = ''; el.textContent = initial.toUpperCase(); });
+  document.getElementById('photo-remove-wrap').style.display = 'none';
+  showToast(i18nT('Photo de profil retirée.'));
+}
 // Changement de photo de profil : envoi direct au stockage, puis enregistrement sur le compte.
 async function uploadProfilePhoto(input) {
   const file = input.files[0];
@@ -12894,7 +12926,7 @@ async function reelComments(i) {
   box.style.display = 'flex';
   try {
     const d = await apiCall(`/api/content/${x.id}/comments`);
-    list.innerHTML = (d.comments || []).map((c) => `<div class="comment-line" translate="no"><b>${escapeHtml(c.creator_name)}</b> ${escapeHtml(c.text)}</div>`).join('')
+    list.innerHTML = (d.comments || []).map((c) => `<div class="comment-line" translate="no"><b>${escapeHtml(c.creator_name)}</b> ${escapeHtml(c.text)}${commentDelBtn(x.id, c)}</div>`).join('')
       || `<div class="comment-line comment-empty" style="color:#aaa;">${escapeHtml(i18nT('Aucun commentaire pour le moment.'))}</div>`;
     list.scrollTop = list.scrollHeight;
   } catch (e) { list.innerHTML = `<div class="comment-line" style="color:var(--coral);">${escapeHtml(e.message)}</div>`; }
