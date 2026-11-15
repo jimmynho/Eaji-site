@@ -383,6 +383,26 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 .lt-row button.sel{border-color:var(--gold);}
 .lt-row canvas{width:60px;height:60px;border-radius:9px;background:#222;}
 .lt-range{display:flex;align-items:center;gap:10px;}
+.lt-lab{margin:10px 0 4px;font-size:12.5px;font-weight:700;color:#cfd3dc;}
+/* Live audio / podcast : pas d'outils vidéo */
+.live-overlay.audio .live-side button,.live-overlay.audio #live-bg-btn{display:none!important;}
+/* Invités confirmés, à l'écran (créateur) */
+.live-stage{position:absolute;left:10px;right:84px;top:calc(96px + env(safe-area-inset-top,0px));z-index:3;display:none;flex-wrap:wrap;gap:6px;}
+.live-stage span,.live-stage button{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:99px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;font-weight:700;padding:5px 10px;}
+.live-stage button{cursor:pointer;}
+.live-stage .ls-x{background:rgba(232,48,79,.92);border-radius:99px;padding:1px 7px;font-size:11px;cursor:pointer;}
+.live-stage .ls-req{background:rgba(240,166,60,.95);color:#1A1206;}
+/* Choix du type de live et fin du podcast */
+.lt-sheet{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;}
+.lt-sheet.open{display:flex;}
+.lt-card{width:100%;max-width:560px;background:var(--surface);color:var(--text);border-radius:22px 22px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:90vh;overflow-y:auto;}
+.lt-card-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.lt-card-head b{flex:1;font-size:17px;}
+.ltype{width:100%;display:flex;gap:12px;align-items:flex-start;text-align:left;border:1px solid var(--line);background:var(--surface2,rgba(255,255,255,.04));color:var(--text);border-radius:16px;padding:12px;margin-bottom:10px;cursor:pointer;}
+.ltype > span{font-size:28px;line-height:1;}
+.ltype b{display:block;font-size:15px;margin-bottom:3px;}
+.ltype small{color:var(--muted);font-size:12.5px;line-height:1.4;}
+.ltype.sel{border-color:var(--gold);}
 .lt-range input{flex:1;accent-color:var(--gold);}
 .lt-range span{min-width:52px;text-align:right;font-weight:700;}
 .lt-text{display:flex;gap:8px;margin-bottom:8px;}
@@ -2192,7 +2212,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.15a';
+const APP_VERSION = '2026.11.15b';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -5977,7 +5997,7 @@ async function toggleLive() {
   if (LIVE && LIVE.role === 'test') await closeLive();
   // Un live est déjà en cours : on revient simplement à son écran.
   if (LIVE && LIVE.role === 'host') { document.getElementById('live-overlay').style.display = 'flex'; return; }
-  await startLiveBroadcast();
+  openLiveTypes('live'); // vidéo, audio ou podcast
 }
 
 // ==== Cadeaux en argent ====
@@ -6993,24 +7013,28 @@ function stopLiveTimers() {
 }
 
 // ---------- Créateur ----------
-async function startLiveBroadcast() {
+async function startLiveBroadcast(type, title) {
+  type = type || 'video';
   const statusEl = document.getElementById('live-status-text');
   let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+    stream = await navigator.mediaDevices.getUserMedia(liveMediaConstraints(type));
   } catch (e) {
-    statusEl.textContent = "Autorise la caméra et le micro pour passer en direct.";
+    statusEl.textContent = type === 'video' ? "Autorise la caméra et le micro pour passer en direct." : i18nT('Autorise le micro pour passer en direct.');
     return;
   }
   let session;
-  try { session = await apiCall('/api/live/start', { method: 'POST' }); }
+  try { session = await apiCall('/api/live/start', { method: 'POST', body: { type, title: title || undefined } }); }
   catch (e) { stream.getTracks().forEach(t => t.stop()); statusEl.textContent = e.message; return; }
   currentLiveSessionId = session.liveSessionId;
-  LIVE = { id: session.liveSessionId, role: 'host', stream, pcs: {}, guests: {}, timers: [], lastEvent: 0, ice: await iceConfig() };
-  openLiveOverlay('host', 'Mon live');
+  LIVE = { id: session.liveSessionId, role: 'host', stream, pcs: {}, guests: {}, timers: [], lastEvent: 0, ice: await iceConfig(), type, title: title || null, startedAt: Date.now() };
+  liveAudioSetup(LIVE);
+  openLiveOverlay('host', type === 'video' ? 'Mon live' : liveTypeTitle(type, title));
+  liveApplyType(type);
   const video = liveEl('live-video');
   video.srcObject = stream; video.muted = true; video.play().catch(() => {});
   liveEl('live-status').textContent = '🔴 Tu es en direct. Partage ton live : tes abonnés le voient dans Découvrir.';
+  if (type === 'podcast') livePodcastStart(LIVE);
   statusEl.textContent = '🔴 En direct maintenant.';
   document.getElementById('live-btn').textContent = 'Revenir au live';
   LIVE.timers.push(setInterval(hostTick, 2000), setInterval(pollLiveEvents, 2000), setInterval(hostGuestsTick, 2000));
@@ -7059,8 +7083,10 @@ async function openLive(liveId, creatorName) {
   let j;
   try { j = await apiCall(`/api/live/${liveId}/join`, { method: 'POST' }); }
   catch (e) { return showToast(e.message); }
-  LIVE = { id: liveId, role: 'viewer', pc: null, timers: [], lastEvent: 0, monetized: j.monetized, ice: await iceConfig() };
+  LIVE = { id: liveId, role: 'viewer', pc: null, timers: [], lastEvent: 0, monetized: j.monetized, ice: await iceConfig(), type: j.liveType || 'video', title: j.title || null };
   openLiveOverlay('viewer', creatorName || j.creatorName);
+  liveApplyType(LIVE.type);
+  if (LIVE.type !== 'video') liveEl('live-title').textContent = `${creatorName || j.creatorName} · ${liveTypeTitle(LIVE.type, LIVE.title)}`;
   // Cadeaux en direct ouverts à tous les créateurs, quel que soit leur pays.
   liveEl('live-gift-row').style.display = 'flex';
   liveEl('live-gift-row').innerHTML = (PRICING ? PRICING.giftAmounts : [1, 2, 5, 10, 20, 50])
@@ -7143,11 +7169,16 @@ async function closeLive() {
   LIVE = null;
   (live.timers || []).forEach(clearInterval);
   liveToolStop(live);
+  const pod = await livePodcastStop(live); // podcast : l'épisode enregistré
+  if (live.scene) { live.scene.stop(); live.scene = null; }
+  liveEl('live-stage').style.display = 'none'; liveEl('live-stage')._html = '';
+  liveEl('live-overlay').classList.remove('audio');
   if (live.role === 'test') {
     stopLiveBackground(live);
     live.stream?.getTracks().forEach(t => t.stop());
     liveEl('live-video').srcObject = null;
     liveEl('live-overlay').style.display = 'none';
+    showPodcastEnd(pod);
     return;
   }
   if (live.role === 'host') {
@@ -7159,6 +7190,7 @@ async function closeLive() {
     document.getElementById('live-status-text').textContent = 'Live terminé. Tu peux en redémarrer un à tout moment.';
     document.getElementById('live-btn').textContent = 'Démarrer le live';
     stopLiveMix(live);
+    showPodcastEnd(pod);
   } else {
     live.pc?.close();
     if (live.guestPc || live.guestStatus === 'demande') await apiCall(`/api/live/${live.id}/guest/leave`, { method: 'POST' }).catch(() => {});
@@ -7182,7 +7214,7 @@ async function loadLives() {
       <button class="live-chip" onclick="openLive('${escapeHtml(l.id)}', this.dataset.name)" data-name="${escapeHtml(l.creator_name)}">
         <span class="live-dot"></span>
         <span class="live-avatar" ${l.creator_photo ? `style="background-image:url('${escapeHtml(l.creator_photo)}');color:transparent;"` : ''}>${escapeHtml((l.creator_name || '?')[0])}</span>
-        <span><b>${escapeHtml(l.creator_name)}</b><br><small>${l.viewers} spectateur(s)</small></span>
+        <span><b>${escapeHtml(l.creator_name)}</b><br><small>${l.live_type === 'audio' ? '🎙️ ' : l.live_type === 'podcast' ? '🎧 ' : ''}${l.viewers} spectateur(s)</small></span>
       </button>`).join('');
   } catch (e) { strip.style.display = 'none'; }
 }
@@ -7244,7 +7276,8 @@ function drawLiveMix() {
   const m = LIVE?.mix;
   if (!m) return;
   const W = m.canvas.width, H = m.canvas.height, g = m.g;
-  const tiles = [{ v: m.hostVideo, name: '' }].concat(
+  const audioLive = LIVE.type === 'audio' || LIVE.type === 'podcast';
+  const tiles = [{ v: m.hostVideo, name: '' }].concat(audioLive ? [] :
     Object.values(LIVE.guests).filter(G => G.video).map(G => ({ v: G.video, name: G.name })));
   const { cols, rows } = liveGrid(tiles.length);
   const cw = W / cols, ch = H / rows;
@@ -7336,6 +7369,7 @@ async function hostGuestsTick() {
     }
     liveEl('live-guest-btn').textContent = `👥 Invités ${d.guests.length}/${d.limit}` + (d.requests.length ? ` · 🙋 ${d.requests.length}` : '');
     if (liveEl('live-guest-panel').style.display === 'block') renderGuestPanel();
+    renderLiveStage();
   } catch (e) { /* on réessaie au prochain tour */ }
   live.guestBusy = false;
   if (live.guestAgain && LIVE === live) { live.guestAgain = false; hostGuestsTick(); }
@@ -7360,8 +7394,9 @@ function renderGuestPanel() {
     + '<div class="lg-sec">Sur le live</div>'
     + (d.guests.length ? d.guests.map(g => row('🎤 ' + g.name, btn(g.guestId, 'remove', 'Retirer'))).join('') : '<p class="lg-empty">Personne pour l\'instant.</p>')
     + (d.invited.length ? '<div class="lg-sec">Invitations envoyées</div>' + d.invited.map(g => row(g.name, btn(g.guestId, 'remove', 'Annuler'))).join('') : '')
+    + ((d.removed || []).length ? `<div class="lg-sec">${escapeHtml(i18nT('Retirés du live'))}</div>` + d.removed.map(g => row(g.name, btn(g.guestId, 'invite', escapeHtml(i18nT('Réinviter')), teal))).join('') : '')
     + '<div class="lg-sec">Spectateurs</div>'
-    + (d.viewers.length ? d.viewers.map(v => row(v.name, btn(v.viewerId, 'invite', 'Inviter', teal))).join('') : '<p class="lg-empty">Aucun spectateur à inviter.</p>')
+    + (d.viewers.filter(v => !(d.removed || []).some(r => r.guestId === v.viewerId)).length ? d.viewers.filter(v => !(d.removed || []).some(r => r.guestId === v.viewerId)).map(v => row(v.name, btn(v.viewerId, 'invite', 'Inviter', teal))).join('') : '<p class="lg-empty">Aucun spectateur à inviter.</p>')
     + `<p class="lg-empty">${d.limit === 10 ? 'Premium : jusqu\'à 10 invités.' : 'Jusqu\'à 5 invités (10 avec Premium).'} Plus il y a d'invités, plus ta connexion internet doit être bonne.</p>`;
   // Redessiné seulement si quelque chose a changé : un bouton ne disparaît jamais sous le doigt.
   if (box._html !== html) { box.innerHTML = html; box._html = html; }
@@ -7438,7 +7473,9 @@ async function guestTick(g, seq) {
   const inv = liveEl('live-invite');
   if (g && g.status === 'invite') {
     if (inv.style.display !== 'block') {
-      liveEl('live-invite-text').textContent = `${g.hostName} t'invite à monter sur son live 🎤 (ta caméra et ton micro seront allumés)`;
+      liveEl('live-invite-text').textContent = LIVE.type === 'audio' || LIVE.type === 'podcast'
+        ? i18nF("{0} t'invite à prendre la parole 🎤 (ton micro sera allumé)", g.hostName)
+        : `${g.hostName} t'invite à monter sur son live 🎤 (ta caméra et ton micro seront allumés)`;
       inv.style.display = 'block';
     }
   } else inv.style.display = 'none';
@@ -7462,10 +7499,12 @@ async function startGuestConnection(offer) {
   if (!live.guestStream) {
     let stream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 640 } },
-        audio: { echoCancellation: true, noiseSuppression: true },
-      });
+      stream = await navigator.mediaDevices.getUserMedia(live.type === 'audio' || live.type === 'podcast'
+        ? { audio: { echoCancellation: true, noiseSuppression: true } }
+        : {
+          video: { facingMode: 'user', width: { ideal: 480 }, height: { ideal: 640 } },
+          audio: { echoCancellation: true, noiseSuppression: true },
+        });
     } catch (e) {
       showToast('Autorise la caméra et le micro pour monter sur le live.');
       await apiCall(`/api/live/${live.id}/guest/leave`, { method: 'POST' }).catch(() => {});
@@ -9447,7 +9486,19 @@ function bgPhotoFile(input) {
   const f = input.files[0]; input.value = '';
   if (!f || !f.type.startsWith('image/')) return;
   const img = new Image();
-  img.onload = () => { BG_PERSO = img; const fn = window[input.dataset.fn]; if (fn) fn('perso'); };
+  img.onload = () => {
+    // Photo du téléphone souvent très grande (12 Mpx et plus) : réduite à 1280 px, elle est traitée bien plus vite.
+    let out = img;
+    const k = Math.min(1, 1280 / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+    if (k < 1) {
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      c.src = img.src; // pour la vignette « Ma photo »
+      out = c;
+    }
+    BG_PERSO = out; const fn = window[input.dataset.fn]; if (fn) fn('perso');
+  };
   img.src = URL.createObjectURL(f);
 }
 
@@ -9534,13 +9585,14 @@ function renderLiveBg() {
 async function toggleLiveBg(show) {
   liveEl('live-bg-panel').style.display = show ? 'block' : 'none';
   if (!show) return;
+  bgSegmenter().catch(() => {}); // préparé pendant que l'on choisit : le fond s'applique plus vite
   liveEl('live-guest-panel').style.display = 'none';
   renderLiveBg();
   if (!BG_LIBRARY) { await loadBgLibrary(); renderLiveBg(); }
 }
 
 // ==== Outils du créateur pendant le live (et le live d'essai) ====
-function liveLookDefault() { return { filter: 'aucun', light: 0, retouch: 0, zoom: 1, effect: 'aucun', text: '', textPos: 'haut' }; }
+function liveLookDefault() { return { filter: 'aucun', filterAmt: 1, light: 0, retouch: 0, zoom: 1, effect: 'aucun', text: '', textPos: 'haut' }; }
 function liveLook() { if (!LIVE) return null; if (!LIVE.look) LIVE.look = liveLookDefault(); return LIVE.look; }
 function liveLookOn(L) { return Boolean(L) && (L.filter !== 'aucun' || L.light || L.retouch || L.zoom > 1 || L.effect !== 'aucun' || L.text); }
 
@@ -9583,6 +9635,9 @@ function makeLookProcessor(live) {
     g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
     if (L.effect === 'miroir') { g.translate(W, 0); g.scale(-1, 1); }
     if (L.zoom > 1) { g.translate(W / 2, H / 2); g.scale(L.zoom, L.zoom); g.translate(-W / 2, -H / 2); }
+    // Intensité du filtre : l'image sans filtre, puis l'image filtrée par-dessus, plus ou moins visible.
+    const amt = f.css === 'none' ? 1 : Math.max(0, Math.min(1, L.filterAmt === undefined ? 1 : L.filterAmt));
+    if (canFilter && amt < 1) { g.filter = edFilterCss('none', L.light); g.drawImage(v, 0, 0, W, H); g.globalAlpha = amt; }
     if (canFilter) g.filter = edFilterCss(f.css, L.light);
     g.drawImage(v, 0, 0, W, H);
     g.restore();
@@ -9596,8 +9651,8 @@ function makeLookProcessor(live) {
       rg.drawImage(c, 0, 0, rw, rh);
       g.save(); g.globalAlpha = 0.5 * L.retouch; g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(r, 0, 0, W, H); g.restore();
     }
-    if (f.tint) { g.save(); g.globalCompositeOperation = 'soft-light'; g.fillStyle = f.tint; g.fillRect(0, 0, W, H); g.restore(); }
-    if (f.vignette && L.effect !== 'vignette') edDrawEffect(g, W, H, t, 'vignette');
+    if (f.tint) { g.save(); g.globalAlpha = amt; g.globalCompositeOperation = 'soft-light'; g.fillStyle = f.tint; g.fillRect(0, 0, W, H); g.restore(); }
+    if (f.vignette && L.effect !== 'vignette') { g.save(); g.globalAlpha = amt; edDrawEffect(g, W, H, t, 'vignette'); g.restore(); }
     if (L.effect !== 'aucun' && L.effect !== 'miroir') edDrawEffect(g, W, H, t, L.effect);
     if (L.text) liveDrawText(g, W, H, L.text, L.textPos);
   };
@@ -9632,6 +9687,7 @@ function liveMarkTools() {
   });
 }
 const LIVE_FMT = {
+  filterAmt: (v) => Math.round(v * 100) + ' %',
   light: (v) => (v > 0 ? '+' : '') + Math.round(v * 100) + ' %',
   retouch: (v) => Math.round(v * 100) + ' %',
   zoom: (v) => v.toFixed(1) + 'x',
@@ -9645,7 +9701,8 @@ function liveRenderTool() {
   const L = liveLook(), body = liveEl('live-tool-body');
   liveToolStop(live);
   if (live.tool === 'filtres') {
-    body.innerHTML = `<div class="lt-row">${ED_FILTERS.map((x) => `<button class="${L.filter === x.id ? 'sel' : ''}" onclick="liveSet('filter','${x.id}');liveRenderTool();"><canvas width="96" height="96" style="filter:${x.css === 'none' ? 'none' : x.css};"></canvas>${escapeHtml(i18nT(x.label))}</button>`).join('')}</div>`;
+    body.innerHTML = `<div class="lt-row">${ED_FILTERS.map((x) => `<button class="${L.filter === x.id ? 'sel' : ''}" onclick="liveSet('filter','${x.id}');liveRenderTool();"><canvas width="96" height="96" style="filter:${x.css === 'none' ? 'none' : x.css};"></canvas>${escapeHtml(i18nT(x.label))}</button>`).join('')}</div>`
+      + (L.filter !== 'aucun' ? `<p class="lt-lab">${escapeHtml(i18nT('Intensité du filtre'))}</p>${liveRange('filterAmt', 0, 1, 0.05)}` : '');
     liveFilterThumbs(live);
   } else if (live.tool === 'eclairage') {
     body.innerHTML = liveRange('light', -0.5, 0.5, 0.05);
@@ -9687,14 +9744,34 @@ function liveToolStop(live) {
 // 🔄 Caméra avant / arrière.
 async function liveFlipCamera() {
   const live = LIVE; if (!live || live.role === 'viewer') return;
+  if (live.flipping) return;
+  live.flipping = true;
   const facing = live.facing === 'environment' ? 'user' : 'environment';
-  let s;
-  try { s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } }); }
-  catch (e) { return showToast(i18nT('Impossible de changer de caméra sur ce téléphone.')); }
-  if (LIVE !== live) { s.getTracks().forEach((t) => t.stop()); return; }
   const stream = live.stream;
   if (!live.camTrack) live.camTrack = stream.getVideoTracks()[0];
   const oldCam = live.camTrack;
+  const oldId = oldCam && oldCam.getSettings ? oldCam.getSettings().deviceId : null;
+  if (oldCam) oldCam.stop();
+  const open = (video) => navigator.mediaDevices.getUserMedia({ video });
+  let s = null;
+  try { s = await open({ facingMode: { exact: facing } }); } catch (e) {}
+  if (!s) {
+    // Sinon : l'autre caméra de la liste (« back » / « arrière » / « environment » en priorité).
+    try {
+      const cams = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput' && d.deviceId !== oldId);
+      const want = facing === 'environment' ? /back|rear|arri|environment|0$/i : /front|avant|user|selfie|1$/i;
+      const pick = cams.find((d) => want.test(d.label)) || cams[0];
+      if (pick) s = await open({ deviceId: { exact: pick.deviceId } });
+    } catch (e) {}
+  }
+  if (!s) {
+    try { s = await open({ facingMode: live.facing || 'user' }); } catch (e) {}
+    live.flipping = false;
+    if (s && LIVE === live) { live.camTrack = s.getVideoTracks()[0]; if (live.bgProc) { const o = live.bgProc; live.bgProc = makeBgProcessor(live.camTrack, () => live.bgId); o.stop(); } liveRoute(live); }
+    return showToast(i18nT('Impossible de changer de caméra sur ce téléphone.'));
+  }
+  live.flipping = false;
+  if (LIVE !== live) { s.getTracks().forEach((t) => t.stop()); return; }
   live.camTrack = s.getVideoTracks()[0];
   live.facing = facing;
   let oldBg = null;
@@ -9720,14 +9797,213 @@ async function liveTorch() {
 async function startLiveTest() {
   if (LIVE && LIVE.role === 'test') { liveEl('live-overlay').style.display = 'flex'; return; }
   if (LIVE) return showToast(i18nT('Un live est déjà en cours.'));
+  openLiveTypes('test');
+}
+async function startLiveTestType(type, title) {
+  type = type || 'video';
+  if (LIVE) return showToast(i18nT('Un live est déjà en cours.'));
   let stream;
-  try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true }); }
-  catch (e) { return showToast(i18nT('Autorise la caméra et le micro pour faire un live d\'essai.')); }
-  LIVE = { id: null, role: 'test', stream, pcs: {}, guests: {}, timers: [], lastEvent: 0, look: liveLookDefault() };
-  openLiveOverlay('test', i18nT("Live d'essai"));
+  try { stream = await navigator.mediaDevices.getUserMedia(liveMediaConstraints(type)); }
+  catch (e) { return showToast(type === 'video' ? i18nT('Autorise la caméra et le micro pour faire un live d\'essai.') : i18nT('Autorise le micro pour faire un live d\'essai.')); }
+  LIVE = { id: null, role: 'test', stream, pcs: {}, guests: {}, timers: [], lastEvent: 0, look: liveLookDefault(), type, title: title || null, startedAt: Date.now() };
+  liveAudioSetup(LIVE);
+  openLiveOverlay('test', type === 'video' ? i18nT("Live d'essai") : liveTypeTitle(type, title));
+  liveApplyType(type);
   const video = liveEl('live-video');
   video.srcObject = stream; video.muted = true; video.play().catch(() => {});
   liveEl('live-status').textContent = i18nT("🧪 Live d'essai : personne ne te voit et rien n'est publié. Essaie les outils à droite et écris un message pour voir l'affichage.");
+  if (type === 'podcast') livePodcastStart(LIVE);
+}
+
+// ==== Types de live : vidéo, audio, podcast ====
+let LT_MODE = 'live';
+function openLiveTypes(mode) {
+  LT_MODE = mode;
+  document.getElementById('ltype-head').textContent = i18nT(mode === 'test' ? "Quel live veux-tu essayer ?" : 'Quel live veux-tu faire ?');
+  document.getElementById('ltype-pod').style.display = 'none';
+  document.querySelectorAll('#live-type-sheet .ltype').forEach((b) => b.classList.remove('sel'));
+  document.getElementById('live-type-sheet').classList.add('open');
+}
+function closeLiveTypes() { document.getElementById('live-type-sheet').classList.remove('open'); }
+function liveTypePick(t) {
+  document.querySelectorAll('#live-type-sheet .ltype').forEach((b) => b.classList.toggle('sel', b.dataset.t === t));
+  if (t === 'podcast') {
+    document.getElementById('ltype-pod').style.display = 'block';
+    setTimeout(() => document.getElementById('ltype-pod-title').focus(), 50);
+    return;
+  }
+  liveTypeGo(t);
+}
+function liveTypeGo(t) {
+  const title = t === 'podcast' ? document.getElementById('ltype-pod-title').value.trim().slice(0, 120) : '';
+  if (t === 'podcast' && !title) return showToast(i18nT("Donne un titre à ton épisode."));
+  closeLiveTypes();
+  if (LT_MODE === 'test') startLiveTestType(t, title);
+  else startLiveBroadcast(t, title);
+}
+function liveTypeTitle(type, title) {
+  return type === 'audio' ? '🎙️ ' + i18nT('Live audio') : type === 'podcast' ? '🎧 ' + (title || i18nT('Live podcast')) : i18nT('Mon live');
+}
+function liveMediaConstraints(type) {
+  return type === 'video' ? { video: { facingMode: 'user' }, audio: true } : { audio: { echoCancellation: true, noiseSuppression: true } };
+}
+// Live audio / podcast : pas d'outils vidéo ; les invités montent avec leur micro seulement.
+function liveApplyType(type) {
+  liveEl('live-overlay').classList.toggle('audio', type === 'audio' || type === 'podcast');
+}
+// Image du live audio / podcast : photo du créateur, ondes de la voix, titre, chronomètre et invités qui parlent.
+function liveAudioSetup(live) {
+  if (!live || (live.type !== 'audio' && live.type !== 'podcast')) return;
+  live.scene = makeAudioScene(live);
+  live.stream.addTrack(live.scene.track);
+  live.camTrack = live.scene.track;
+}
+function makeAudioScene(live) {
+  const c = document.createElement('canvas'); c.width = 540; c.height = 960;
+  const g = c.getContext('2d');
+  const sc = { canvas: c, photo: null };
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    sc.ac = new AC(); sc.ac.resume().catch(() => {});
+    sc.an = sc.ac.createAnalyser(); sc.an.fftSize = 128;
+    sc.ac.createMediaStreamSource(new MediaStream(live.stream.getAudioTracks())).connect(sc.an);
+    sc.data = new Uint8Array(sc.an.frequencyBinCount);
+  } catch (e) { sc.an = null; }
+  const name = (document.getElementById('prof-name') && document.getElementById('prof-name').value) || '';
+  if (MY_PHOTO_URL) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { sc.photo = im; }; im.src = MY_PHOTO_URL; }
+  const draw = () => {
+    const W = c.width, H = c.height, t = performance.now() / 1000;
+    let lvl = 0;
+    if (sc.an) { sc.an.getByteFrequencyData(sc.data); for (const v of sc.data) lvl += v; lvl = lvl / sc.data.length / 255; }
+    const bgr = g.createLinearGradient(0, 0, W, H);
+    if (live.type === 'podcast') { bgr.addColorStop(0, '#1d1640'); bgr.addColorStop(1, '#0b0b14'); } else { bgr.addColorStop(0, '#2b1d03'); bgr.addColorStop(1, '#0b0b10'); }
+    g.fillStyle = bgr; g.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H * 0.36, r = 120;
+    for (let i = 3; i >= 1; i--) { g.beginPath(); g.arc(cx, cy, r + i * 18 * (0.4 + lvl * 2.2), 0, Math.PI * 2); g.fillStyle = `rgba(240,166,60,${0.07 * i})`; g.fill(); }
+    g.save(); g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.clip();
+    if (sc.photo) { const s = Math.max(2 * r / sc.photo.naturalWidth, 2 * r / sc.photo.naturalHeight); const w = sc.photo.naturalWidth * s, h = sc.photo.naturalHeight * s; g.drawImage(sc.photo, cx - w / 2, cy - h / 2, w, h); }
+    else { g.fillStyle = '#F0A63C'; g.fillRect(cx - r, cy - r, 2 * r, 2 * r); g.fillStyle = '#1A1206'; g.font = 'bold 110px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText((name || '?')[0].toUpperCase(), cx, cy + 6); }
+    g.restore();
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = '#fff';
+    g.font = 'bold 34px sans-serif'; g.fillText(name.slice(0, 26), cx, cy + r + 62);
+    g.font = 'bold 22px sans-serif'; g.fillStyle = '#F0A63C';
+    g.fillText(live.type === 'podcast' ? '🎧 PODCAST EN DIRECT' : '🎙️ LIVE AUDIO', cx, cy + r + 100);
+    if (live.type === 'podcast' && live.title) {
+      g.fillStyle = '#e6e6ee'; g.font = '26px sans-serif';
+      const words = live.title.split(/\s+/), lines = []; let line = '';
+      for (const w of words) { const tt = line ? line + ' ' + w : w; if (g.measureText(tt).width > W * 0.8 && line) { lines.push(line); line = w; } else line = tt; }
+      if (line) lines.push(line);
+      lines.slice(0, 3).forEach((l, i) => g.fillText(l, cx, cy + r + 142 + i * 34));
+    }
+    // ondes de la voix
+    const n = 28, bw = (W * 0.76) / n, base = H * 0.78;
+    for (let i = 0; i < n; i++) {
+      const v = sc.an ? sc.data[Math.floor(i * sc.data.length / n)] / 255 : 0;
+      const h = 6 + v * 120 + Math.sin(t * 3 + i) * 2;
+      g.fillStyle = live.type === 'podcast' ? '#9d8cff' : '#F0A63C';
+      g.fillRect(W * 0.12 + i * bw + 2, base - h / 2, bw - 4, h);
+    }
+    if (live.type === 'podcast') {
+      const sec = Math.floor((Date.now() - (live.startedAt || Date.now())) / 1000);
+      g.font = 'bold 26px sans-serif'; g.fillStyle = '#ff5c7a';
+      g.fillText(`⏺ ${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`, cx, H * 0.9);
+    }
+    // invités qui ont la parole
+    const gs = (live.guestInfo && live.guestInfo.guests) || [];
+    if (gs.length) {
+      g.font = 'bold 22px sans-serif'; g.fillStyle = '#fff';
+      g.fillText('🎤 ' + gs.map((x) => x.name).join(' · ').slice(0, 60), cx, H * 0.86);
+    }
+  };
+  sc.timer = setInterval(draw, 66); draw();
+  sc.track = c.captureStream(15).getVideoTracks()[0];
+  sc.stop = () => { clearInterval(sc.timer); sc.track.stop(); if (sc.ac) sc.ac.close().catch(() => {}); };
+  return sc;
+}
+
+// ==== Live podcast : l'émission est enregistrée (créateur + invités) pour être publiée ensuite ====
+function livePodcastStart(live) {
+  if (typeof MediaRecorder === 'undefined') return;
+  const mix = live.role === 'host' ? ensureLiveMix() : null;
+  const track = mix ? mix.toViewers.stream.getAudioTracks()[0] : live.stream.getAudioTracks()[0];
+  if (!track) return;
+  const type = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'].find((m) => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
+  try {
+    const rec = new MediaRecorder(new MediaStream([track]), type ? { mimeType: type } : undefined);
+    const R = { rec, chunks: [], type: rec.mimeType || type || 'audio/webm', at: Date.now() };
+    live.rec = R;
+    // (le dernier morceau arrive pendant l'arrêt : il est gardé aussi)
+    rec.ondataavailable = (e) => { if (e.data && e.data.size) R.chunks.push(e.data); };
+    rec.start(1000);
+    liveEl('live-status').textContent += ' ' + i18nT("⏺ L'épisode est enregistré.");
+  } catch (e) { live.rec = null; }
+}
+function livePodcastStop(live) {
+  const r = live && live.rec;
+  if (!r) return Promise.resolve(null);
+  live.rec = null;
+  return new Promise((res) => {
+    const done = () => {
+      const blob = new Blob(r.chunks, { type: r.type });
+      res(blob.size > 1000 ? { blob, seconds: Math.round((Date.now() - r.at) / 1000), title: live.title || '' } : null);
+    };
+    if (r.rec.state === 'inactive') return done();
+    r.rec.onstop = done;
+    try { r.rec.stop(); } catch (e) { done(); }
+  });
+}
+let POD_END = null;
+function showPodcastEnd(pod) {
+  if (!pod) return;
+  POD_END = pod;
+  const a = document.getElementById('pod-end-audio');
+  if (a.src) URL.revokeObjectURL(a.src);
+  a.src = URL.createObjectURL(pod.blob);
+  document.getElementById('pod-end-info').textContent = `${pod.title ? '« ' + pod.title + ' » · ' : ''}${durationLabel(pod.seconds)}`;
+  document.getElementById('pod-end-sheet').classList.add('open');
+}
+function podcastFile() {
+  const p = POD_END; if (!p) return null;
+  const ext = /mp4/.test(p.blob.type) ? 'm4a' : /ogg/.test(p.blob.type) ? 'ogg' : 'webm';
+  const base = (p.title || 'podcast').replace(/[^\w\- ]+/g, '').trim().slice(0, 60) || 'podcast';
+  return new File([p.blob], `${base}.${ext}`, { type: p.blob.type || 'audio/webm' });
+}
+function podcastClose() {
+  document.getElementById('pod-end-sheet').classList.remove('open');
+  const a = document.getElementById('pod-end-audio'); a.pause();
+}
+async function podcastPublish() {
+  const file = podcastFile(); if (!file) return podcastClose();
+  const title = POD_END.title;
+  podcastClose();
+  pickPubType('podcast', true);
+  IMPORTED = null;
+  const input = document.getElementById('up-file');
+  if (putFileInInput(input, file)) await onUploadFileChange();
+  else { EDITED = { file, duration: POD_END.seconds, soundId: null, summary: 'podcast en direct' }; refreshEditButton(); }
+  const t = document.getElementById('up-title');
+  if (t && !t.value.trim()) t.value = title || '';
+  showToast(i18nT('Épisode prêt : vérifie le titre puis touche « Publier ».'));
+}
+function podcastDownload() {
+  const file = podcastFile(); if (!file) return;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function podcastDiscard() {
+  if (!confirm(i18nT("Supprimer l'enregistrement de cet épisode ?"))) return;
+  POD_END = null; podcastClose();
+}
+
+// ==== Invités confirmés sur le live, visibles à l'écran du créateur (✕ = retirer) ====
+function renderLiveStage() {
+  const box = liveEl('live-stage');
+  const d = LIVE && LIVE.role === 'host' ? LIVE.guestInfo : null;
+  if (!d || (!d.guests.length && !d.requests.length)) { box.style.display = 'none'; box.innerHTML = ''; box._html = ''; return; }
+  const html = d.guests.map((g) => `<span>🎤 ${escapeHtml(g.name)} <b class="ls-x" title="${escapeHtml(i18nT('Retirer'))}" data-guest="${escapeHtml(g.guestId)}" onclick="hostGuestAction(this.dataset.guest, 'remove')">✕</b></span>`).join('')
+    + (d.requests.length ? `<button class="ls-req" onclick="toggleGuestPanel(true)">🙋 ${escapeHtml(i18nF('{0} demande(s)', d.requests.length))}</button>` : '');
+  if (box._html !== html) { box.innerHTML = html; box._html = html; }
+  box.style.display = 'flex';
 }
 
 // ==== Collage de photos et de vidéos ====
@@ -14325,6 +14601,32 @@ if (PLAY_APP) {
     <button class="primary-btn" style="width:auto;padding:10px 14px;" onclick="applyCountryPicker()">Voir les publications</button>
   </div>
 </div>
+<!-- Choix du type de live -->
+<div class="lt-sheet" id="live-type-sheet" onclick="if (event.target === this) closeLiveTypes()">
+  <div class="lt-card">
+    <div class="lt-card-head"><b id="ltype-head">Quel live veux-tu faire ?</b><button class="mini-btn" onclick="closeLiveTypes()">✕</button></div>
+    <button class="ltype" data-t="video" onclick="liveTypePick('video')"><span>🎥</span><div><b>Live vidéo</b><small>Caméra et micro. Filtres, éclairage, retouche, effets, zoom, texte, fond, flash et caméra avant / arrière. Invités en vidéo.</small></div></button>
+    <button class="ltype" data-t="audio" onclick="liveTypePick('audio')"><span>🎙️</span><div><b>Live audio</b><small>Micro seulement : ta photo à l'écran avec les ondes de ta voix. Les invités prennent la parole (micro), sans caméra.</small></div></button>
+    <button class="ltype" data-t="podcast" onclick="liveTypePick('podcast')"><span>🎧</span><div><b>Live podcast</b><small>Une émission audio avec un titre, un chronomètre et des co-animateurs. Elle est enregistrée : à la fin, tu peux la publier comme podcast.</small></div></button>
+    <div id="ltype-pod" style="display:none;">
+      <input class="field" id="ltype-pod-title" maxlength="120" placeholder="Titre de l'épisode (ex : Épisode 1 — La musique congolaise)">
+      <button class="primary-btn" onclick="liveTypeGo('podcast')">Commencer le podcast</button>
+    </div>
+  </div>
+</div>
+<!-- Fin d'un live podcast : l'épisode enregistré -->
+<div class="lt-sheet" id="pod-end-sheet">
+  <div class="lt-card">
+    <div class="lt-card-head"><b>🎧 Ton épisode est enregistré</b></div>
+    <p class="feed-type" id="pod-end-info" style="margin:0 0 10px;"></p>
+    <audio id="pod-end-audio" controls style="width:100%;margin-bottom:12px;"></audio>
+    <button class="primary-btn" onclick="podcastPublish()">Publier comme podcast</button>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="mini-btn" style="flex:1;" onclick="podcastDownload()">⬇️ Télécharger</button>
+      <button class="mini-btn" style="flex:1;" onclick="podcastDiscard()">Ne pas garder</button>
+    </div>
+  </div>
+</div>
 <div class="live-overlay" id="live-overlay">
   <video id="live-video" autoplay playsinline></video>
   <div class="live-top">
@@ -14334,6 +14636,8 @@ if (PLAY_APP) {
     <span class="live-pill">🎁 <span id="live-gifts-total">0</span></span>
   </div>
   <div class="live-status" id="live-status"></div>
+  <!-- Créateur : invités confirmés sur le live (✕ pour retirer) et demandes en attente -->
+  <div class="live-stage" id="live-stage"></div>
   <!-- Créateur : argent reçu pendant ce live + outils (comme dans la modification d'une vidéo) -->
   <div class="live-side" id="live-side">
     <div class="live-money" title="Reçu pendant ce live">💰 <span id="live-money">0</span><small>reçu en direct</small></div>
