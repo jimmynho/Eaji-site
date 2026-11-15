@@ -179,6 +179,20 @@ select.field{appearance:none;}
   background:var(--surface2);color:var(--muted);font-size:14px;margin-bottom:14px;white-space:nowrap;}
 .phone-row input{flex:1;}
 .scope-row{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap;}
+#s-decouvrir .scope-row{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+#s-decouvrir .scope-row::-webkit-scrollbar{display:none;}
+#s-decouvrir .scope-row .scope-btn{flex:none;white-space:nowrap;}
+/* Choix des pays d'un continent : panneau à gauche, le fil reste visible à droite */
+.cpick-back{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.25);display:none;}
+.cpick{position:fixed;top:0;bottom:0;left:0;width:min(78vw,330px);z-index:56;background:var(--surface);color:var(--text);display:none;flex-direction:column;box-shadow:6px 0 24px rgba(0,0,0,.35);padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(12px + env(safe-area-inset-bottom,0px));}
+.cpick.open,.cpick-back.open{display:flex;}
+.cpick-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.cpick-head b{flex:1;font-size:16px;}
+.cpick-list{flex:1;overflow-y:auto;margin:8px 0;}
+.cpick-list label{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer;}
+.cpick-list input{width:18px;height:18px;accent-color:var(--gold);}
+.cpick-foot{display:flex;gap:8px;}
+.cpick-foot button{flex:1;}
 .scope-btn{padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--muted);
   font-size:13px;cursor:pointer;}
 .scope-btn.sel{background:var(--gold);color:#1A1206;border-color:var(--gold);font-weight:600;}
@@ -348,6 +362,31 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 .live-bottom{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.8) 30%);}
 .live-events{max-height:34vh;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:8px;}
 .live-ev{color:#fff;font-size:13px;text-shadow:0 1px 2px #000;}
+/* 5 derniers messages visibles ; les plus anciens restent accessibles en faisant défiler vers le haut */
+.live-events.fit5{-webkit-mask-image:linear-gradient(transparent,#000 14px);mask-image:linear-gradient(transparent,#000 14px);}
+/* Outils du créateur pendant le live (colonne à droite) */
+.live-overlay.has-side .live-status{padding-right:84px;}
+.live-side{position:absolute;right:8px;top:calc(62px + env(safe-area-inset-top,0px));z-index:3;display:none;flex-direction:column;gap:6px;max-height:calc(100vh - 380px - env(safe-area-inset-top,0px));overflow-y:auto;scrollbar-width:none;align-items:flex-end;}
+.live-side::-webkit-scrollbar{display:none;}
+.live-money{background:rgba(240,166,60,.95);color:#1A1206;font-weight:800;border-radius:12px;padding:6px 9px;font-size:12.5px;white-space:nowrap;text-align:center;}
+.live-money small{display:block;font-weight:600;font-size:10px;}
+.live-side button{width:58px;border:none;border-radius:12px;background:rgba(0,0,0,.55);color:#fff;font-size:10.5px;font-weight:700;padding:6px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.live-side button span{font-size:19px;line-height:1.1;}
+.live-side button.on{background:rgba(240,166,60,.9);color:#1A1206;}
+.live-tool{position:absolute;left:0;right:0;bottom:0;z-index:4;display:none;background:rgba(12,12,18,.94);color:#fff;border-radius:18px 18px 0 0;padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));max-height:46vh;overflow-y:auto;}
+.live-tool-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.live-tool-head b{flex:1;}
+.live-tool-head button{border:none;border-radius:10px;background:rgba(255,255,255,.15);color:#fff;padding:6px 10px;cursor:pointer;}
+.lt-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.lt-row::-webkit-scrollbar{display:none;}
+.lt-row button{flex:none;border:2px solid transparent;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;padding:6px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.lt-row button.sel{border-color:var(--gold);}
+.lt-row canvas{width:60px;height:60px;border-radius:9px;background:#222;}
+.lt-range{display:flex;align-items:center;gap:10px;}
+.lt-range input{flex:1;accent-color:var(--gold);}
+.lt-range span{min-width:52px;text-align:right;font-weight:700;}
+.lt-text{display:flex;gap:8px;margin-bottom:8px;}
+.lt-text input{flex:1;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.4);color:#fff;padding:9px 12px;font-size:14px;}
 .live-ev b{color:var(--gold);}
 .live-ev.arrivee,.live-ev.fin{color:#cfd3dc;font-size:12px;font-style:italic;}
 .live-ev.cadeau{background:rgba(240,166,60,.92);color:#1A1206;text-shadow:none;font-weight:700;border-radius:10px;padding:6px 10px;align-self:flex-start;}
@@ -409,7 +448,7 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 .ed-overlay.studio .ed-side{top:calc(64px + env(safe-area-inset-top,0px));bottom:calc(30vh + 60px);z-index:4;}
 /* Découvrir : publications bord à bord, vidéos et photos sur toute la largeur (sans jaune ni cadre autour) */
 #s-decouvrir #feed-list .feed-card{margin:0 -20px;border-radius:0;border-left:0;border-right:0;border-top:0;border-bottom:6px solid #0b0b10;}
-#s-decouvrir #feed-list .fv-wrap{width:calc(100% + 32px);max-width:none;margin:8px -16px;border-radius:0;max-height:82vh;}
+#s-decouvrir #feed-list .fv-wrap{width:calc(100% + 32px);max-width:none;margin:8px -16px;border-radius:0;max-height:46vh;}
 #s-decouvrir #feed-list .fv-wrap video{object-fit:cover;}
 #s-decouvrir #feed-list .ph-wrap{margin:8px -16px;border-radius:0;}
 #s-decouvrir #feed-list .ph-wrap img{border-radius:0;}
@@ -1445,6 +1484,8 @@ window.eajiLoader = (function () {
       <div class="hero-card" id="live-card" style="padding:18px 20px;">
         <p class="hero-sub" id="live-status-text" style="margin:0 0 12px;">V&eacute;rification de ton &eacute;ligibilit&eacute;&hellip;</p>
         <button class="primary-btn" id="live-btn" onclick="toggleLive()" disabled>Patiente&hellip;</button>
+        <button class="mini-btn" style="margin-top:10px;width:100%;" onclick="startLiveTest()">🧪 Faire un live d'essai (privé)</button>
+        <p class="feed-type" style="font-size:12px;margin:6px 0 0;">Personne ne te voit pendant l'essai : tu testes la caméra, les outils et l'affichage des messages.</p>
       </div>
 
       <!-- Notre agent IA : aide, montages, sécurité -->
@@ -1482,6 +1523,7 @@ window.eajiLoader = (function () {
       <div class="scope-row">
         <button class="scope-btn sel" id="scope-country" onclick="setFeedScope('pays')">Mon pays</button>
         <button class="scope-btn" id="scope-all" onclick="setFeedScope('tout')">Partout</button>
+        <span id="scope-zones" style="display:contents;"></span>
       </div>
       <div class="tag-bar" id="tag-bar" style="display:none;"><b translate="no"></b><span id="tag-count"></span><button class="mini-btn" onclick="closeHashtag()">✕ Retour au fil</button></div>
       <div id="feed-list"></div>
@@ -2150,7 +2192,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.14a';
+const APP_VERSION = '2026.11.15a';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -3410,9 +3452,19 @@ function tagifyHtml(h) {
   return String(h).replace(/(^|\s)#([^\s#.,;:!?()"«»<>&'’]{2,40})/g, (m, sp, t) => `${sp}<a class="hashtag" href="#" onclick="event.stopPropagation();openHashtag(this.textContent);return false;">#${t}</a>`);
 }
 // Titre / texte d'une publication : texte sur son fond pour une publication texte.
+// Publication : seul le premier paragraphe est affiché ; le reste s'ouvre avec « Voir plus ».
+function cutFirstParaHtml(text) {
+  const s = String(text || '');
+  const m = s.match(/\n\s*\n/) || s.match(/\n/);
+  if (m && s.slice(m.index + m[0].length).trim()) {
+    const first = cutTextHtml(s.slice(0, m.index));
+    if (!first.cut) return { html: `${escapeHtml(s.slice(0, m.index))}<span class="ft-rest">${escapeHtml(s.slice(m.index))}</span>`, cut: true };
+  }
+  return cutTextHtml(s);
+}
 function feedTitleHtml(item) {
   const title = String(item.title || '');
-  const c = cutTextHtml(title);
+  const c = cutFirstParaHtml(title);
   const more = c.cut ? moreBtnHtml() : '';
   const p = `<p class="feed-title${c.cut ? ' cut' : ''}" translate="no"${c.cut ? ' onclick="toggleCut(this)"' : ''}>${tagifyHtml(c.html)}</p>`;
   if (item.content_type === 'publication' && item.text_only) {
@@ -3523,6 +3575,7 @@ function feedCardHtml(item) {
 function updateScopeLabel() {
   const c = COUNTRY_BY_CODE[MY_COUNTRY];
   document.getElementById('scope-country').textContent = c ? `Mon pays (${c.name})` : 'Mon pays';
+  renderZoneButtons();
 }
 
 // ==== Hashtags et tendances ====
@@ -3568,7 +3621,63 @@ function setFeedScope(scope) {
   TAG_VIEW = null; document.getElementById('tag-bar').style.display = 'none';
   document.getElementById('scope-country').classList.toggle('sel', scope === 'pays');
   document.getElementById('scope-all').classList.toggle('sel', scope === 'tout');
+  renderZoneButtons();
   loadFeed();
+}
+
+// ==== Choisir les pays d'un continent (ex. Europe → France, Belgique…) ====
+// Les pays cochés restent gardés pour chaque continent ; le fil montre les publications de tous les pays cochés.
+const FEED_CHOICE = new Set();
+let CPICK_ZONE = null, CPICK_SEL = null;
+function renderZoneButtons() {
+  const box = document.getElementById('scope-zones');
+  if (!box) return;
+  box.innerHTML = Object.entries(ZONE_LABELS).map(([z, label]) => {
+    const n = COUNTRIES.filter((c) => c[3] === z && FEED_CHOICE.has(c[0])).length;
+    const on = FEED_SCOPE === 'choix' && n > 0;
+    return `<button class="scope-btn${on ? ' sel' : ''}" onclick="openCountryPicker('${z}')">🌍 ${escapeHtml(i18nT(label))}${n ? ` (${n})` : ''} ▾</button>`;
+  }).join('');
+}
+function openCountryPicker(zone) {
+  CPICK_ZONE = zone;
+  CPICK_SEL = new Set(COUNTRIES.filter((c) => c[3] === zone && FEED_CHOICE.has(c[0])).map((c) => c[0]));
+  document.getElementById('cpick-title').textContent = '🌍 ' + i18nT(ZONE_LABELS[zone] || zone);
+  document.getElementById('cpick-search').value = '';
+  renderCountryPicker();
+  document.getElementById('cpick').classList.add('open');
+  document.getElementById('cpick-back').classList.add('open');
+}
+function closeCountryPicker() {
+  document.getElementById('cpick').classList.remove('open');
+  document.getElementById('cpick-back').classList.remove('open');
+  CPICK_ZONE = null;
+}
+function cpickCountries() {
+  return COUNTRIES.filter((c) => c[3] === CPICK_ZONE).sort((a, b) => a[1].localeCompare(b[1], 'fr'));
+}
+function renderCountryPicker() {
+  if (!CPICK_ZONE) return;
+  const q = document.getElementById('cpick-search').value.trim().toLowerCase();
+  const list = cpickCountries().filter((c) => !q || c[1].toLowerCase().includes(q));
+  document.getElementById('cpick-list').innerHTML = list.map((c) =>
+    `<label><input type="checkbox" value="${c[0]}"${CPICK_SEL.has(c[0]) ? ' checked' : ''} onchange="cpickToggle(this)"><span translate="no">${escapeHtml(c[1])}</span></label>`).join('')
+    || `<p class="feed-empty">${escapeHtml(i18nT('Aucun pays trouvé.'))}</p>`;
+  const all = cpickCountries().every((c) => CPICK_SEL.has(c[0]));
+  document.getElementById('cpick-all').textContent = i18nT(all ? 'Tout décocher' : 'Tout cocher');
+}
+function cpickToggle(box) { if (box.checked) CPICK_SEL.add(box.value); else CPICK_SEL.delete(box.value); renderCountryPicker(); }
+function cpickAll() {
+  const list = cpickCountries(), all = list.every((c) => CPICK_SEL.has(c[0]));
+  list.forEach((c) => (all ? CPICK_SEL.delete(c[0]) : CPICK_SEL.add(c[0])));
+  renderCountryPicker();
+}
+function applyCountryPicker() {
+  if (!CPICK_ZONE) return;
+  COUNTRIES.filter((c) => c[3] === CPICK_ZONE).forEach((c) => FEED_CHOICE.delete(c[0]));
+  CPICK_SEL.forEach((code) => FEED_CHOICE.add(code));
+  closeCountryPicker();
+  // Plus aucun pays coché : retour à « Partout ».
+  setFeedScope(FEED_CHOICE.size ? 'choix' : 'tout');
 }
 
 async function loadFeed() {
@@ -3577,12 +3686,17 @@ async function loadFeed() {
   if (TAG_VIEW) return; // on regarde un #hashtag : le fil revient avec « Retour au fil »
   if (typeof loadLives === 'function') loadLives();
   try {
-    const data = await apiCall(FEED_SCOPE === 'pays' ? `/api/feed?country=${MY_COUNTRY}` : '/api/feed');
+    const data = await apiCall(FEED_SCOPE === 'pays' ? `/api/feed?country=${MY_COUNTRY}`
+      : FEED_SCOPE === 'choix' && FEED_CHOICE.size ? `/api/feed?country=${[...FEED_CHOICE].join(',')}` : '/api/feed');
     (data.following || []).forEach(id => followingSet.add(id));
     FEED_ADS = data.ads || [];
     VIEWER_PREMIUM = Boolean(data.viewerPremium);
     if (!(data.items || []).length && FEED_SCOPE === 'pays') {
       list.innerHTML = '<p class="feed-empty">Aucune publication dans ton pays pour le moment. Sois le premier à publier, ou regarde <a href="#" onclick="setFeedScope(\'tout\');return false;" style="color:var(--teal);">partout</a>.</p>';
+      return;
+    }
+    if (!(data.items || []).length && FEED_SCOPE === 'choix') {
+      list.innerHTML = `<p class="feed-empty">${escapeHtml(i18nT('Aucune publication dans les pays choisis pour le moment.'))} <a href="#" onclick="setFeedScope('tout');return false;" style="color:var(--teal);">${escapeHtml(i18nT('Partout'))}</a></p>`;
       return;
     }
     renderFeed(data.items || []);
@@ -5860,6 +5974,7 @@ async function checkLiveEligibility() {
 }
 
 async function toggleLive() {
+  if (LIVE && LIVE.role === 'test') await closeLive();
   // Un live est déjà en cours : on revient simplement à son écran.
   if (LIVE && LIVE.role === 'host') { document.getElementById('live-overlay').style.display = 'flex'; return; }
   await startLiveBroadcast();
@@ -6802,6 +6917,22 @@ function openLiveOverlay(role, title) {
   liveEl('live-bg-msg').textContent = '';
   liveEl('live-bg-btn').style.display = role === 'host' ? '' : 'none';
   liveEl('live-gift-row').style.display = 'none';
+  // Outils du créateur (live et live d'essai).
+  liveEl('live-side').style.display = role === 'viewer' ? 'none' : 'flex';
+  liveEl('live-overlay').classList.toggle('has-side', role !== 'viewer');
+  liveEl('live-money').textContent = formatMoney(0, 'USD');
+  liveEl('live-tool').style.display = 'none';
+  liveEl('live-torch-btn').classList.remove('on');
+  liveEl('live-events').classList.add('fit5');
+  liveEl('live-events').style.maxHeight = '';
+  liveEl('live-events')._fresh = true;
+  document.querySelector('#live-overlay .live-badge').textContent = role === 'test' ? i18nT('ESSAI') : i18nT('EN DIRECT');
+  if (role === 'test') {
+    liveEl('live-end-btn').textContent = i18nT("Terminer l'essai");
+    liveEl('live-mic-btn').style.display = '';
+    liveEl('live-guest-btn').style.display = 'none';
+    liveEl('live-bg-btn').style.display = '';
+  }
   liveEl('live-overlay').style.display = 'flex';
 }
 
@@ -6819,7 +6950,16 @@ function appendLiveEvents(events) {
     box.appendChild(div);
   }
   while (box.children.length > 60) box.removeChild(box.firstChild);
-  box.scrollTop = box.scrollHeight;
+  fitLiveEvents(box);
+}
+// Hauteur = les 5 derniers messages. Si on a remonté pour lire les anciens, on n'est pas ramené en bas.
+function fitLiveEvents(box) {
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 30;
+  let h = 0;
+  [...box.children].slice(-5).forEach((k) => { h += k.offsetHeight + 4; });
+  box.style.maxHeight = Math.min(h, window.innerHeight * 0.34) + 'px';
+  if (atBottom || box._fresh !== false) box.scrollTop = box.scrollHeight;
+  box._fresh = false;
 }
 
 async function pollLiveEvents() {
@@ -6830,6 +6970,7 @@ async function pollLiveEvents() {
     appendLiveEvents(d.events);
     liveEl('live-viewers').textContent = d.viewers;
     liveEl('live-gifts-total').textContent = formatMoney(d.giftsTotal, 'USD');
+    liveEl('live-money').textContent = formatMoney(d.giftsTotal, 'USD');
     if (d.status === 'termine' && LIVE.role === 'viewer') {
       LIVE.ended = true;
       liveEl('live-status').textContent = 'Le live est terminé.';
@@ -6903,7 +7044,7 @@ async function hostTick() {
 }
 
 function toggleLiveMic() {
-  const stream = LIVE?.role === 'host' ? LIVE.stream : LIVE?.guestStream;
+  const stream = LIVE && LIVE.role !== 'viewer' ? LIVE.stream : LIVE?.guestStream;
   if (!stream) return;
   const track = stream.getAudioTracks()[0];
   if (!track) return;
@@ -6968,6 +7109,10 @@ async function sendLiveChat() {
   const input = liveEl('live-input');
   const text = input.value.trim();
   if (!text || !LIVE) return;
+  if (LIVE.role === 'test') {
+    input.value = '';
+    return appendLiveEvents([{ id: LIVE.lastEvent + 1, kind: 'message', author_name: i18nT('Toi'), text }]);
+  }
   try { await apiCall(`/api/live/${LIVE.id}/chat`, { method: 'POST', body: { text } }); }
   catch (e) { return showToast(e.message); }
   input.value = '';
@@ -6997,6 +7142,14 @@ async function closeLive() {
   const live = LIVE;
   LIVE = null;
   (live.timers || []).forEach(clearInterval);
+  liveToolStop(live);
+  if (live.role === 'test') {
+    stopLiveBackground(live);
+    live.stream?.getTracks().forEach(t => t.stop());
+    liveEl('live-video').srcObject = null;
+    liveEl('live-overlay').style.display = 'none';
+    return;
+  }
   if (live.role === 'host') {
     Object.values(live.pcs).forEach(pc => pc.close());
     stopLiveBackground(live);
@@ -7451,8 +7604,8 @@ function edApplyVoice() {
 // Petit générateur pseudo-aléatoire stable : l'aperçu et la vidéo finale ont exactement les mêmes effets.
 function edRand(i, k) { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); }
 
-function edDrawEffect(g, W, H, t) {
-  const fx = EDITOR.effect;
+function edDrawEffect(g, W, H, t, fxOverride) {
+  const fx = fxOverride || EDITOR.effect;
   if (fx === 'vignette') {
     const r = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75);
     r.addColorStop(0, 'rgba(0,0,0,0)'); r.addColorStop(1, 'rgba(0,0,0,.75)');
@@ -9319,7 +9472,7 @@ function swapVideoSender(pc, track) {
 
 async function setLiveBackground(id) {
   const live = LIVE; if (!live) return;
-  const isHost = live.role === 'host';
+  const isHost = live.role !== 'viewer';
   const stream = isHost ? live.stream : live.guestStream;
   if (!stream) return showToast('Ta caméra doit être allumée pour changer d\'arrière-plan.');
   if (!live.camTrack) live.camTrack = stream.getVideoTracks()[0];
@@ -9331,25 +9484,44 @@ async function setLiveBackground(id) {
   }
   if (LIVE !== live) return;
   live.bgId = id;
-  let track;
-  if (id === 'aucun') { if (live.bgProc) { live.bgProc.stop(); live.bgProc = null; } track = live.camTrack; }
-  else if (!live.bgProc) { live.bgProc = makeBgProcessor(live.camTrack, () => live.bgId); track = live.bgProc.track; }
-  if (track) {
+  let oldProc = null;
+  if (id === 'aucun') { if (live.bgProc) { oldProc = live.bgProc; live.bgProc = null; } }
+  else if (!live.bgProc) live.bgProc = makeBgProcessor(live.camTrack, () => live.bgId);
+  liveRoute(live);
+  if (oldProc) oldProc.stop();
+  renderLiveBg();
+}
+
+// Image envoyée : caméra → (arrière-plan) → (outils du créateur : filtre, éclairage, retouche, zoom, effets, texte).
+function liveRoute(live) {
+  const isHost = live.role !== 'viewer';
+  const stream = isHost ? live.stream : live.guestStream;
+  if (!stream) return;
+  if (!live.camTrack) live.camTrack = stream.getVideoTracks()[0];
+  const src = live.bgProc ? live.bgProc.track : live.camTrack;
+  let track = src, oldLook = null;
+  if (isHost && liveLookOn(live.look)) {
+    if (!live.lookProc) live.lookProc = makeLookProcessor(live);
+    live.lookProc.setSource(src);
+    track = live.lookProc.track;
+  } else if (live.lookProc) { oldLook = live.lookProc; live.lookProc = null; }
+  if (track && track !== stream.getVideoTracks()[0]) {
     const old = stream.getVideoTracks()[0];
     if (old && old !== track) stream.removeTrack(old);
     if (!stream.getVideoTracks().includes(track)) stream.addTrack(track);
     if (isHost) {
       if (live.mix) live.mix.hostVideo.srcObject = new MediaStream([track]);
       else {
-        for (const pc of Object.values(live.pcs)) swapVideoSender(pc, track);
+        for (const pc of Object.values(live.pcs || {})) swapVideoSender(pc, track);
         const v = liveEl('live-video'); v.srcObject = new MediaStream(stream.getTracks()); v.muted = true; v.play().catch(() => {});
       }
     } else if (live.guestPc) swapVideoSender(live.guestPc, track);
   }
-  renderLiveBg();
+  if (oldLook) oldLook.stop();
 }
 
 function stopLiveBackground(live) {
+  if (live.lookProc) { live.lookProc.stop(); live.lookProc = null; }
   if (live.bgProc) { live.bgProc.stop(); live.bgProc = null; }
   if (live.camTrack) { live.camTrack.stop(); live.camTrack = null; }
   live.bgId = 'aucun';
@@ -9365,6 +9537,197 @@ async function toggleLiveBg(show) {
   liveEl('live-guest-panel').style.display = 'none';
   renderLiveBg();
   if (!BG_LIBRARY) { await loadBgLibrary(); renderLiveBg(); }
+}
+
+// ==== Outils du créateur pendant le live (et le live d'essai) ====
+function liveLookDefault() { return { filter: 'aucun', light: 0, retouch: 0, zoom: 1, effect: 'aucun', text: '', textPos: 'haut' }; }
+function liveLook() { if (!LIVE) return null; if (!LIVE.look) LIVE.look = liveLookDefault(); return LIVE.look; }
+function liveLookOn(L) { return Boolean(L) && (L.filter !== 'aucun' || L.light || L.retouch || L.zoom > 1 || L.effect !== 'aucun' || L.text); }
+
+function liveDrawText(g, W, H, text, pos) {
+  // L'écran du téléphone coupe parfois les côtés de l'image : le texte reste dans la partie visible.
+  const VW = Math.min(W, H * (innerWidth / innerHeight));
+  const size = Math.round(VW / 13);
+  g.save();
+  g.font = `bold ${size}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const words = String(text).split(/\s+/), lines = [];
+  let line = '';
+  for (const w of words) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > VW * 0.74 && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line);
+  const lh = size * 1.25, total = lines.length * lh;
+  const cy = pos === 'bas' ? H * 0.64 : pos === 'milieu' ? H * 0.5 : H * 0.16;
+  const wmax = Math.max(...lines.map((l) => g.measureText(l).width)) + size;
+  g.fillStyle = 'rgba(0,0,0,.5)';
+  g.fillRect((W - wmax) / 2, cy - total / 2 - size * 0.3, wmax, total + size * 0.6);
+  g.fillStyle = '#fff';
+  lines.forEach((l, i) => g.fillText(l, W / 2, cy - total / 2 + lh * (i + 0.5)));
+  g.restore();
+}
+
+// Dessine la caméra (ou l'arrière-plan) avec les réglages du créateur, puis l'envoie aux spectateurs.
+function makeLookProcessor(live) {
+  const v = document.createElement('video');
+  v.muted = true; v.playsInline = true; v.autoplay = true;
+  const c = document.createElement('canvas'); c.width = 480; c.height = 640;
+  const g = c.getContext('2d');
+  const canFilter = 'filter' in g;
+  const P = { v, canvas: c, srcTrack: null };
+  const draw = () => {
+    if (v.readyState < 2 || !v.videoWidth) return;
+    const L = live.look || liveLookDefault();
+    const W = Math.min(640, v.videoWidth), H = Math.round(v.videoHeight * W / v.videoWidth);
+    if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+    const t = performance.now() / 1000;
+    const f = ED_FILTERS.find((x) => x.id === L.filter) || ED_FILTERS[0];
+    g.save();
+    g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+    if (L.effect === 'miroir') { g.translate(W, 0); g.scale(-1, 1); }
+    if (L.zoom > 1) { g.translate(W / 2, H / 2); g.scale(L.zoom, L.zoom); g.translate(-W / 2, -H / 2); }
+    if (canFilter) g.filter = edFilterCss(f.css, L.light);
+    g.drawImage(v, 0, 0, W, H);
+    g.restore();
+    if (!canFilter && L.light) { g.save(); g.fillStyle = L.light > 0 ? `rgba(255,255,255,${Math.min(0.45, L.light * 0.7)})` : `rgba(0,0,0,${Math.min(0.5, -L.light * 0.8)})`; g.fillRect(0, 0, W, H); g.restore(); }
+    if (L.retouch > 0) {
+      const r = P.rtC || (P.rtC = document.createElement('canvas'));
+      const rw = Math.max(1, Math.round(W / (5 + 3 * L.retouch))), rh = Math.max(1, Math.round(H / (5 + 3 * L.retouch)));
+      if (r.width !== rw || r.height !== rh) { r.width = rw; r.height = rh; }
+      const rg = r.getContext('2d'); rg.imageSmoothingEnabled = true;
+      if (canFilter) rg.filter = `brightness(${1 + 0.08 * L.retouch}) saturate(1.06)`;
+      rg.drawImage(c, 0, 0, rw, rh);
+      g.save(); g.globalAlpha = 0.5 * L.retouch; g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(r, 0, 0, W, H); g.restore();
+    }
+    if (f.tint) { g.save(); g.globalCompositeOperation = 'soft-light'; g.fillStyle = f.tint; g.fillRect(0, 0, W, H); g.restore(); }
+    if (f.vignette && L.effect !== 'vignette') edDrawEffect(g, W, H, t, 'vignette');
+    if (L.effect !== 'aucun' && L.effect !== 'miroir') edDrawEffect(g, W, H, t, L.effect);
+    if (L.text) liveDrawText(g, W, H, L.text, L.textPos);
+  };
+  const timer = setInterval(draw, 66);
+  const out = c.captureStream(15).getVideoTracks()[0];
+  P.track = out;
+  P.setSource = (track) => { if (track && P.srcTrack !== track) { P.srcTrack = track; v.srcObject = new MediaStream([track]); v.play().catch(() => {}); } };
+  P.stop = () => { clearInterval(timer); out.stop(); v.srcObject = null; };
+  return P;
+}
+
+const LIVE_TOOL_TITLES = { filtres: '🎨 Filtres', eclairage: '💡 Éclairage', retouche: '✨ Retouche', effets: '🎉 Effets', zoom: '🔍 Zoom', texte: '🔤 Texte' };
+function liveTool(name) {
+  const live = LIVE; if (!live || live.role === 'viewer') return;
+  const panel = liveEl('live-tool');
+  if (!name || live.tool === name) { live.tool = null; panel.style.display = 'none'; liveToolStop(live); liveMarkTools(); return; }
+  live.tool = name;
+  liveEl('live-bg-panel').style.display = 'none';
+  liveEl('live-guest-panel').style.display = 'none';
+  liveEl('live-tool-title').textContent = i18nT(LIVE_TOOL_TITLES[name] || '');
+  liveRenderTool();
+  panel.style.display = 'block';
+  liveMarkTools();
+}
+function liveMarkTools() {
+  const L = LIVE && LIVE.look;
+  document.querySelectorAll('#live-side button[data-lt]').forEach((b) => {
+    const k = b.dataset.lt;
+    const active = L && ((k === 'filtres' && L.filter !== 'aucun') || (k === 'eclairage' && L.light) || (k === 'retouche' && L.retouch)
+      || (k === 'effets' && L.effect !== 'aucun') || (k === 'zoom' && L.zoom > 1) || (k === 'texte' && L.text));
+    b.classList.toggle('on', Boolean(active) || (LIVE && LIVE.tool === k));
+  });
+}
+const LIVE_FMT = {
+  light: (v) => (v > 0 ? '+' : '') + Math.round(v * 100) + ' %',
+  retouch: (v) => Math.round(v * 100) + ' %',
+  zoom: (v) => v.toFixed(1) + 'x',
+};
+function liveRange(key, min, max, step) {
+  const L = liveLook();
+  return `<div class="lt-range"><input type="range" min="${min}" max="${max}" step="${step}" value="${L[key]}" oninput="liveSet('${key}', Number(this.value)); this.nextElementSibling.textContent = LIVE_FMT['${key}'](Number(this.value));"><span>${LIVE_FMT[key](L[key])}</span></div>`;
+}
+function liveRenderTool() {
+  const live = LIVE; if (!live || !live.tool) return;
+  const L = liveLook(), body = liveEl('live-tool-body');
+  liveToolStop(live);
+  if (live.tool === 'filtres') {
+    body.innerHTML = `<div class="lt-row">${ED_FILTERS.map((x) => `<button class="${L.filter === x.id ? 'sel' : ''}" onclick="liveSet('filter','${x.id}');liveRenderTool();"><canvas width="96" height="96" style="filter:${x.css === 'none' ? 'none' : x.css};"></canvas>${escapeHtml(i18nT(x.label))}</button>`).join('')}</div>`;
+    liveFilterThumbs(live);
+  } else if (live.tool === 'eclairage') {
+    body.innerHTML = liveRange('light', -0.5, 0.5, 0.05);
+  } else if (live.tool === 'retouche') {
+    body.innerHTML = liveRange('retouch', 0, 1, 0.1);
+  } else if (live.tool === 'zoom') {
+    body.innerHTML = liveRange('zoom', 1, 3, 0.1);
+  } else if (live.tool === 'effets') {
+    body.innerHTML = `<div class="lt-row">${ED_EFFECTS.filter((x) => x.id !== 'zoom').map((x) => `<button class="${L.effect === x.id ? 'sel' : ''}" onclick="liveSet('effect','${x.id}');liveRenderTool();">${escapeHtml(i18nT(x.label))}</button>`).join('')}</div>`;
+  } else if (live.tool === 'texte') {
+    body.innerHTML = `<div class="lt-text"><input id="lt-text-in" maxlength="80" placeholder="${escapeHtml(i18nT('Texte à afficher sur le live'))}" value="${escapeHtml(L.text)}"><button class="mini-btn" onclick="liveSet('text', liveEl('lt-text-in').value.trim())">${escapeHtml(i18nT('Afficher'))}</button></div>
+      <div class="lt-row">${[['haut', 'En haut'], ['milieu', 'Au milieu'], ['bas', 'En bas']].map(([k, l]) => `<button class="${L.textPos === k ? 'sel' : ''}" onclick="liveSet('textPos','${k}');liveRenderTool();">${escapeHtml(i18nT(l))}</button>`).join('')}
+      <button onclick="liveSet('text','');liveRenderTool();">🗑️ ${escapeHtml(i18nT('Effacer'))}</button></div>`;
+  }
+}
+function liveSet(key, value) {
+  const live = LIVE; if (!live) return;
+  const L = liveLook();
+  L[key] = value;
+  liveRoute(live);
+  liveMarkTools();
+}
+// Aperçus des filtres avec la vraie image de la caméra.
+function liveFilterThumbs(live) {
+  const src = live.bgProc ? live.bgProc.track : (live.camTrack || live.stream?.getVideoTracks()[0]);
+  if (!src) return;
+  const v = hiddenVideo(new MediaStream([src]));
+  const tick = () => {
+    if (v.readyState < 2 || !v.videoWidth) return;
+    document.querySelectorAll('#live-tool-body canvas').forEach((cv) => drawCover(cv.getContext('2d'), v, 0, 0, cv.width, cv.height));
+  };
+  live.thumb = { v, timer: setInterval(tick, 400) };
+  tick();
+}
+function liveToolStop(live) {
+  if (live && live.thumb) { clearInterval(live.thumb.timer); live.thumb.v.srcObject = null; live.thumb = null; }
+}
+
+// 🔄 Caméra avant / arrière.
+async function liveFlipCamera() {
+  const live = LIVE; if (!live || live.role === 'viewer') return;
+  const facing = live.facing === 'environment' ? 'user' : 'environment';
+  let s;
+  try { s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } }); }
+  catch (e) { return showToast(i18nT('Impossible de changer de caméra sur ce téléphone.')); }
+  if (LIVE !== live) { s.getTracks().forEach((t) => t.stop()); return; }
+  const stream = live.stream;
+  if (!live.camTrack) live.camTrack = stream.getVideoTracks()[0];
+  const oldCam = live.camTrack;
+  live.camTrack = s.getVideoTracks()[0];
+  live.facing = facing;
+  let oldBg = null;
+  if (live.bgProc) { oldBg = live.bgProc; live.bgProc = makeBgProcessor(live.camTrack, () => live.bgId); }
+  liveRoute(live);
+  if (oldBg) oldBg.stop();
+  if (oldCam && oldCam !== live.camTrack) oldCam.stop();
+  liveEl('live-torch-btn').classList.remove('on');
+  if (live.tool === 'filtres') liveRenderTool();
+}
+// 🔦 Flash (lampe) : seulement si la caméra du téléphone le permet (souvent la caméra arrière).
+async function liveTorch() {
+  const live = LIVE; if (!live || live.role === 'viewer') return;
+  const track = live.camTrack || live.stream?.getVideoTracks()[0];
+  const caps = track && track.getCapabilities ? track.getCapabilities() : {};
+  if (!caps || !caps.torch) return showToast(i18nT('Le flash marche avec la caméra arrière, si ton téléphone le permet. Touche 🔄 Retourner.'));
+  const on = !liveEl('live-torch-btn').classList.contains('on');
+  try { await track.applyConstraints({ advanced: [{ torch: on }] }); liveEl('live-torch-btn').classList.toggle('on', on); }
+  catch (e) { showToast(i18nT('Le flash ne répond pas sur ce téléphone.')); }
+}
+
+// 🧪 Live d'essai : caméra, outils et messages sur ton téléphone seulement. Rien n'est envoyé, personne ne te voit.
+async function startLiveTest() {
+  if (LIVE && LIVE.role === 'test') { liveEl('live-overlay').style.display = 'flex'; return; }
+  if (LIVE) return showToast(i18nT('Un live est déjà en cours.'));
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true }); }
+  catch (e) { return showToast(i18nT('Autorise la caméra et le micro pour faire un live d\'essai.')); }
+  LIVE = { id: null, role: 'test', stream, pcs: {}, guests: {}, timers: [], lastEvent: 0, look: liveLookDefault() };
+  openLiveOverlay('test', i18nT("Live d'essai"));
+  const video = liveEl('live-video');
+  video.srcObject = stream; video.muted = true; video.play().catch(() => {});
+  liveEl('live-status').textContent = i18nT("🧪 Live d'essai : personne ne te voit et rien n'est publié. Essaie les outils à droite et écris un message pour voir l'affichage.");
 }
 
 // ==== Collage de photos et de vidéos ====
@@ -13951,6 +14314,17 @@ if (PLAY_APP) {
 </div>
 <input type="file" id="bg-photo-file" accept="image/*" style="display:none;" onchange="bgPhotoFile(this)">
 
+<!-- Choix des pays d'un continent (Découvrir) -->
+<div class="cpick-back" id="cpick-back" onclick="closeCountryPicker()"></div>
+<div class="cpick" id="cpick">
+  <div class="cpick-head"><b id="cpick-title"></b><button class="mini-btn" onclick="closeCountryPicker()">✕</button></div>
+  <input class="field" id="cpick-search" placeholder="🔍 Chercher un pays" oninput="renderCountryPicker()" style="margin:0;">
+  <div class="cpick-list" id="cpick-list"></div>
+  <div class="cpick-foot">
+    <button class="mini-btn" onclick="cpickAll()" id="cpick-all">Tout cocher</button>
+    <button class="primary-btn" style="width:auto;padding:10px 14px;" onclick="applyCountryPicker()">Voir les publications</button>
+  </div>
+</div>
 <div class="live-overlay" id="live-overlay">
   <video id="live-video" autoplay playsinline></video>
   <div class="live-top">
@@ -13960,6 +14334,23 @@ if (PLAY_APP) {
     <span class="live-pill">🎁 <span id="live-gifts-total">0</span></span>
   </div>
   <div class="live-status" id="live-status"></div>
+  <!-- Créateur : argent reçu pendant ce live + outils (comme dans la modification d'une vidéo) -->
+  <div class="live-side" id="live-side">
+    <div class="live-money" title="Reçu pendant ce live">💰 <span id="live-money">0</span><small>reçu en direct</small></div>
+    <button data-lt="filtres" onclick="liveTool('filtres')"><span>🎨</span>Filtres</button>
+    <button data-lt="eclairage" onclick="liveTool('eclairage')"><span>💡</span>Éclairage</button>
+    <button data-lt="retouche" onclick="liveTool('retouche')"><span>✨</span>Retouche</button>
+    <button data-lt="effets" onclick="liveTool('effets')"><span>🎉</span>Effets</button>
+    <button data-lt="zoom" onclick="liveTool('zoom')"><span>🔍</span>Zoom</button>
+    <button data-lt="texte" onclick="liveTool('texte')"><span>🔤</span>Texte</button>
+    <button onclick="liveFlipCamera()"><span>🔄</span>Retourner</button>
+    <button id="live-torch-btn" onclick="liveTorch()"><span>🔦</span>Flash</button>
+    <button onclick="liveTool(null);toggleLiveBg(liveEl('live-bg-panel').style.display !== 'block')"><span>🏞️</span>Fond</button>
+  </div>
+  <div class="live-tool" id="live-tool">
+    <div class="live-tool-head"><b id="live-tool-title"></b><button onclick="liveTool(null)">✕</button></div>
+    <div id="live-tool-body"></div>
+  </div>
   <div class="live-bottom">
     <div class="live-events" id="live-events"></div>
     <div class="live-gift-row" id="live-gift-row"></div>
