@@ -591,6 +591,24 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
 .topbar .brand{color:var(--on-gold);}
 .topbar .brand span{color:#8A3F00;}
 .topbar .logout-top{color:var(--on-gold);border-color:rgba(43,29,3,.45);background:rgba(255,255,255,.2);}
+/* En-tête : grand logo « Eaji » aux couleurs qui changent, cloche, recherche (Découvrir), profil, menu */
+.app > .topbar{padding:10px 12px 8px;gap:8px;}
+.topbar .top-right{display:flex;align-items:center;gap:6px;flex:1;min-width:0;justify-content:flex-end;}
+.topbar .top-right .bell{margin:0;}
+.topbar .top-right .bell + .bell,.topbar .top-right .avatar + .bell{margin:0!important;}
+.brand.brand-anim{font-size:34px;font-weight:800;letter-spacing:-0.02em;line-height:1;flex:none;text-shadow:0 1px 0 rgba(255,255,255,.35),0 2px 6px rgba(43,29,3,.18);}
+.topbar .brand.brand-anim span{display:inline-block;transition:color 1.4s ease,transform 1.4s ease;color:var(--on-gold);}
+.top-search{flex:1;min-width:0;display:none;}
+.top-search .field{margin:0;width:100%;height:38px;padding:0 12px;border-radius:12px;font-size:12.5px;background:#1B1E29;color:#F3F1EB;border:1px solid rgba(43,29,3,.35);text-overflow:ellipsis;}
+.top-search .field::placeholder{color:#AEB3C2;}
+body.on-decouvrir .top-search{display:block;}
+/* Tendances + lives + pays dans un cadre */
+.disc-frame{background:rgba(255,255,255,.22);border:1px solid rgba(43,29,3,.14);border-radius:18px;padding:10px 10px 2px;margin:8px 0 12px;box-shadow:0 4px 14px rgba(60,40,0,.10);}
+.disc-frame .trend-row{margin:0 0 8px;}
+.disc-frame .live-strip:empty{display:none;}
+#s-decouvrir .disc-frame .scope-row{margin:0 0 8px;}
+/* Légende d'une photo ou vidéo : 4 lignes, puis « Voir plus » */
+.feed-title.clamp4:not(.open){display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
 #up-price-wrap .field-label{color:var(--on-gold-muted);}
 .screen .section-title,.screen .feed-empty,.screen > .feed-type,.screen > p.feed-type,.creator-head .feed-type,
 .screen > .field-label,.screen .avatar-edit-label,.screen > .form-success,#dm-list-view > .section-title,#dm-thread-view > .section-title{color:var(--on-gold);}
@@ -1468,10 +1486,11 @@ window.eajiLoader = (function () {
 
 <div class="app" id="app-shell" style="display:none;">
   <div class="topbar">
-    <div class="brand">Ea<span>ji</span></div>
-    <div style="display:flex;align-items:center;">
+    <div class="brand brand-anim" id="brand-anim" translate="no"><span>E</span><span>a</span><span>j</span><span>i</span></div>
+    <div class="top-right">
       <div class="bell" onclick="toggleNotifications()" title="Notifications">🔔<span class="bell-count" id="notif-count"></span></div>
-      <button class="logout-top" onclick="logoutCreator()">D&eacute;connexion</button>
+      <!-- Recherche (Découvrir) dans l'en-tête ; la déconnexion est dans Profil -->
+      <div class="top-search" id="top-search"><input class="field" id="search-input" placeholder="🔍 Chercher un créateur ou une publication" oninput="onSearchInput()"></div>
       <div class="avatar" onclick="document.querySelector('.tab[data-target=\'s-profil\']').click()" style="cursor:pointer;">A</div>
       <div class="bell" style="margin:0 0 0 8px;color:var(--on-gold);font-size:22px;font-weight:900;line-height:1;" onclick="toggleAppMenu()" title="Menu">⋮</div>
     </div>
@@ -1535,15 +1554,15 @@ window.eajiLoader = (function () {
         <button class="mini-btn" id="push-banner-btn" onclick="enablePush(true)">Activer</button>
         <button class="push-x" title="Plus tard" onclick="dismissPushBanner()">✕</button>
       </div>
-      <div class="section-title" style="margin-top:14px;">Contenus de la communaut&eacute;</div>
-      <div class="search-box"><input class="field" id="search-input" placeholder="🔍 Chercher un créateur ou une publication" oninput="onSearchInput()"></div>
       <div id="search-results"></div>
+      <div class="disc-frame">
       <div class="trend-row" id="trend-row" style="display:none;"></div>
       <div class="live-strip" id="live-strip"></div>
       <div class="scope-row">
         <button class="scope-btn sel" id="scope-country" onclick="setFeedScope('pays')">Mon pays</button>
         <button class="scope-btn" id="scope-all" onclick="setFeedScope('tout')">Partout</button>
         <span id="scope-zones" style="display:contents;"></span>
+      </div>
       </div>
       <div class="tag-bar" id="tag-bar" style="display:none;"><b translate="no"></b><span id="tag-count"></span><button class="mini-btn" onclick="closeHashtag()">✕ Retour au fil</button></div>
       <div id="feed-list"></div>
@@ -2212,10 +2231,23 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.15c';
+const APP_VERSION = '2026.11.16a';
 
+// Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
+const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
+function brandTick() {
+  if (document.hidden) return;
+  const used = new Set();
+  document.querySelectorAll('#brand-anim span').forEach((sp) => {
+    let c; do { c = BRAND_COLORS[Math.floor(Math.random() * BRAND_COLORS.length)]; } while (used.has(c) && used.size < BRAND_COLORS.length);
+    used.add(c); sp.style.color = c;
+  });
+}
+brandTick(); setInterval(brandTick, 2600);
+document.body.classList.toggle('on-decouvrir', !!document.querySelector('#s-decouvrir.active'));
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
+    document.body.classList.toggle('on-decouvrir', btn.dataset.target === 's-decouvrir');
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     btn.classList.add('active');
@@ -3484,7 +3516,13 @@ function cutFirstParaHtml(text) {
 }
 function feedTitleHtml(item) {
   const title = String(item.title || '');
-  const c = cutFirstParaHtml(title);
+  // Photo, vidéo, musique… : la légende tient sur 4 lignes, « Voir plus » si elle est plus longue.
+  if (!(item.content_type === 'publication' && item.text_only)) {
+    return `<p class="feed-title clamp4" translate="no" onclick="toggleCut(this)">${tagifyHtml(escapeHtml(title))}</p>`
+      + `<button class="more-btn clamp-more" style="display:none;" onclick="event.stopPropagation();toggleMoreText(this)">${escapeHtml(i18nT('Voir plus'))}</button>`;
+  }
+  // Publication texte : le texte se lit en entier, « Voir plus » seulement s'il est très long.
+  const c = cutTextHtml(title);
   const more = c.cut ? moreBtnHtml() : '';
   const p = `<p class="feed-title${c.cut ? ' cut' : ''}" translate="no"${c.cut ? ' onclick="toggleCut(this)"' : ''}>${tagifyHtml(c.html)}</p>`;
   if (item.content_type === 'publication' && item.text_only) {
@@ -3506,9 +3544,21 @@ function toggleCut(el) {
 function toggleMoreText(btn) {
   const prev = btn.previousElementSibling;
   if (!prev) return;
-  const t = prev.classList.contains('cut') ? prev : prev.querySelector('.cut');
+  const t = prev.classList.contains('cut') || prev.classList.contains('clamp4') ? prev : prev.querySelector('.cut, .clamp4');
   if (t) toggleCut(t);
 }
+// Affiche « Voir plus » sous les légendes qui dépassent 4 lignes.
+function fitClamps() {
+  document.querySelectorAll('.feed-title.clamp4:not([data-fit])').forEach((p) => {
+    if (!p.offsetParent) return; // écran caché : mesuré plus tard
+    p.dataset.fit = '1';
+    const btn = p.nextElementSibling;
+    if (btn && btn.classList.contains('clamp-more')) btn.style.display = p.scrollHeight > p.clientHeight + 2 ? '' : 'none';
+  });
+}
+let FIT_CLAMP_T = null;
+new MutationObserver(() => { clearTimeout(FIT_CLAMP_T); FIT_CLAMP_T = setTimeout(fitClamps, 120); }).observe(document.body, { childList: true, subtree: true });
+document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.tab')) setTimeout(fitClamps, 150); });
 
 // Carte d'une publication (utilisée dans le fil et sur le profil d'un créateur).
 function feedCardHtml(item) {
