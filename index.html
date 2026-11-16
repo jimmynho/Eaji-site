@@ -639,7 +639,10 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
 .topbar .top-right .bell{margin:0;}
 .topbar .top-right .bell + .bell,.topbar .top-right .avatar + .bell{margin:0!important;}
 .brand.brand-anim{font-size:34px;font-weight:800;letter-spacing:-0.02em;line-height:1;flex:none;text-shadow:0 1px 0 rgba(255,255,255,.35),0 2px 6px rgba(43,29,3,.18);}
-.topbar .brand.brand-anim span{display:inline-block;transition:color 1.4s ease,transform 1.4s ease;color:var(--on-gold);}
+.topbar .brand.brand-anim span{display:inline-block;color:var(--on-gold);}
+.topbar .brand.brand-anim span.b-in{animation:brandIn .45s cubic-bezier(.2,1.4,.4,1) both;}
+@keyframes brandIn{0%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r)) scale(.3);}100%{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){.topbar .brand.brand-anim span.b-in{animation:none;}}
 .top-search{flex:1;min-width:0;display:none;}
 .top-search .field{margin:0;width:100%;height:38px;padding:0 12px;border-radius:12px;font-size:12.5px;background:#1B1E29;color:#F3F1EB;border:1px solid rgba(43,29,3,.35);text-overflow:ellipsis;}
 .top-search .field::placeholder{color:#AEB3C2;}
@@ -1096,6 +1099,41 @@ textarea.grow-ta.tp-live.tp-dark{color:#1A1206;}
 textarea.grow-ta.tp-live.tp-dark::placeholder{color:rgba(26,18,6,.6);}
 textarea.grow-ta.tp-live:not(.tp-dark)::placeholder{color:rgba(255,255,255,.75);}
 textarea.grow-ta.tp-live.tp-panel{text-shadow:0 1px 3px rgba(0,0,0,.85);color:#fff;}
+/* ==== Thème « diamant » : plus de noir dans l'application (seulement diamant qui brille + jaune) ==== */
+:root{
+  --bg:#EEF6FF; --surface:#F6FBFF; --surface2:#E7F2FC; --line:#C9DDEE;
+  --text:#1D2230; --muted:#5B6579;
+  --diamond:linear-gradient(135deg,#ffffff 0%,#eef8ff 30%,#f6f0ff 58%,#eafaff 80%,#ffffff 100%);
+  --diamond-edge:linear-gradient(120deg,#ffffff,#9fe3ff,#e9fbff,#cbb8ff,#ffffff,#8fdcff,#f2ecff,#ffffff);
+}
+/* Écrans vidéo plein écran (caméra, montage, live, appels, lecteurs) : fond sombre comme avant, pour bien voir l'image */
+.ed-overlay,.cam-overlay,.live-overlay,.reel,.mp,.dv,.pv,.call-overlay,.st-view,.gcall,.pub-wait,.mp-mini,#mp-mini{
+  --bg:#12141C; --surface:#1B1E29; --surface2:#232838; --line:#2C3140; --text:#F3F1EB; --muted:#8A8FA0;
+  color:var(--text);
+}
+/* Cartes, panneaux et fenêtres : diamant brillant (fond irisé + bord scintillant) */
+.feed-card,.hero-card,.stat-card,.settings-block,.sheet-card,.pay-card,.notif-panel,.lt-card,.cpick,.msg-menu-card,.onboarding-card,
+.info-list,.creator-head,.dm-row,.conv-row,.wallet-card,.pin-card{
+  background:var(--diamond) padding-box,var(--diamond-edge) border-box!important;
+  border:1.5px solid transparent!important;
+  box-shadow:0 4px 16px rgba(60,40,0,.12),0 0 0 1px rgba(255,255,255,.5) inset,0 0 12px rgba(160,225,255,.28);
+  color:var(--text);
+}
+/* Fil Découvrir : cartes de bord à bord, séparées par un fin trait irisé au lieu du noir */
+#s-decouvrir #feed-list .feed-card{border-radius:0;box-shadow:none;border-width:0 0 3px 0!important;}
+.field,select.field,textarea.field{background:#ffffff;color:var(--text);border-color:var(--line);}
+.field::placeholder{color:#8B93A6;}
+.more-btn{color:#B45309;}
+.feed-type,.feed-meta{color:var(--muted);}
+.tabbar .tab{color:#4A3A1A;}
+/* Boutons noirs / brun foncé → jaune (texte foncé) ; boutons « choisi » → jaune */
+.screen > .primary-btn,.screen > div > .primary-btn,.btn-on-gold,.pub-go{background:linear-gradient(135deg,#F7C766,#F0A63C)!important;color:#2B1D03!important;border-color:#D9902A!important;box-shadow:0 3px 10px rgba(180,110,10,.25);}
+.scope-btn.sel{background:linear-gradient(135deg,#F7C766,#F0A63C);color:#2B1D03;border-color:#D9902A;}
+.scope-btn{background:var(--diamond) padding-box,var(--diamond-edge) border-box;border:1.5px solid transparent;color:var(--text);}
+.trend-chip{background:var(--diamond) padding-box,var(--diamond-edge) border-box;border:1.5px solid transparent;}
+/* Recherche de l'en-tête : claire */
+.top-search .field{background:#ffffff;color:var(--text);border:1.5px solid #bfe6ff;}
+.top-search .field::placeholder{color:#6B7488;}
 </style>
 <style>.i18n-wait body{visibility:hidden;}.lang-pick{display:flex;justify-content:flex-end;margin:-6px 0 8px;}.lang-pick select{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:5px 10px;font-size:12px;}
 .lang-list button{display:flex;justify-content:space-between;width:100%;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:12px;padding:12px 14px;margin:6px 0;font-size:15px;cursor:pointer;}
@@ -2289,19 +2327,27 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.16d';
+const APP_VERSION = '2026.11.16e';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
+// Comme à l'ouverture : les lettres arrivent une par une, dans un ordre et des couleurs au hasard.
 function brandTick() {
   if (document.hidden) return;
   const used = new Set();
-  document.querySelectorAll('#brand-anim span').forEach((sp) => {
+  const spans = [...document.querySelectorAll('#brand-anim span')];
+  const order = spans.map((_, i) => i).sort(() => Math.random() - 0.5);
+  spans.forEach((sp, i) => {
     let c; do { c = BRAND_COLORS[Math.floor(Math.random() * BRAND_COLORS.length)]; } while (used.has(c) && used.size < BRAND_COLORS.length);
     used.add(c); sp.style.color = c;
+    sp.style.setProperty('--x', (Math.random() * 40 - 20).toFixed(0) + 'px');
+    sp.style.setProperty('--y', (Math.random() * 30 - 15).toFixed(0) + 'px');
+    sp.style.setProperty('--r', (Math.random() * 90 - 45).toFixed(0) + 'deg');
+    sp.style.animationDelay = (order.indexOf(i) * 110) + 'ms';
+    sp.classList.remove('b-in'); void sp.offsetWidth; sp.classList.add('b-in');
   });
 }
-brandTick(); setInterval(brandTick, 2600);
+brandTick(); setInterval(brandTick, 4000);
 document.body.classList.toggle('on-decouvrir', !!document.querySelector('#s-decouvrir.active'));
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
