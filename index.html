@@ -366,12 +366,12 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 .live-events.fit5{-webkit-mask-image:linear-gradient(transparent,#000 14px);mask-image:linear-gradient(transparent,#000 14px);}
 /* Outils du créateur pendant le live (colonne à droite) */
 .live-overlay.has-side .live-status{padding-right:84px;}
-.live-side{position:absolute;right:8px;top:calc(62px + env(safe-area-inset-top,0px));z-index:3;display:none;flex-direction:column;gap:6px;max-height:calc(100vh - 380px - env(safe-area-inset-top,0px));overflow-y:auto;scrollbar-width:none;align-items:flex-end;}
+.live-side{position:absolute;right:8px;top:calc(62px + env(safe-area-inset-top,0px));z-index:3;display:none;flex-direction:column;gap:4px;max-height:calc(100vh - 330px - env(safe-area-inset-top,0px));overflow-y:auto;scrollbar-width:none;align-items:flex-end;}
 .live-side::-webkit-scrollbar{display:none;}
 .live-money{background:rgba(240,166,60,.95);color:#1A1206;font-weight:800;border-radius:12px;padding:6px 9px;font-size:12.5px;white-space:nowrap;text-align:center;}
 .live-money small{display:block;font-weight:600;font-size:10px;}
-.live-side button{width:58px;border:none;border-radius:12px;background:rgba(0,0,0,.55);color:#fff;font-size:10.5px;font-weight:700;padding:6px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;}
-.live-side button span{font-size:19px;line-height:1.1;}
+.live-side button{width:58px;border:none;border-radius:12px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:700;padding:4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;flex:none;}
+.live-side button span{font-size:17px;line-height:1.1;}
 .live-side button.on{background:rgba(240,166,60,.9);color:#1A1206;}
 .live-tool{position:absolute;left:0;right:0;bottom:0;z-index:4;display:none;background:rgba(12,12,18,.94);color:#fff;border-radius:18px 18px 0 0;padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));max-height:46vh;overflow-y:auto;}
 .live-tool-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
@@ -385,7 +385,7 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 .lt-range{display:flex;align-items:center;gap:10px;}
 .lt-lab{margin:10px 0 4px;font-size:12.5px;font-weight:700;color:#cfd3dc;}
 /* Live audio / podcast : pas d'outils vidéo */
-.live-overlay.audio .live-side button,.live-overlay.audio #live-bg-btn{display:none!important;}
+.live-overlay.audio .live-side button,.live-overlay.audio #live-bg-btn,.live-overlay.audio #live-flip-btn{display:none!important;}
 /* Invités confirmés, à l'écran (créateur) */
 .live-stage{position:absolute;left:10px;right:84px;top:calc(96px + env(safe-area-inset-top,0px));z-index:3;display:none;flex-wrap:wrap;gap:6px;}
 .live-stage span,.live-stage button{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:99px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;font-weight:700;padding:5px 10px;}
@@ -2212,7 +2212,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.15b';
+const APP_VERSION = '2026.11.15c';
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -3910,10 +3910,54 @@ function pickRegPhoto(input) {
   if (!file) return;
   if (!(file.type || '').startsWith('image/')) { document.getElementById('reg-photo-note').textContent = i18nT('Choisis une photo.'); return; }
   REG_PHOTO = file;
+  regPhotoKeep(file);
   const prev = document.getElementById('reg-photo-preview');
   prev.textContent = '';
   prev.style.backgroundImage = `url("${URL.createObjectURL(file)}")`;
   document.getElementById('reg-photo-note').textContent = i18nT('Photo choisie : elle sera ajoutée à ton profil dès la création du compte.');
+}
+// La photo est aussi gardée sur le téléphone (réduite) : si l'appli se recharge pendant l'inscription
+// (par exemple en allant lire le code dans Gmail), elle est quand même ajoutée au profil à la connexion.
+const REG_PHOTO_KEY = 'eaji_reg_photo';
+function regPhotoRead() { try { return JSON.parse(storeGet(REG_PHOTO_KEY) || 'null'); } catch (e) { return null; } }
+function regPhotoForget() { try { localStorage.removeItem(REG_PHOTO_KEY); sessionStorage.removeItem(REG_PHOTO_KEY); } catch (e) {} }
+function regPhotoKeep(file) {
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = () => {
+    try {
+      const k = Math.min(1, 720 / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      storeSet(REG_PHOTO_KEY, JSON.stringify({ data: c.toDataURL('image/jpeg', 0.85), at: Date.now(), creatorId: null, tries: 0 }));
+    } catch (e) {}
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+}
+function regPhotoTag(creatorId) {
+  const r = regPhotoRead(); if (!r) return;
+  r.creatorId = creatorId; storeSet(REG_PHOTO_KEY, JSON.stringify(r));
+}
+let REG_PHOTO_BUSY = false;
+async function regPhotoResume() {
+  if (REG_PHOTO_BUSY || !CREATOR_TOKEN || !CREATOR_ID) return;
+  let file = REG_PHOTO;
+  const r = regPhotoRead();
+  if (!file && r && r.data && r.creatorId === CREATOR_ID) {
+    if (Date.now() - r.at > 7 * 864e5 || (r.tries || 0) >= 3) { regPhotoForget(); return; }
+    try { const blob = await (await fetch(r.data)).blob(); file = new File([blob], 'photo-profil.jpg', { type: 'image/jpeg' }); } catch (e) { return; }
+  }
+  if (!file) return;
+  REG_PHOTO = null; REG_PHOTO_BUSY = true;
+  const before = MY_PHOTO_URL;
+  try { await uploadProfilePhoto({ files: [file], value: '' }); } catch (e) {}
+  REG_PHOTO_BUSY = false;
+  if (MY_PHOTO_URL !== before && String(MY_PHOTO_URL || '').startsWith('blob:')) regPhotoForget();
+  else {
+    if (r && r.creatorId === CREATOR_ID) { r.tries = (r.tries || 0) + 1; storeSet(REG_PHOTO_KEY, JSON.stringify(r)); }
+    showToast(i18nT("Ta photo de profil n'a pas encore pu être ajoutée : elle sera réessayée à la prochaine ouverture. Tu peux aussi l'ajouter dans Profil."));
+  }
 }
 // Pays de l'inscription : tous les pays du monde dans une seule liste (la zone suit le pays automatiquement).
 function regAllCountries() {
@@ -4045,6 +4089,7 @@ async function registerCreator() {
     }
     if (!res.ok) throw new Error(data.error || 'Inscription impossible pour le moment.');
     CREATOR_ID = data.creatorId;
+    regPhotoTag(data.creatorId); // la photo choisie appartient à ce nouveau compte
   } catch (e) {
     // On affiche la vraie raison et on s'arrête : pas de faux « compte créé ».
     eajiLoader.hide();
@@ -4282,7 +4327,7 @@ async function verifyLoginCode() {
     afterLogin();
     eajiLoader.hide();
     // Photo choisie à l'inscription : ajoutée au profil maintenant que le compte est ouvert.
-    if (REG_PHOTO) { const f = REG_PHOTO; REG_PHOTO = null; uploadProfilePhoto({ files: [f], value: '' }).catch(() => {}); }
+    regPhotoResume();
     // Mot de passe provisoire donné par l'administrateur : on choisit le sien tout de suite.
     if (data.mustChangePassword) openMustChangePassword(tempPassword);
   } catch (e) {
@@ -4429,7 +4474,7 @@ async function loadProfile() {
   if (p.likesReceived != null) setLikesStat(p.likesReceived);
   // Le solde affiché est celui des gains réels (voir loadMoney).
   if (p.photoUrl) setAvatarImage(p.photoUrl);
-  else if (p.name) document.querySelectorAll('.avatar, #avatar-edit').forEach((el) => { el.textContent = p.name[0].toUpperCase(); });
+  else if (p.name && !MY_PHOTO_URL) document.querySelectorAll('.avatar, #avatar-edit').forEach((el) => { el.textContent = p.name[0].toUpperCase(); });
 }
 
 // ==== J'aime reçus : le total, et qui a aimé mes publications ====
@@ -4468,6 +4513,7 @@ async function afterLogin() {
   // À la connexion, on commence par découvrir les publications des autres.
   document.querySelector('.tab[data-target="s-decouvrir"]')?.click();
   await loadProfile().catch(() => {});
+  regPhotoResume(); // photo choisie à l'inscription pas encore envoyée
   loadRealData().catch(() => {});
   checkLiveEligibility();
   loadAiQuota();
@@ -6940,6 +6986,7 @@ function openLiveOverlay(role, title) {
   // Outils du créateur (live et live d'essai).
   liveEl('live-side').style.display = role === 'viewer' ? 'none' : 'flex';
   liveEl('live-overlay').classList.toggle('has-side', role !== 'viewer');
+  liveEl('live-flip-btn').style.display = role === 'viewer' ? 'none' : '';
   liveEl('live-money').textContent = formatMoney(0, 'USD');
   liveEl('live-tool').style.display = 'none';
   liveEl('live-torch-btn').classList.remove('on');
@@ -9755,6 +9802,9 @@ async function liveFlipCamera() {
   const open = (video) => navigator.mediaDevices.getUserMedia({ video });
   let s = null;
   try { s = await open({ facingMode: { exact: facing } }); } catch (e) {}
+  // Certains téléphones libèrent la caméra avec un petit retard : on réessaie une fois.
+  if (!s) { await new Promise((r) => setTimeout(r, 400)); try { s = await open({ facingMode: { exact: facing } }); } catch (e) {} }
+  if (!s) { try { s = await open({ facingMode: facing }); if (s && s.getVideoTracks()[0].getSettings().deviceId === oldId) { s.getTracks().forEach((t) => t.stop()); s = null; } } catch (e) { s = null; } }
   if (!s) {
     // Sinon : l'autre caméra de la liste (« back » / « arrière » / « environment » en priorité).
     try {
@@ -14664,6 +14714,7 @@ if (PLAY_APP) {
     </div>
     <div class="live-actions">
       <button id="live-mic-btn" onclick="toggleLiveMic()">🎙️ Micro</button>
+      <button id="live-flip-btn" onclick="liveFlipCamera()" style="display:none;flex:0 0 auto;padding:10px 12px;" title="Retourner la caméra">🔄</button>
       <button id="live-guest-btn" onclick="liveGuestButton()">🙋 Monter sur le live</button>
       <button id="live-bg-btn" onclick="toggleLiveBg(liveEl('live-bg-panel').style.display !== 'block')">🏞️ Fond</button>
       <button id="live-end-btn" onclick="closeLive()">Quitter</button>
