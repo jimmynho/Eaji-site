@@ -294,6 +294,23 @@ select.field{appearance:none;}
   display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:4px 2px;flex:1 1 0;min-width:0;}
 .tab.active{color:var(--gold);}
 .tab-ic{width:20px;height:20px;display:block;}
+/* Barre du bas « diamant » qui brille, comme la barre du haut */
+.tabbar{border-top:1.5px solid transparent;backdrop-filter:none;overflow:hidden;border-radius:22px 22px 0 0;
+  background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(226,246,255,.9) 38%,rgba(243,234,255,.9) 68%,rgba(255,255,255,.92)) padding-box,
+    linear-gradient(120deg,#ffffff,#9fe3ff,#e9fbff,#cbb8ff,#ffffff,#8fdcff,#f2ecff,#ffffff) border-box;
+  background-size:100% 100%,300% 300%;box-shadow:0 -4px 16px rgba(60,40,0,.14),0 0 14px rgba(160,225,255,.35);
+  animation:diamond-shine 6s linear infinite;}
+.tabbar::before{content:"";position:absolute;top:0;bottom:0;left:-60%;width:45%;pointer-events:none;z-index:0;
+  background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.8) 50%,rgba(200,240,255,.35) 60%,transparent 80%);
+  animation:diamond-sweep 3.2s ease-in-out infinite 1.6s;}
+.tabbar::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(circle at 12% 40%,#fff 0 1.4px,transparent 2.4px),radial-gradient(circle at 38% 80%,#e3f6ff 0 1.2px,transparent 2.2px),
+    radial-gradient(circle at 63% 30%,#fff 0 1.4px,transparent 2.4px),radial-gradient(circle at 88% 65%,#f1e8ff 0 1.2px,transparent 2.2px);
+  animation:diamond-twinkle 2.4s ease-in-out infinite alternate;}
+.tabbar-inner{position:relative;z-index:1;}
+.tabbar .tab{color:#4A3A1A;font-weight:600;}
+.tabbar .tab.active{color:#C2410C;}
+@media (prefers-reduced-motion:reduce){.tabbar,.tabbar::before,.tabbar::after{animation:none;}}
 /* ---- Argent : paiement, premium, contenus payants, publicité ---- */
 .pay-sheet{position:fixed;inset:0;background:rgba(10,11,16,.88);z-index:70;display:none;align-items:flex-end;justify-content:center;}
 .pay-card{background:var(--surface);border:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));}
@@ -1233,23 +1250,39 @@ function i18nName(type, code, fallback) {
 <!-- Ouverture et passages d'un écran à l'autre : le mot « Eaji » se construit lettre par lettre,
      dans un ordre et des couleurs au hasard (au lieu d'un « Eaji » immobile). -->
 <style>
-#eaji-splash{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:#E4AE3A;
-  transition:opacity .28s ease;animation:esSafety .3s ease 6s forwards;}
-#eaji-splash.es-soft{background:rgba(228,174,58,.94);}
+#eaji-splash{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#ffffff 0%,#e6f7ff 22%,#f4ecff 45%,#e9fbff 66%,#ffffff 82%,#dff3ff 100%);background-size:300% 300%;overflow:hidden;
+  transition:opacity .28s ease;animation:esSafety .3s ease 6s forwards,esDiamond 5s linear infinite;}
+#eaji-splash.es-soft{background:linear-gradient(135deg,#ffffff 0%,#e6f7ff 22%,#f4ecff 45%,#e9fbff 66%,#ffffff 82%,#dff3ff 100%);background-size:300% 300%;opacity:.97;}
+#eaji-splash.es-soft.es-out{opacity:0;}
+@keyframes esDiamond{0%{background-position:0% 50%;}100%{background-position:300% 50%;}}
+/* reflet qui traverse l'écran + étincelles */
+#eaji-splash::before{content:"";position:absolute;top:-20%;bottom:-20%;left:-70%;width:55%;pointer-events:none;
+  background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.85) 50%,rgba(190,235,255,.4) 62%,transparent 80%);transform:skewX(-12deg);
+  animation:esSweep 2.6s ease-in-out infinite;}
+@keyframes esSweep{0%{left:-70%;}75%,100%{left:130%;}}
+#eaji-splash::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 20% 25%,#fff 0 2px,transparent 3px),radial-gradient(circle at 78% 18%,#e3f6ff 0 2px,transparent 3px),
+    radial-gradient(circle at 15% 78%,#fff 0 1.6px,transparent 2.6px),radial-gradient(circle at 84% 72%,#f1e8ff 0 2px,transparent 3px),
+    radial-gradient(circle at 50% 10%,#fff 0 1.4px,transparent 2.4px),radial-gradient(circle at 55% 90%,#e3f6ff 0 1.6px,transparent 2.6px);
+  animation:esTwinkle 1.8s ease-in-out infinite alternate;}
+@keyframes esTwinkle{0%{opacity:.2;}100%{opacity:1;}}
+.es-circle{position:relative;z-index:1;width:min(72vw,320px);height:min(72vw,320px);border-radius:50%;background:#1B1E29;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(27,30,41,.35),0 0 0 6px rgba(255,255,255,.55),0 0 34px rgba(150,220,255,.55);}
 #eaji-splash.es-out{opacity:0;pointer-events:none;}
 #eaji-splash[hidden]{display:none;}
-.es-word{display:flex;gap:2px;font:800 76px/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:-1px;}
+.es-word{display:flex;gap:2px;font:800 min(18vw,80px)/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:-1px;}
 .es-word span{display:inline-block;opacity:0;text-shadow:0 4px 14px rgba(60,40,0,.25);}
 .es-word span.es-in{animation:esIn .34s cubic-bezier(.2,1.4,.4,1) forwards;}
 @keyframes esIn{0%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r)) scale(.2);}100%{opacity:1;transform:none;}}
 @keyframes esSafety{to{opacity:0;visibility:hidden;pointer-events:none;}}
-@media (prefers-reduced-motion:reduce){.es-word span.es-in{animation:none;opacity:1;}}
+@media (prefers-reduced-motion:reduce){.es-word span.es-in{animation:none;opacity:1;}#eaji-splash::before,#eaji-splash::after{animation:none;}}
 </style>
-<div id="eaji-splash" aria-hidden="true"><div class="es-word" translate="no"><span>E</span><span>a</span><span>j</span><span>i</span></div></div>
+<div id="eaji-splash" aria-hidden="true"><div class="es-circle"><div class="es-word" translate="no"><span>E</span><span>a</span><span>j</span><span>i</span></div></div></div>
 <script>
 // eajiLoader.show() / .hide() : la même animation quand l'application charge pour passer à l'écran suivant.
 window.eajiLoader = (function () {
-  const COLORS = ['#1B1E29', '#E8304F', '#7B61FF', '#2EC4B6', '#2D6A4F', '#FFFFFF', '#0077B6', '#F12711', '#3A1C71'];
+  const COLORS = ['#F3F1EB', '#E8304F', '#9D8CFF', '#2EC4B6', '#7BC21F', '#FFFFFF', '#38A9F5', '#F07C1A', '#F0A63C'];
   const el = document.getElementById('eaji-splash');
   let timer = null, shownAt = 0, hideTimer = null;
   const rnd = (a) => a[Math.floor(Math.random() * a.length)];
@@ -2256,7 +2289,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.16c';
+const APP_VERSION = '2026.11.16d';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
