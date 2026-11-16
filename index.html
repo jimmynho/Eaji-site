@@ -20,7 +20,7 @@ if (window.top !== window.self) { document.documentElement.style.display = 'none
 <link rel="canonical" href="https://eaji.org/">
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "name": "Eaji", "alternateName": "Eaji App", "url": "https://eaji.org/", "inLanguage": ["fr", "en", "ar", "pt", "es", "sw", "ln", "de", "ru", "hi", "zh"]}, {"@type": "WebApplication", "name": "Eaji", "url": "https://eaji.org/", "applicationCategory": "SocialNetworkingApplication", "operatingSystem": "Android, iOS, Windows, macOS", "browserRequirements": "Navigateur récent (Chrome, Safari, Edge, Firefox)", "description": "Eaji : vidéos, musique, photos, livres et lives de créateurs du monde entier. Crée ton compte gratuit, découvre les publications et gagne de l'argent avec les tiennes.", "image": "https://eaji.org/icon-512.png", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}, {"@type": "Organization", "name": "Eaji", "url": "https://eaji.org/", "logo": "https://eaji.org/icon-512.png"}]}</script>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#E4AE3A">
+<meta name="theme-color" content="#EEF6FF">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -485,8 +485,9 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 .ed-overlay.studio .ed-side{top:calc(64px + env(safe-area-inset-top,0px));bottom:calc(30vh + 60px);z-index:4;}
 /* Découvrir : publications bord à bord, vidéos et photos sur toute la largeur (sans jaune ni cadre autour) */
 #s-decouvrir #feed-list .feed-card{margin:0 -20px;border-radius:0;border-left:0;border-right:0;border-top:0;border-bottom:6px solid #0b0b10;}
-#s-decouvrir #feed-list .fv-wrap{width:calc(100% + 32px);max-width:none;margin:8px -16px;border-radius:0;max-height:46vh;}
-#s-decouvrir #feed-list .fv-wrap video{object-fit:cover;}
+/* La vidéo est montrée en entier : pleine largeur si elle est horizontale, ajustée à la hauteur de l'écran si elle est verticale */
+#s-decouvrir #feed-list .fv-wrap{width:min(calc(100% + 32px), calc(64vh * var(--ar)));max-width:none;margin:8px 0;border-radius:0;max-height:none;left:50%;transform:translateX(-50%);}
+#s-decouvrir #feed-list .fv-wrap video{object-fit:contain;}
 #s-decouvrir #feed-list .ph-wrap{margin:8px -16px;border-radius:0;}
 #s-decouvrir #feed-list .ph-wrap img{border-radius:0;}
 #s-contenu.pub-focus > *:not(#pub-form){display:none!important;}
@@ -1019,7 +1020,8 @@ textarea.grow-ta{resize:none;overflow-y:auto;line-height:1.45;min-height:46px;fo
 .comment-input-row.dm-compose textarea{flex:1 1 100%;order:-1;margin-bottom:0;padding:10px 12px;font-size:14px;min-height:42px;}
 .comment-input-row.dm-compose .voice-btn,.comment-input-row.dm-compose .comment-send{min-height:38px;}
 .comment-input-row.dm-compose .comment-send{margin-left:auto;padding:0 20px;}
-.dm-bubble{white-space:pre-wrap;overflow-wrap:anywhere;}
+.dm-bubble{overflow-wrap:anywhere;}
+.dm-bubble > span[translate]{white-space:pre-wrap;} /* les retours à la ligne du message seulement, pas de vide autour */
 /* Titres longs dans le fil : quelques lignes, puis « Voir plus » */
 .feed-title{white-space:pre-wrap;overflow-wrap:anywhere;}
 .feed-title.clamp{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden;}
@@ -2321,7 +2323,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.16e';
+const APP_VERSION = '2026.11.16f';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
@@ -2641,7 +2643,7 @@ function monetizationNote(code) {
     : 'ℹ️ Tout est gratuit et ouvert dans ce pays. Tu peux recevoir des cadeaux pendant tes lives et les retirer. La monétisation (gains des créateurs) est réservée à l\'Afrique, aux Caraïbes et aux pays en développement d\'Asie, d\'Amérique, d\'Europe et d\'Océanie. Tu peux tout de même publier, suivre, écrire, prendre le Premium ou faire de la publicité.';
 }
 
-let MY_COUNTRY = detectCountry();
+let MY_COUNTRY = (storeGet('eaji_creator_token') && storeGet('eaji_my_country')) || detectCountry();
 let MY_MONETIZED = true;
 let MY_CURRENCY = 'USD';
 let FEED_SCOPE = 'pays';
@@ -3848,6 +3850,23 @@ function applyCountryPicker() {
   setFeedScope(FEED_CHOICE.size ? 'choix' : 'tout');
 }
 
+function feedPathNow() {
+  return FEED_SCOPE === 'pays' ? `/api/feed?country=${MY_COUNTRY}`
+    : FEED_SCOPE === 'choix' && FEED_CHOICE.size ? `/api/feed?country=${[...FEED_CHOICE].join(',')}` : '/api/feed';
+}
+// À l'ouverture : le dernier fil gardé sur le téléphone s'affiche tout de suite, puis il est mis à jour dès que le serveur répond.
+async function showSavedFeed() {
+  try {
+    if (TAG_VIEW || document.querySelector('#feed-list .feed-card')) return false;
+    const c = await offGet(offKey(feedPathNow()));
+    if (!c || !c.data || !(c.data.items || []).length) return false;
+    if (document.querySelector('#feed-list .feed-card')) return true;
+    (c.data.following || []).forEach(id => followingSet.add(id));
+    FEED_ADS = c.data.ads || [];
+    renderFeed(c.data.items);
+    return true;
+  } catch (e) { return false; }
+}
 async function loadFeed() {
   const list = document.getElementById('feed-list');
   loadTrends();
@@ -4601,7 +4620,9 @@ async function loadProfile() {
   if (!p.city) document.getElementById('prof-city').placeholder = 'Ajoute ta ville (obligatoire)';
   if (p.withdrawalPhone) document.getElementById('prof-withdrawal-phone').value = p.withdrawalPhone;
   if (p.countryCode) {
+    if (p.countryCode !== MY_COUNTRY && FEED_SCOPE === 'pays' && document.querySelector('#feed-list .feed-card')) { MY_COUNTRY = p.countryCode; loadFeed(); }
     MY_COUNTRY = p.countryCode;
+    storeSet('eaji_my_country', p.countryCode);
     wireCountryPicker('prof-zone', 'prof-country', null, 'prof-language', p.countryCode, p.language);
     document.getElementById('phone-dial').textContent = COUNTRY_BY_CODE[p.countryCode]?.dial || '+';
     updateScopeLabel();
@@ -14135,7 +14156,11 @@ window.addEventListener('load', async () => {
     document.getElementById('app-shell').style.display = 'flex';
     checkLiveEligibility();
     loadAiQuota();
+    // Le fil démarre tout de suite, en même temps que le profil (avant : seulement après le profil et les tarifs).
+    const firstFeed = (async () => { const shown = await showSavedFeed(); const net = loadFeed(); if (!shown) await net.catch(() => {}); })();
     await loadProfile().catch(() => {});
+    // L'animation « Eaji » ne s'efface que lorsque les publications sont là (4 s au plus) : plus d'écran jaune vide.
+    await Promise.race([firstFeed, new Promise((r) => setTimeout(r, 4000))]);
     eajiLoader.ready(); // le compte est prêt : l'animation « Eaji » s'efface
     loadMyContent(); loadFollowers(); loadBlocked(); loadPayoutAccount();
     startIncomingCallWatch();
