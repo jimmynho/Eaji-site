@@ -2332,7 +2332,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.17c';
+const APP_VERSION = '2026.11.17d';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
@@ -13636,7 +13636,7 @@ if ('serviceWorker' in navigator) {
       if (d.kind === 'appel') checkIncomingCall(); // sonne tout de suite
       if (d.kind === 'message') refreshUnread();
       if (d.kind === 'message' && (dmContactId || CHAT_GROUP_ID)) renderDmThread(true);
-      else if (d.kind !== 'appel' && d.body) showToast(`${d.title ? d.title + ' — ' : ''}${d.body}`);
+      else if (d.kind !== 'appel' && d.kind !== 'appel_fin' && d.body) showToast(`${d.title ? d.title + ' — ' : ''}${d.body}`);
     }
   });
 }

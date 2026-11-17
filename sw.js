@@ -3,7 +3,7 @@
 // la copie gardée sur le téléphone ne sert que si la connexion est coupée.
 // Les échanges avec le serveur (API) ne sont pas mis en cache ici (l'application garde elle-même le fil et les messages).
 // Les images déjà vues (photos des publications, photos de profil) sont gardées pour le mode hors connexion.
-const CACHE_NAME = 'eaji-v60';
+const CACHE_NAME = 'eaji-v61';
 const IMG_CACHE = 'eaji-images';
 const IMG_MAX = 120; // images gardées au maximum (les plus anciennes sont retirées)
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
@@ -61,6 +61,8 @@ self.addEventListener('push', (event) => {
     const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const shown = wins.find((w) => w.visibilityState === 'visible' && w.focused);
     if (shown) { shown.postMessage({ type: 'eaji-push', ...d }); return; }
+    if (d.kind === 'appel_fin') return callMissed(d);
+    if (call) return ringCall(d);
     await self.registration.showNotification(d.title || 'Eaji', {
       body: d.body || '',
       icon: String(d.link || '').startsWith('admin:') ? 'icon-admin-192.png' : 'icon-192.png',
@@ -75,6 +77,45 @@ self.addEventListener('push', (event) => {
     });
   })());
 });
+
+// ==== Appel entrant, application fermée : la notification sonne et vibre plusieurs fois, comme une sonnerie ====
+// Elle s'arrête dès qu'on la touche (Répondre / Ignorer), dès qu'Eaji s'ouvre, quand l'appelant raccroche,
+// ou au bout de 45 secondes (elle devient alors « Appel manqué »).
+const RING_EVERY = 3500, RING_FOR = 45000;
+const ENDED_CALLS = new Set();
+function callOptions(d, again) {
+  return {
+    body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', tag: d.tag || 'appel',
+    renotify: true, requireInteraction: true, silent: false,
+    vibrate: [800, 400, 800, 400, 800, 400, 800],
+    timestamp: d.at || Date.now(), data: { link: d.link || '', ringing: true, again: !!again },
+    actions: [{ action: 'open', title: 'Répondre' }, { action: 'close', title: 'Ignorer' }],
+  };
+}
+async function ringCall(d) {
+  const tag = d.tag || 'appel', start = Date.now();
+  await self.registration.showNotification(d.title || '📞 Appel entrant', callOptions(d));
+  while (Date.now() - start < RING_FOR) {
+    await new Promise((r) => setTimeout(r, RING_EVERY));
+    if (ENDED_CALLS.has(tag)) return;
+    // touchée ou balayée : on arrête
+    const still = (await self.registration.getNotifications({ tag })).find((n) => n.data && n.data.ringing);
+    if (!still) return;
+    // Eaji vient d'être ouvert à l'écran : l'application prend le relais
+    const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (wins.some((w) => w.visibilityState === 'visible')) { still.close(); return; }
+    await self.registration.showNotification(d.title || '📞 Appel entrant', callOptions(d, true));
+  }
+  if (!ENDED_CALLS.has(tag)) await callMissed({ ...d, title: '📞 Appel manqué', body: (d.body || '').replace(/ t'appelle sur Eaji\. Touche pour répondre\./, ' a essayé de t\'appeler.') });
+}
+async function callMissed(d) {
+  const tag = d.tag || 'appel';
+  ENDED_CALLS.add(tag); setTimeout(() => ENDED_CALLS.delete(tag), 120000);
+  await self.registration.showNotification(d.title || '📞 Appel manqué', {
+    body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', tag, renotify: false, silent: true,
+    timestamp: Date.now(), data: { link: d.link || '' },
+  });
+}
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
