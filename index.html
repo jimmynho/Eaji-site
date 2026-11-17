@@ -652,6 +652,14 @@ html,body{background:#E4AE3A linear-gradient(165deg,#F9DD82 0%,#EDBB4A 42%,#D29A
 .top-search .field{margin:0;width:100%;height:38px;padding:0 12px;border-radius:12px;font-size:12.5px;background:#1B1E29;color:#F3F1EB;border:1px solid rgba(43,29,3,.35);text-overflow:ellipsis;}
 .top-search .field::placeholder{color:#AEB3C2;}
 body.on-decouvrir .top-search{display:block;}
+/* Toucher la recherche : la case grandit et prend toute la barre du haut ; ✕ pour la refermer */
+.top-search{position:relative;}
+.top-search-x{display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:none;border-radius:50%;background:#E7F2FC;color:#1D2230;font-size:16px;font-weight:800;cursor:pointer;z-index:2;}
+body.on-decouvrir.search-open .app > .topbar .brand,
+body.on-decouvrir.search-open .app > .topbar .top-right > :not(.top-search){display:none;}
+body.on-decouvrir.search-open .app > .topbar .top-search .field{height:48px;font-size:15px;padding-right:46px;animation:searchGrow .25s ease-out;}
+body.on-decouvrir.search-open .top-search-x{display:block;}
+@keyframes searchGrow{from{transform:scaleX(.55);transform-origin:right center;opacity:.6;}to{transform:none;opacity:1;}}
 /* Tendances + lives + pays dans un cadre */
 .disc-frame{margin:6px 0 10px;}
 .disc-frame .trend-row{margin:0 0 8px;}
@@ -1586,7 +1594,7 @@ window.eajiLoader = (function () {
     <div class="top-right">
       <div class="bell" onclick="toggleNotifications()" title="Notifications">🔔<span class="bell-count" id="notif-count"></span></div>
       <!-- Recherche (Découvrir) dans l'en-tête ; la déconnexion est dans Profil -->
-      <div class="top-search" id="top-search"><input class="field" id="search-input" placeholder="🔍 Chercher un créateur ou une publication" oninput="onSearchInput()"></div>
+      <div class="top-search" id="top-search"><input class="field" id="search-input" placeholder="🔍 Chercher un créateur ou une publication" oninput="onSearchInput()" onfocus="searchOpen(true)" onblur="setTimeout(() => searchOpen(false), 150)"><button class="top-search-x" type="button" aria-label="Fermer la recherche" onmousedown="event.preventDefault()" onclick="searchClose()">✕</button></div>
       <div class="avatar" onclick="document.querySelector('.tab[data-target=\'s-profil\']').click()" style="cursor:pointer;">A</div>
       <div class="bell" style="margin:0 0 0 8px;color:var(--on-gold);font-size:22px;font-weight:900;line-height:1;" onclick="toggleAppMenu()" title="Menu">⋮</div>
     </div>
@@ -2327,7 +2335,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.17a';
+const APP_VERSION = '2026.11.17b';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
@@ -10930,6 +10938,17 @@ async function confirmPasswordReset() {
 
 // ==== Recherche ====
 let SEARCH_TIMER = null;
+// La case de recherche s'agrandit quand on la touche ; elle reprend sa taille quand elle est vide et qu'on la quitte.
+function searchOpen(on) {
+  const inp = document.getElementById('search-input');
+  if (!on && inp && (inp.value.trim() || document.activeElement === inp)) return;
+  document.body.classList.toggle('search-open', !!on);
+}
+function searchClose() {
+  const inp = document.getElementById('search-input');
+  inp.value = ''; runSearch(); inp.blur();
+  document.body.classList.remove('search-open');
+}
 function onSearchInput() {
   clearTimeout(SEARCH_TIMER);
   SEARCH_TIMER = setTimeout(runSearch, 350);
