@@ -2147,26 +2147,34 @@ async function toggleSuspend(btn){
   }
 }
 
-async function deleteCreator(btn){
+// Suppression d'un compte : confirmation dans la page (la petite fenêtre du navigateur ne marchait pas bien
+// sur téléphone : majuscule automatique « Supprimer », fenêtre cachée), et le résultat est toujours affiché.
+function deleteCreator(btn){
   const row = btn.closest('tr');
-  const name = row.dataset.creatorName;
-  const typed = window.prompt(
-    `Supprimer DÉFINITIVEMENT le compte « ${name} » et toutes ses données (contenus, messages, solde, cadeaux) ?\n\nCette action est irréversible. Tape SUPPRIMER pour confirmer.`
-  );
-  if (typed !== 'SUPPRIMER') return;
-  btn.disabled = true;
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/admin/creators/${row.dataset.creatorId}`, {
-      method: 'DELETE', headers: authHeaders(),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Suppression impossible.');
-    loadCreators();
-  } catch (e) {
-    btn.disabled = false;
-    document.getElementById('creators-msg').textContent = e.message;
-  }
+  const name = row.dataset.creatorName || 'ce compte';
+  const box = document.getElementById('del-modal');
+  document.getElementById('del-name').textContent = name;
+  const inp = document.getElementById('del-input'), msg = document.getElementById('del-msg'), go = document.getElementById('del-go');
+  inp.value = ''; msg.textContent = ''; go.disabled = false; go.textContent = 'Supprimer définitivement';
+  box.style.display = 'flex';
+  setTimeout(() => inp.focus(), 50);
+  go.onclick = async () => {
+    const typed = inp.value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+    if (typed !== 'SUPPRIMER') { msg.style.color = 'var(--coral)'; msg.textContent = 'Écris le mot SUPPRIMER dans la case pour confirmer.'; return; }
+    go.disabled = true; go.textContent = 'Suppression…'; msg.style.color = 'var(--muted)'; msg.textContent = '';
+    try {
+      await adminApi(`/api/admin/creators/${row.dataset.creatorId}`, { method: 'DELETE' });
+      box.style.display = 'none';
+      document.getElementById('creators-msg').textContent = `✅ Le compte « ${name} » a été supprimé avec toutes ses données.`;
+      loadCreators();
+      alert(`✅ Le compte « ${name} » a été supprimé.`);
+    } catch (e) {
+      go.disabled = false; go.textContent = 'Supprimer définitivement';
+      msg.style.color = 'var(--coral)'; msg.textContent = '❌ ' + (e.message || 'Suppression impossible.');
+    }
+  };
 }
+function closeDeleteCreator(){ document.getElementById('del-modal').style.display = 'none'; }
 
 async function removeContent(btn){
   const row = btn.closest('tr');
@@ -2692,6 +2700,19 @@ async function undoAgent(id, btn) {
 }
 VIEW_LOADERS['v-agent'] = loadAgent;
 </script>
+<div class="modal" id="del-modal" style="align-items:center;" onclick="if (event.target === this) closeDeleteCreator()">
+  <div class="modal-card" style="max-width:440px;">
+    <div class="modal-head"><b>🗑️ Supprimer un compte</b><button class="logout-btn" onclick="closeDeleteCreator()">Fermer &times;</button></div>
+    <p style="margin:0 0 10px;line-height:1.5;">Supprimer <b>définitivement</b> le compte « <b id="del-name"></b> » et toutes ses données (contenus, messages, solde, cadeaux) ?<br>Cette action est <b>irréversible</b>.</p>
+    <label class="field-label" for="del-input">Écris <b>SUPPRIMER</b> pour confirmer</label>
+    <input class="field" id="del-input" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Écris ici" onkeydown="if (event.key === 'Enter') document.getElementById('del-go').click()">
+    <p id="del-msg" style="min-height:18px;margin:10px 0;font-size:13px;"></p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn" style="background:var(--surface2);color:var(--text);padding:10px 16px;" onclick="closeDeleteCreator()">Annuler</button>
+      <button class="btn remove" id="del-go" style="padding:10px 16px;">Supprimer définitivement</button>
+    </div>
+  </div>
+</div>
 <div class="modal" id="a-modal" onclick="if (event.target === this) closeModal()">
   <div class="modal-card">
     <div class="modal-head"><b id="a-modal-title"></b><button class="logout-btn" onclick="closeModal()">Fermer &times;</button></div>
