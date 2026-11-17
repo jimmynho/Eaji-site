@@ -486,8 +486,12 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 /* Découvrir : publications bord à bord, vidéos et photos sur toute la largeur (sans jaune ni cadre autour) */
 #s-decouvrir #feed-list .feed-card{margin:0 -20px;border-radius:0;border-left:0;border-right:0;border-top:0;border-bottom:6px solid #0b0b10;}
 /* La vidéo est montrée en entier : pleine largeur si elle est horizontale, ajustée à la hauteur de l'écran si elle est verticale */
-#s-decouvrir #feed-list .fv-wrap{width:min(calc(100% + 32px), calc(64vh * var(--ar)));max-width:none;margin:8px 0;border-radius:0;max-height:none;left:50%;transform:translateX(-50%);}
-#s-decouvrir #feed-list .fv-wrap video{object-fit:contain;}
+/* Le cadre prend toute la largeur (bord à bord) ; la vidéo reste entière au milieu, les côtés sont remplis par la même image floutée */
+#s-decouvrir #feed-list .fv-wrap{width:calc(100% + 32px);max-width:none;margin:8px -16px;border-radius:0;max-height:64vh;background:var(--diamond,#dbe9f7);}
+#s-decouvrir #feed-list .fv-wrap video{object-fit:contain;position:relative;z-index:1;}
+#s-decouvrir #feed-list .fv-wrap .fv-bg{display:block;}
+#s-decouvrir #feed-list .fv-wrap .fv-snd{z-index:2;}
+.fv-bg{display:none;position:absolute;left:-12%;top:-12%;width:124%;height:124%;filter:blur(22px) brightness(.85) saturate(1.15);pointer-events:none;}
 #s-decouvrir #feed-list .ph-wrap{margin:8px -16px;border-radius:0;}
 #s-decouvrir #feed-list .ph-wrap img{border-radius:0;}
 #s-contenu.pub-focus > *:not(#pub-form){display:none!important;}
@@ -2323,7 +2327,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.16f';
+const APP_VERSION = '2026.11.17a';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
@@ -3161,6 +3165,7 @@ function renderMedia(item) {
     // Format d'origine connu : le cadre a tout de suite la bonne forme. Sinon, il la prend dès que la vidéo est lue.
     const w = Number(item.media_width), h = Number(item.media_height), known = w > 0 && h > 0;
     return `<div class="fv-wrap" onclick="openReel(this.querySelector('video'))" role="button" aria-label="Plein écran"${known ? ` style="--ar:${(w / h).toFixed(4)}"` : ''}>
+        <canvas class="fv-bg" width="24" height="24" aria-hidden="true"></canvas>
         <video playsinline muted preload="${known ? 'none' : 'metadata'}" src="${url}" data-dims="${known ? 1 : 0}" onloadedmetadata="fvRatio(this, '${id}')" onplay="countView('${id}', this)" onended="onFeedVideoEnded(this)"></video>
         <button class="fv-snd" onclick="fvSound(event)" aria-label="Activer le son">${FEED_SOUND ? '🔊' : '🔇'}</button>
       </div>`;
@@ -13457,9 +13462,22 @@ function fvObserve() {
     if (FV.seen.has(v)) return;
     FV.seen.add(v); FV.io.observe(v);
     v.addEventListener('play', () => v.closest('.fv-wrap')?.classList.add('playing'));
+    v.addEventListener('loadeddata', () => fvBgDraw(v));
+    v.addEventListener('seeked', () => fvBgDraw(v));
   });
   FV.ratio.forEach((r, v) => { if (!v.isConnected) FV.ratio.delete(v); });
 }
+// Côtés du cadre dans Découvrir : une petite copie floutée de l'image en cours de la vidéo (seulement si la vidéo ne remplit pas la largeur).
+function fvBgDraw(v) {
+  try {
+    const wrap = v && v.closest('.fv-wrap'); const c = wrap && wrap.querySelector('.fv-bg');
+    if (!c || c.offsetParent === null || !(v.videoWidth > 0) || v.readyState < 2) return;
+    if (wrap.clientWidth / wrap.clientHeight <= v.videoWidth / v.videoHeight + 0.02) return;
+    c.width = 24; c.height = Math.max(8, Math.round(24 * v.videoHeight / v.videoWidth));
+    c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  } catch (e) { /* rien : les côtés gardent la couleur diamant */ }
+}
+setInterval(() => { const v = FV.cur; if (v && !v.paused && v.isConnected) fvBgDraw(v); }, 300);
 function fvIcons() { document.querySelectorAll('.fv-snd').forEach((b) => { b.textContent = FEED_SOUND ? '🔊' : '🔇'; b.setAttribute('aria-label', i18nT(FEED_SOUND ? 'Couper le son' : 'Activer le son')); }); }
 // La vidéo a donné sa vraie taille : le cadre prend sa forme (et le serveur la garde pour les anciennes vidéos).
 function fvRatio(v, id) {
