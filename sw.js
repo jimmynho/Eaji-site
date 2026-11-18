@@ -3,7 +3,7 @@
 // la copie gardée sur le téléphone ne sert que si la connexion est coupée.
 // Les échanges avec le serveur (API) ne sont pas mis en cache ici (l'application garde elle-même le fil et les messages).
 // Les images déjà vues (photos des publications, photos de profil) sont gardées pour le mode hors connexion.
-const CACHE_NAME = 'eaji-v61';
+const CACHE_NAME = 'eaji-v62';
 const IMG_CACHE = 'eaji-images';
 const IMG_MAX = 120; // images gardées au maximum (les plus anciennes sont retirées)
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
@@ -75,8 +75,19 @@ self.addEventListener('push', (event) => {
       data: { link: d.link || '' },
       actions: call ? [{ action: 'open', title: 'Répondre' }, { action: 'close', title: 'Ignorer' }] : [],
     });
+    await updateIconBadge();
   })());
 });
+
+// Nombre affiché sur l'icône d'Eaji (comme Facebook) : nombre de notifications en attente.
+// Sur Android, le lanceur compte lui-même les notifications ; setAppBadge sert sur les appareils qui le permettent.
+async function updateIconBadge() {
+  try {
+    const n = (await self.registration.getNotifications()).length;
+    if (self.navigator && self.navigator.setAppBadge) { if (n) await self.navigator.setAppBadge(n); else await self.navigator.clearAppBadge(); }
+  } catch (e) { /* appareil sans nombre sur l'icône */ }
+}
+self.addEventListener('notificationclose', (event) => { event.waitUntil(updateIconBadge()); });
 
 // ==== Appel entrant, application fermée : la notification sonne et vibre plusieurs fois, comme une sonnerie ====
 // Elle s'arrête dès qu'on la touche (Répondre / Ignorer), dès qu'Eaji s'ouvre, quand l'appelant raccroche,

@@ -2230,6 +2230,7 @@ window.eajiLoader = (function () {
         <p class="feed-type" id="push-state" style="margin:-6px 0 10px;"></p>
         <button class="mini-btn" id="push-enable-btn" onclick="enablePush(true)">🔔 Activer les notifications</button>
         <button class="mini-btn" id="push-test-btn" style="display:none;" onclick="testPush()">Envoyer une notification de test</button>
+        <p class="feed-type" id="push-help" style="margin:10px 0 0;font-size:12px;line-height:1.5;">🔊 Pas de son ? Réglages du téléphone → Applications → <b>Eaji</b> → Notifications : <b>Autoriser</b>, son activé, priorité élevée. Puis Batterie → <b>Aucune restriction</b> (fais pareil pour <b>Chrome</b>).</p>
       </div>
 
       <div class="settings-block">
@@ -2332,7 +2333,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.17d';
+const APP_VERSION = '2026.11.18a';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
@@ -10977,6 +10978,7 @@ async function loadNotifications() {
   try {
     const d = await apiCall('/api/notifications');
     const badge = document.getElementById('notif-count');
+    ICON_COUNTS.notifs = d.unread || 0; syncIconBadge();
     badge.textContent = d.unread > 9 ? '9+' : d.unread;
     badge.style.display = d.unread ? 'flex' : 'none';
     document.getElementById('notif-list').innerHTML = d.items.map(n => `
@@ -10999,6 +11001,7 @@ async function toggleNotifications() {
   if (open) {
     await loadNotifications();
     apiCall('/api/notifications/read-all', { method: 'POST' }).then(() => {
+      ICON_COUNTS.notifs = 0; syncIconBadge();
       document.getElementById('notif-count').style.display = 'none';
     }).catch(() => {});
   }
@@ -13549,16 +13552,23 @@ function refreshPushUi() {
   try { dismissed = localStorage.getItem('eaji_push_banner_off') === '1'; } catch (e) {}
   let msg = '', showBtn = false, showBanner = false;
   if (perm === 'granted') { msg = '✅ Activées sur cet appareil : messages, appels, photos, cadeaux et lives arrivent même écran verrouillé.'; }
-  else if (perm === 'denied') { msg = '🚫 Bloquées. Ouvre les réglages du téléphone → Applications → Eaji (ou Chrome) → Notifications → Autoriser, puis reviens ici.'; }
+  else if (perm === 'denied') { msg = '🚫 Bloquées. Touche « Réessayer ». Si rien ne s\'affiche : réglages du téléphone → Applications → Eaji (et Chrome) → Notifications → Autoriser, puis reviens ici.'; showBtn = true; showBanner = !dismissed; }
   else if (perm === 'default') { msg = 'Pas encore activées sur cet appareil.'; showBtn = true; showBanner = !dismissed; }
   else if (IS_IOS && !IS_STANDALONE) { msg = 'Sur iPhone : touche « Partager » puis « Sur l\'écran d\'accueil », ouvre Eaji depuis l\'icône, puis active les notifications ici (iOS 16.4 ou plus récent).'; showBanner = !dismissed; }
   else { msg = 'Ce navigateur ne permet pas les notifications. Utilise l\'application Eaji installée ou Chrome.'; }
   if (state) state.textContent = msg;
-  if (btn) btn.style.display = showBtn ? '' : 'none';
+  // Le bouton reste toujours là : « Activer », « Réessayer » si bloquées, « Réactiver » si déjà activées (abonnement refait).
+  if (btn) {
+    btn.style.display = PUSH_SUPPORTED && CREATOR_TOKEN ? '' : (showBtn ? '' : 'none');
+    btn.textContent = perm === 'granted' ? '🔄 Réactiver les notifications' : perm === 'denied' ? '🔔 Réessayer d\'activer les notifications' : '🔔 Activer les notifications';
+  }
+  const help = document.getElementById('push-help');
+  if (help) help.style.display = PUSH_SUPPORTED ? '' : 'none';
   if (test) test.style.display = perm === 'granted' ? '' : 'none';
   if (banner) {
     banner.style.display = CREATOR_TOKEN && showBanner ? 'flex' : 'none';
-    document.getElementById('push-banner-btn').style.display = perm === 'default' ? '' : 'none';
+    document.getElementById('push-banner-btn').style.display = perm === 'default' || perm === 'denied' ? '' : 'none';
+    document.getElementById('push-banner-btn').textContent = perm === 'denied' ? 'Réessayer' : 'Activer';
     if (perm !== 'default') document.getElementById('push-banner-text').textContent = msg;
   }
 }
@@ -13571,10 +13581,10 @@ function dismissPushBanner() {
 async function enablePush(fromUser) {
   if (!CREATOR_TOKEN || !PUSH_SUPPORTED) { refreshPushUi(); if (fromUser && !PUSH_SUPPORTED) showToast(document.getElementById('push-state')?.textContent || 'Notifications non disponibles ici.'); return false; }
   try {
-    if (Notification.permission === 'default') {
+    if (Notification.permission === 'default' || (fromUser && Notification.permission === 'denied')) {
       if (!fromUser) return false;
       const answer = await Notification.requestPermission();
-      if (answer !== 'granted') { refreshPushUi(); if (answer === 'denied') showToast('Notifications refusées. Tu peux les autoriser plus tard dans les réglages du téléphone.'); return false; }
+      if (answer !== 'granted') { refreshPushUi(); if (answer === 'denied') showToast('Notifications bloquées : réglages du téléphone → Applications → Eaji → Notifications → Autoriser.'); return false; }
     }
     if (Notification.permission !== 'granted') { refreshPushUi(); return false; }
     const reg = await pushRegistration();
@@ -13588,7 +13598,7 @@ async function enablePush(fromUser) {
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(publicKey) });
     await apiCall('/api/push/subscribe', { method: 'POST', body: { subscription: sub.toJSON() } });
     refreshPushUi();
-    if (fromUser) showToast('🔔 Notifications activées sur ce téléphone.');
+    if (fromUser) { showToast('🔔 Notifications activées sur ce téléphone. Une notification de test arrive…'); apiCall('/api/push/test', { method: 'POST' }).catch(() => {}); }
     return true;
   } catch (e) {
     refreshPushUi();
@@ -13988,6 +13998,20 @@ function resetSpeaker() { SPEAKER_ON = false; speakerTargets().forEach((el) => b
 
 // ==== Messages non lus : badge sur l'onglet Messages ====
 let UNREAD_TIMER = null;
+// ==== Nombre sur l'icône d'Eaji (comme Facebook) : notifications non lues + messages non lus + appels manqués ====
+const ICON_COUNTS = { notifs: null, msgs: null };
+async function syncIconBadge() {
+  if (ICON_COUNTS.notifs === null || ICON_COUNTS.msgs === null) return; // on attend les deux compteurs
+  const n = ICON_COUNTS.notifs + ICON_COUNTS.msgs;
+  try { if ('setAppBadge' in navigator) { if (n) await navigator.setAppBadge(n); else await navigator.clearAppBadge(); } } catch (e) { /* pas de nombre sur cet appareil */ }
+  // Tout est lu et Eaji est ouvert : les notifications déjà vues quittent la barre du téléphone (le nombre de l'icône disparaît).
+  if (!n && document.visibilityState === 'visible' && 'serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) (await reg.getNotifications()).forEach((x) => { if (!(x.data && x.data.ringing)) x.close(); });
+    } catch (e) { /* rien */ }
+  }
+}
 async function refreshUnread() {
   if (!CREATOR_TOKEN) return;
   try {
@@ -13997,6 +14021,7 @@ async function refreshUnread() {
     if (sb) { sb.textContent = support; sb.style.display = support ? 'inline-block' : 'none'; }
     const b = document.getElementById('msg-badge');
     const n = total + missed;
+    ICON_COUNTS.msgs = n; syncIconBadge();
     b.textContent = n > 99 ? '99+' : String(n);
     b.style.display = n > 0 ? 'inline-flex' : 'none';
     b.classList.toggle('call', missed > 0);
