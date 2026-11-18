@@ -969,6 +969,10 @@ body.reel-on .toast{z-index:130;}
 .reel-slide{position:relative;height:100vh;height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;}
 .reel-slide video{width:100%;height:100%;object-fit:contain;background:#000;}
 .reel-info{position:absolute;left:0;right:0;bottom:0;padding:60px 16px calc(22px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.75));color:#fff;display:flex;flex-direction:column;gap:3px;font-size:14px;pointer-events:none;}
+.reel-info .reel-cap{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;pointer-events:auto;}
+.reel-info .reel-cap.open{display:block;-webkit-line-clamp:unset;max-height:45vh;overflow-y:auto;}
+.reel-info.open{background:linear-gradient(transparent,rgba(0,0,0,.85) 40px);padding-right:78px;} /* le texte ouvert ne passe pas sous les boutons ❤ 💬 */
+.reel-info .reel-more{pointer-events:auto;align-self:flex-start;background:none;border:none;color:#fff;font-weight:800;font-size:13px;padding:2px 0;cursor:pointer;}
 .reel-count{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;color:#fff;font-size:12px;background:rgba(0,0,0,.45);border-radius:99px;padding:4px 10px;}
 .reel-close{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px;z-index:2;width:40px;height:40px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:18px;cursor:pointer;}
 .reel-hint{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:13px;border-radius:99px;padding:8px 14px;pointer-events:none;white-space:nowrap;}
@@ -2333,7 +2337,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.18a';
+const APP_VERSION = '2026.11.18b';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
@@ -4087,19 +4091,39 @@ function pickRegPhoto(input) {
   if (!file) return;
   if (!(file.type || '').startsWith('image/')) { document.getElementById('reg-photo-note').textContent = i18nT('Choisis une photo.'); return; }
   REG_PHOTO = file;
-  regPhotoKeep(file);
+  const kept = regPhotoKeep(file);
   const prev = document.getElementById('reg-photo-preview');
   prev.textContent = '';
   prev.style.backgroundImage = `url("${URL.createObjectURL(file)}")`;
-  document.getElementById('reg-photo-note').textContent = i18nT('Photo choisie : elle sera ajoutée à ton profil dès la création du compte.');
+  const note = document.getElementById('reg-photo-note');
+  note.style.color = '';
+  note.textContent = i18nT('Photo choisie : elle sera ajoutée à ton profil dès la création du compte.');
+  // La vérification de la photo se fait tout de suite, pendant que la personne finit l'inscription
+  // (avant, elle se faisait seulement après la création du compte et pouvait durer plusieurs minutes).
+  const mine = file;
+  checkNudity(file).then(async (res) => {
+    if (REG_PHOTO !== mine) return; // une autre photo a été choisie entre-temps
+    if (res === 'bloque') {
+      REG_PHOTO = null; regPhotoForget();
+      prev.style.backgroundImage = ''; prev.textContent = '👤';
+      note.style.color = 'var(--coral)'; note.textContent = NUDITY_BLOCKED_MESSAGE;
+      return;
+    }
+    REG_PHOTO_CHECKED = res;
+    await kept;
+    const r = regPhotoRead(); if (r) { r.checked = res; storeSet(REG_PHOTO_KEY, JSON.stringify(r)); }
+  });
 }
+let REG_PHOTO_CHECKED = null;
 // La photo est aussi gardée sur le téléphone (réduite) : si l'appli se recharge pendant l'inscription
 // (par exemple en allant lire le code dans Gmail), elle est quand même ajoutée au profil à la connexion.
 const REG_PHOTO_KEY = 'eaji_reg_photo';
 function regPhotoRead() { try { return JSON.parse(storeGet(REG_PHOTO_KEY) || 'null'); } catch (e) { return null; } }
 function regPhotoForget() { try { localStorage.removeItem(REG_PHOTO_KEY); sessionStorage.removeItem(REG_PHOTO_KEY); } catch (e) {} }
 function regPhotoKeep(file) {
+  return new Promise((done) => {
   const img = new Image(), url = URL.createObjectURL(file);
+  img.onerror = () => { URL.revokeObjectURL(url); done(); };
   img.onload = () => {
     try {
       const k = Math.min(1, 720 / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
@@ -4109,32 +4133,46 @@ function regPhotoKeep(file) {
       storeSet(REG_PHOTO_KEY, JSON.stringify({ data: c.toDataURL('image/jpeg', 0.85), at: Date.now(), creatorId: null, tries: 0 }));
     } catch (e) {}
     URL.revokeObjectURL(url);
+    done();
   };
   img.src = url;
+  });
 }
 function regPhotoTag(creatorId) {
   const r = regPhotoRead(); if (!r) return;
   r.creatorId = creatorId; storeSet(REG_PHOTO_KEY, JSON.stringify(r));
 }
 let REG_PHOTO_BUSY = false;
+let REG_PHOTO_RETRY = 0;
 async function regPhotoResume() {
   if (REG_PHOTO_BUSY || !CREATOR_TOKEN || !CREATOR_ID) return;
-  let file = REG_PHOTO;
+  let file = null;
   const r = regPhotoRead();
-  if (!file && r && r.data && r.creatorId === CREATOR_ID) {
-    if (Date.now() - r.at > 7 * 864e5 || (r.tries || 0) >= 3) { regPhotoForget(); return; }
-    try { const blob = await (await fetch(r.data)).blob(); file = new File([blob], 'photo-profil.jpg', { type: 'image/jpeg' }); } catch (e) { return; }
+  if (r && r.creatorId && r.creatorId !== CREATOR_ID) { REG_PHOTO = null; return; } // photo d'un autre compte : jamais ici
+  if (r && r.data && r.creatorId === CREATOR_ID) {
+    if (Date.now() - r.at > 7 * 864e5 || (r.tries || 0) >= 5) { regPhotoForget(); REG_PHOTO = null; return; }
+    // On envoie la copie réduite (720 px) : bien plus rapide qu'une photo de plusieurs Mo sur une connexion lente.
+    try { const blob = await (await fetch(r.data)).blob(); file = new File([blob], 'photo-profil.jpg', { type: 'image/jpeg' }); } catch (e) { file = null; }
   }
+  if (!file) file = REG_PHOTO;
   if (!file) return;
-  REG_PHOTO = null; REG_PHOTO_BUSY = true;
+  const checked = (r && r.checked) || REG_PHOTO_CHECKED;
+  REG_PHOTO_BUSY = true;
+  showToast(i18nT('📷 Ajout de ta photo de profil…'));
   const before = MY_PHOTO_URL;
-  try { await uploadProfilePhoto({ files: [file], value: '' }); } catch (e) {}
+  const input = { files: [file], value: '', regPhoto: true, checked };
+  try { await uploadProfilePhoto(input); } catch (e) {}
   REG_PHOTO_BUSY = false;
-  if (MY_PHOTO_URL !== before && String(MY_PHOTO_URL || '').startsWith('blob:')) regPhotoForget();
-  else {
-    if (r && r.creatorId === CREATOR_ID) { r.tries = (r.tries || 0) + 1; storeSet(REG_PHOTO_KEY, JSON.stringify(r)); }
-    showToast(i18nT("Ta photo de profil n'a pas encore pu être ajoutée : elle sera réessayée à la prochaine ouverture. Tu peux aussi l'ajouter dans Profil."));
+  if (MY_PHOTO_URL !== before && String(MY_PHOTO_URL || '').startsWith('blob:')) {
+    regPhotoForget(); REG_PHOTO = null; REG_PHOTO_CHECKED = null;
+    showToast(i18nT('✅ Ta photo de profil a été ajoutée.'));
+    return;
   }
+  if (input.blocked) { regPhotoForget(); REG_PHOTO = null; showToast(NUDITY_BLOCKED_MESSAGE); return; }
+  if (r && r.creatorId === CREATOR_ID) { r.tries = (r.tries || 0) + 1; storeSet(REG_PHOTO_KEY, JSON.stringify(r)); }
+  // Nouvel essai automatique dans 20 secondes (connexion coupée…), puis à la prochaine ouverture.
+  if (REG_PHOTO_RETRY < 2) { REG_PHOTO_RETRY++; setTimeout(regPhotoResume, 20000); }
+  else showToast(i18nT("Ta photo de profil n'a pas encore pu être ajoutée : elle sera réessayée à la prochaine ouverture. Tu peux aussi l'ajouter dans Profil."));
 }
 // Pays de l'inscription : tous les pays du monde dans une seule liste (la zone suit le pays automatiquement).
 function regAllCountries() {
@@ -4587,7 +4625,14 @@ async function uploadProfilePhoto(input) {
   if (!CREATOR_TOKEN) { statusEl.textContent = 'Connecte-toi d\'abord.'; return; }
   const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CREATOR_TOKEN}` };
   statusEl.style.color = 'var(--muted)';
-  if ((await checkNudity(file, (m) => { statusEl.textContent = m; })) === 'bloque') {
+  // Photo de l'inscription déjà vérifiée au moment du choix : pas de deuxième attente ;
+  // sinon la vérification est limitée à 20 secondes pour elle (comme quand le contrôle ne peut pas se faire).
+  const nud = input.regPhoto
+    ? (input.checked === 'ok' || input.checked === 'non_verifie' ? input.checked
+      : await withTimeout(checkNudity(file, (m) => { statusEl.textContent = m; }), 20000).catch(() => 'non_verifie'))
+    : await checkNudity(file, (m) => { statusEl.textContent = m; });
+  if (nud === 'bloque') {
+    input.blocked = true;
     statusEl.style.color = 'var(--coral)'; statusEl.textContent = NUDITY_BLOCKED_MESSAGE; input.value = ''; return;
   }
   statusEl.textContent = 'Envoi de la photo…';
@@ -13685,7 +13730,7 @@ function openReel(fromVideo) {
   box.innerHTML = list.map((x, i) => `
     <div class="reel-slide" data-i="${i}" data-cid="${escapeHtml(x.id || '')}">
       <video playsinline preload="${Math.abs(i - start) <= 1 ? 'auto' : 'none'}" src="${escapeHtml(x.src)}"></video>
-      <div class="reel-info"><b translate="no">${escapeHtml(x.creator)}</b><span translate="no">${escapeHtml(x.title)}</span>${x.repostId ? `<small>🔁 ${escapeHtml(i18nT('Republication'))}</small>` : ''}</div>
+      <div class="reel-info"><b translate="no">${escapeHtml(x.creator)}</b><span class="reel-cap" translate="no" onclick="event.stopPropagation();reelMore(this.nextElementSibling)">${escapeHtml(x.title)}</span><button class="reel-more" style="display:none;" onclick="event.stopPropagation();reelMore(this)">${escapeHtml(i18nT('Voir plus'))}</button>${x.repostId ? `<small>🔁 ${escapeHtml(i18nT('Republication'))}</small>` : ''}</div>
       <div class="reel-count">${i + 1} / ${list.length}</div>
       ${x.id ? `<div class="reel-actions">
         <button class="reel-act${x.liked ? ' on' : ''}" data-kind="like" onclick="reelLike(${i}, this)"><span class="ic">❤</span><span class="n">${escapeHtml(kfmt(x.likes))}</span></button>
@@ -13713,9 +13758,24 @@ function openReel(fromVideo) {
   }), { root: box, threshold: [0.6] });
   slides.forEach((sl) => REEL.observer.observe(sl));
   reelActivate(start, startTime);
+  setTimeout(fitReelCaps, 80);
   const hint = document.getElementById('reel-hint');
   hint.style.display = list.length > 1 ? 'block' : 'none';
   setTimeout(() => { hint.style.display = 'none'; }, 3000);
+}
+// Légende de la vidéo en plein écran : 2 lignes, « Voir plus » pour lire la suite (comme dans Découvrir).
+function fitReelCaps() {
+  document.querySelectorAll('#reel-scroll .reel-cap').forEach((c) => {
+    const b = c.nextElementSibling;
+    if (b && b.classList.contains('reel-more')) b.style.display = c.scrollHeight > c.clientHeight + 2 ? '' : 'none';
+  });
+}
+function reelMore(btn) {
+  if (!btn || !btn.classList.contains('reel-more') || btn.style.display === 'none') return;
+  const cap = btn.previousElementSibling;
+  const open = cap.classList.toggle('open');
+  cap.closest('.reel-info').classList.toggle('open', open);
+  btn.textContent = i18nT(open ? 'Voir moins' : 'Voir plus');
 }
 function reelActivate(i, startTime) {
   if (!REEL || REEL.index === i) return;
