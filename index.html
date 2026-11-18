@@ -750,6 +750,9 @@ body.on-decouvrir.search-open .top-search-x{display:block;}
 .push-banner{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--gold);border-radius:16px;padding:12px 12px 12px 14px;margin-bottom:14px;}
 .push-banner .grow{display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:0;} .push-banner .grow span{color:var(--muted);font-size:12px;}
 .push-x{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px;}
+.push-banner.on{padding:7px 10px 7px 12px;border-color:var(--teal);} .push-banner.on .grow span{display:none;}
+.push-banner.on .mini-btn{padding:6px 10px;font-size:12px;}
+.push-off-btn{background:transparent !important;color:var(--coral) !important;border:1px solid var(--coral) !important;}
 /* ---- Plein écran qui défile ---- */
 .reel-open{display:block;margin:-2px 0 6px;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:2px 0;}
 /* ---- Vidéo du fil : toucher = plein écran ---- */
@@ -1657,7 +1660,9 @@ window.eajiLoader = (function () {
       <div class="push-banner" id="push-banner" style="display:none;">
         <div class="grow"><b>🔔 Ne rate plus rien</b><span id="push-banner-text">Reçois les messages, appels, photos et cadeaux sur ton téléphone, même écran verrouillé.</span></div>
         <button class="mini-btn" id="push-banner-btn" onclick="enablePush(true)">Activer</button>
-        <button class="push-x" title="Plus tard" onclick="dismissPushBanner()">✕</button>
+        <button class="mini-btn" id="push-banner-test" style="display:none;" onclick="testPush()">Tester</button>
+        <button class="mini-btn push-off-btn" id="push-banner-off" style="display:none;" onclick="pushTurnOff()">Désactiver</button>
+        <button class="push-x" id="push-banner-x" title="Plus tard" onclick="dismissPushBanner()">✕</button>
       </div>
       <div id="search-results"></div>
       <div class="disc-frame">
@@ -2234,6 +2239,7 @@ window.eajiLoader = (function () {
         <p class="feed-type" id="push-state" style="margin:-6px 0 10px;"></p>
         <button class="mini-btn" id="push-enable-btn" onclick="enablePush(true)">🔔 Activer les notifications</button>
         <button class="mini-btn" id="push-test-btn" style="display:none;" onclick="testPush()">Envoyer une notification de test</button>
+        <button class="mini-btn push-off-btn" id="push-off-btn" style="display:none;" onclick="pushTurnOff()">🔕 Désactiver les notifications</button>
         <p class="feed-type" id="push-help" style="margin:10px 0 0;font-size:12px;line-height:1.5;">🔊 Pas de son ? Réglages du téléphone → Applications → <b>Eaji</b> → Notifications : <b>Autoriser</b>, son activé, priorité élevée. Puis Batterie → <b>Aucune restriction</b> (fais pareil pour <b>Chrome</b>).</p>
       </div>
 
@@ -2337,7 +2343,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.18b';
+const APP_VERSION = '2026.11.18c';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
@@ -13589,16 +13595,25 @@ async function pushRegistration() {
 }
 function pushPermission() { return PUSH_SUPPORTED ? Notification.permission : 'unsupported'; }
 
+// « Désactiver » : ce téléphone ne reçoit plus les notifications (jusqu'à « Activer »).
+function pushOff() { try { return localStorage.getItem('eaji_push_off') === '1'; } catch (e) { return false; } }
+async function pushTurnOff() {
+  try { localStorage.setItem('eaji_push_off', '1'); } catch (e) {}
+  await disablePushForThisDevice();
+  refreshPushUi();
+  showToast(i18nT('🔕 Notifications désactivées sur ce téléphone.'));
+}
 function refreshPushUi() {
-  const perm = pushPermission();
+  const perm = pushPermission() === 'granted' && pushOff() ? 'off' : pushPermission();
   const state = document.getElementById('push-state'), btn = document.getElementById('push-enable-btn'), test = document.getElementById('push-test-btn');
   const banner = document.getElementById('push-banner');
   let dismissed = false;
-  try { dismissed = localStorage.getItem('eaji_push_banner_off') === '1'; } catch (e) {}
+  try { dismissed = sessionStorage.getItem('eaji_push_banner_off') === '1'; } catch (e) {}
   let msg = '', showBtn = false, showBanner = false;
   if (perm === 'granted') { msg = '✅ Activées sur cet appareil : messages, appels, photos, cadeaux et lives arrivent même écran verrouillé.'; }
   else if (perm === 'denied') { msg = '🚫 Bloquées. Touche « Réessayer ». Si rien ne s\'affiche : réglages du téléphone → Applications → Eaji (et Chrome) → Notifications → Autoriser, puis reviens ici.'; showBtn = true; showBanner = !dismissed; }
   else if (perm === 'default') { msg = 'Pas encore activées sur cet appareil.'; showBtn = true; showBanner = !dismissed; }
+  else if (perm === 'off') { msg = '🔕 Désactivées sur ce téléphone. Touche « Activer » pour les recevoir à nouveau.'; showBtn = true; showBanner = true; }
   else if (IS_IOS && !IS_STANDALONE) { msg = 'Sur iPhone : touche « Partager » puis « Sur l\'écran d\'accueil », ouvre Eaji depuis l\'icône, puis active les notifications ici (iOS 16.4 ou plus récent).'; showBanner = !dismissed; }
   else { msg = 'Ce navigateur ne permet pas les notifications. Utilise l\'application Eaji installée ou Chrome.'; }
   if (state) state.textContent = msg;
@@ -13607,23 +13622,34 @@ function refreshPushUi() {
     btn.style.display = PUSH_SUPPORTED && CREATOR_TOKEN ? '' : (showBtn ? '' : 'none');
     btn.textContent = perm === 'granted' ? '🔄 Réactiver les notifications' : perm === 'denied' ? '🔔 Réessayer d\'activer les notifications' : '🔔 Activer les notifications';
   }
+  const offBtn = document.getElementById('push-off-btn');
+  if (offBtn) offBtn.style.display = perm === 'granted' ? '' : 'none';
   const help = document.getElementById('push-help');
   if (help) help.style.display = PUSH_SUPPORTED ? '' : 'none';
   if (test) test.style.display = perm === 'granted' ? '' : 'none';
   if (banner) {
-    banner.style.display = CREATOR_TOKEN && showBanner ? 'flex' : 'none';
-    document.getElementById('push-banner-btn').style.display = perm === 'default' || perm === 'denied' ? '' : 'none';
-    document.getElementById('push-banner-btn').textContent = perm === 'denied' ? 'Réessayer' : 'Activer';
+    // Sous la recherche : toujours visible. Activées → petite ligne avec « Tester » et « Désactiver ».
+    const on = perm === 'granted';
+    banner.classList.toggle('on', on);
+    banner.style.display = CREATOR_TOKEN && PUSH_SUPPORTED && (on || showBanner) ? 'flex' : 'none';
+    document.getElementById('push-banner-btn').style.display = perm === 'default' || perm === 'denied' || perm === 'off' ? '' : 'none';
+    document.getElementById('push-banner-btn').textContent = perm === 'denied' ? i18nT('Réessayer') : i18nT('Activer');
+    document.getElementById('push-banner-test').style.display = on ? '' : 'none';
+    document.getElementById('push-banner-off').style.display = on ? '' : 'none';
+    document.getElementById('push-banner-x').style.display = on || perm === 'off' ? 'none' : '';
+    banner.querySelector('.grow b').textContent = on ? i18nT('🔔 Notifications activées') : perm === 'off' ? i18nT('🔕 Notifications désactivées') : i18nT('🔔 Ne rate plus rien');
     if (perm !== 'default') document.getElementById('push-banner-text').textContent = msg;
   }
 }
 function dismissPushBanner() {
-  try { localStorage.setItem('eaji_push_banner_off', '1'); } catch (e) {}
+  try { sessionStorage.setItem('eaji_push_banner_off', '1'); } catch (e) {}
   document.getElementById('push-banner').style.display = 'none';
 }
 
 // fromUser : appelé par un toucher (obligatoire pour demander l'autorisation sur la plupart des téléphones).
 async function enablePush(fromUser) {
+  if (fromUser) { try { localStorage.removeItem('eaji_push_off'); } catch (e) {} }
+  else if (pushOff()) { refreshPushUi(); return false; }
   if (!CREATOR_TOKEN || !PUSH_SUPPORTED) { refreshPushUi(); if (fromUser && !PUSH_SUPPORTED) showToast(document.getElementById('push-state')?.textContent || 'Notifications non disponibles ici.'); return false; }
   try {
     if (Notification.permission === 'default' || (fromUser && Notification.permission === 'denied')) {
@@ -13687,6 +13713,7 @@ if ('serviceWorker' in navigator) {
     if (d.type === 'eaji-open' && d.link) openNotification(d.link);
     if (d.type === 'eaji-push') {
       // Application ouverte : on met à jour la cloche et la conversation, sans notification système.
+      if (d.kind !== 'appel' && d.kind !== 'appel_fin' && !pushOff()) notifPing();
       loadNotifications();
       if (d.kind === 'appel') checkIncomingCall(); // sonne tout de suite
       if (d.kind === 'message') refreshUnread();
@@ -13696,6 +13723,23 @@ if ('serviceWorker' in navigator) {
   });
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshPushUi(); });
+// Petit son (deux notes) + vibration quand un message ou une notification arrive pendant qu'Eaji est ouvert.
+let PING_AC = null;
+function notifPing() {
+  try { if (navigator.vibrate) navigator.vibrate([120, 60, 120]); } catch (e) {}
+  try {
+    PING_AC = PING_AC || new (window.AudioContext || window.webkitAudioContext)();
+    const ac = PING_AC; if (ac.state === 'suspended') ac.resume().catch(() => {});
+    [[880, 0], [1320, 0.14]].forEach(([f, t]) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, ac.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.25, ac.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t + 0.22);
+      o.connect(g).connect(ac.destination); o.start(ac.currentTime + t); o.stop(ac.currentTime + t + 0.25);
+    });
+  } catch (e) { /* pas de son possible ici */ }
+}
 
 // ==== Lecture en plein écran : glisser vers le haut pour passer à la vidéo suivante (comme TikTok) ====
 let REEL = null;
