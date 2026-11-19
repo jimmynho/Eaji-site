@@ -3,7 +3,7 @@
 // la copie gardée sur le téléphone ne sert que si la connexion est coupée.
 // Les échanges avec le serveur (API) ne sont pas mis en cache ici (l'application garde elle-même le fil et les messages).
 // Les images déjà vues (photos des publications, photos de profil) sont gardées pour le mode hors connexion.
-const CACHE_NAME = 'eaji-v65';
+const CACHE_NAME = 'eaji-v66';
 const IMG_CACHE = 'eaji-images';
 const IMG_MAX = 120; // images gardées au maximum (les plus anciennes sont retirées)
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
@@ -60,7 +60,8 @@ self.addEventListener('push', (event) => {
     // Eaji est ouvert et affiché à l'écran : l'application prévient elle-même (sonnerie, compteur).
     const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const shown = wins.find((w) => w.visibilityState === 'visible' && w.focused);
-    if (shown) { shown.postMessage({ type: 'eaji-push', ...d }); return; }
+    // La notification de test s'affiche toujours dans la barre du téléphone, même Eaji ouvert.
+    if (shown && d.tag !== 'test') { shown.postMessage({ type: 'eaji-push', ...d }); return; }
     if (d.kind === 'appel_fin') return callMissed(d);
     if (call) return ringCall(d);
     await self.registration.showNotification(d.title || 'Eaji', {

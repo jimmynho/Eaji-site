@@ -156,6 +156,10 @@ select.field{appearance:none;}
 .follow-btn{margin-left:auto;background:none;border:1px solid var(--teal);color:var(--teal);font-size:11px;
   font-weight:700;padding:5px 11px;border-radius:99px;cursor:pointer;font-family:'Inter',sans-serif;}
 .follow-btn.following{background:var(--teal);color:#0A2320;}
+/* Bouton pour suivre un créateur : « Ajouter » en bleu, « Suivi » en jaune une fois ajouté */
+.follow-btn.add-btn,#cp-follow.add-btn{background:#2563EB !important;border:1px solid #2563EB !important;color:#fff !important;}
+.follow-btn.add-btn.following,#cp-follow.add-btn.following{background:#F5C518 !important;border-color:#E0A800 !important;color:#2B1D03 !important;}
+.dm-add{font-size:11px;padding:5px 10px;margin-left:0;flex:none;}
 .feed-title{font-size:16px;line-height:1.55;margin:0 0 12px;}
 .feed-actions{display:flex;flex-wrap:wrap;gap:10px 16px;border-top:1px solid var(--line);padding-top:10px;}
 .feed-action{background:none;border:none;color:var(--muted);font-size:12px;display:flex;align-items:center;gap:5px;
@@ -2121,7 +2125,8 @@ window.eajiLoader = (function () {
       <div id="dm-thread-view" style="display:none;">
         <div class="section-title" style="margin-top:14px;display:flex;align-items:center;gap:10px;">
           <button class="follow-btn" style="margin-left:0;" onclick="closeConversation()">&larr; Retour</button>
-          <span id="dm-title" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" onclick="if (CHAT_GROUP_ID) openGroupInfo()">Conversation</span>
+          <span id="dm-title" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" onclick="if (CHAT_GROUP_ID) openGroupInfo(); else if (dmContactId) openCreatorProfile(dmContactId)">Conversation</span>
+          <button class="follow-btn add-btn dm-add" id="dm-add" style="display:none;" onclick="dmToggleFollow(this)">Ajouter</button>
           <button class="call-btn" title="Appel audio" onclick="startCall('audio')">📞</button>
           <button class="call-btn" id="dm-call-video" title="Appel vidéo" onclick="startCall('video')">🎥</button>
           <button class="call-btn" id="dm-group-info" title="Membres du groupe" style="display:none;" onclick="openGroupInfo()">👥</button>
@@ -2343,7 +2348,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.18d';
+const APP_VERSION = '2026.11.18e';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
@@ -3482,7 +3487,18 @@ document.addEventListener('input', (e) => { if (e.target && e.target.classList &
 setInterval(() => document.querySelectorAll('textarea.grow-ta').forEach((el) => { if (String(el.value.length) !== el.dataset.lastLen && el.offsetParent) growTa(el); }), 700);
 window.addEventListener('resize', () => document.querySelectorAll('textarea.grow-ta').forEach(growTa));
 
+let UPLOAD_BUSY = false;
 async function uploadContent() {
+  // Une publication à la fois : un deuxième appui (ou la publication automatique d'un lien) ne la publie pas deux fois.
+  if (UPLOAD_BUSY) return;
+  UPLOAD_BUSY = true;
+  try { return await uploadContentOnce(); } finally { UPLOAD_BUSY = false; }
+}
+function newClientRef() {
+  try { if (crypto.randomUUID) return crypto.randomUUID().replace(/-/g, ''); } catch (e) {}
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+}
+async function uploadContentOnce() {
   const errorEl = document.getElementById('up-error');
   const successEl = document.getElementById('up-success');
   const btn = document.getElementById('up-btn');
@@ -3522,7 +3538,7 @@ async function uploadContent() {
   const fingerprint = await fileFingerprint(file);
   const original = document.getElementById('up-file').files[0];
   const sourceFingerprint = original && original !== file ? await fileFingerprint(original) : null;
-  const params = { contentType, title, visibilityScope, durationSeconds, mediaWidth: vInfo.width, mediaHeight: vInfo.height, salePrice, safetyCheck,
+  const params = { clientRef: newClientRef(), contentType, title, visibilityScope, durationSeconds, mediaWidth: vInfo.width, mediaHeight: vInfo.height, salePrice, safetyCheck,
     soundContentId: EDITED ? EDITED.soundId : null, aiMarkers,
     importedFrom: IMPORTED ? IMPORTED.url : null, fingerprint, sourceFingerprint,
     lyrics: ['musique', 'podcast', 'audio'].includes(contentType) ? (document.getElementById('up-lyrics').value || '').trim() || undefined : undefined };
@@ -3582,7 +3598,7 @@ async function sendMediaPost(p, file) {
   const thumb = thumbKind ? await prepareThumb(thumbKind, { file }) : null;
   const r3 = await net(() => fetch(`${API_BASE_URL}/api/content`, {
     method: 'POST', headers,
-    body: JSON.stringify({ ...(thumb || {}), contentType: p.contentType, title: p.title, storageUrl: d1.storageKey, visibilityScope: p.visibilityScope, fileSizeBytes: file.size,
+    body: JSON.stringify({ ...(thumb || {}), clientRef: p.clientRef, contentType: p.contentType, title: p.title, storageUrl: d1.storageKey, visibilityScope: p.visibilityScope, fileSizeBytes: file.size,
       durationSeconds: p.durationSeconds, mediaWidth: p.mediaWidth, mediaHeight: p.mediaHeight, salePrice: p.salePrice, safetyCheck: p.safetyCheck,
       soundContentId: p.soundContentId, aiMarkers: p.aiMarkers, importedFrom: p.importedFrom, fingerprint: p.fingerprint, sourceFingerprint: p.sourceFingerprint, lyrics: p.lyrics }),
   }));
@@ -3697,7 +3713,7 @@ function feedCardHtml(item) {
           <div class="feed-creator" onclick="openCreatorProfile('${cid}')">${name}${item.creator_business ? '<span class="biz-badge">Entreprise</span>' : (item.creator_premium ? '<span class="premium-badge">✓</span>' : '')}</div>
           <div class="feed-type">${escapeHtml(contentTypeLabel(item.content_type))}${item.creator_country && COUNTRY_BY_CODE[item.creator_country] ? ' · ' + escapeHtml(COUNTRY_BY_CODE[item.creator_country].name) : ''}${item.visibility_scope === 'abonnes' ? ' · réservé aux abonnés' : ''}</div>
         </div>
-        ${mine ? '' : `<button class="follow-btn${followingSet.has(item.creator_id) ? ' following' : ''}" onclick="toggleFollow('${cid}', this)">${followingSet.has(item.creator_id) ? 'Suivi' : 'Suivre'}</button>`}
+        ${mine ? '' : `<button class="follow-btn add-btn${followingSet.has(item.creator_id) ? ' following' : ''}" onclick="toggleFollow('${cid}', this)">${escapeHtml(i18nT(followingSet.has(item.creator_id) ? 'Suivi' : 'Ajouter'))}</button>`}
       </div>
       ${feedTitleHtml(item)}
       ${item.ai_generated ? '<p class="ai-badge">🤖 Créé par intelligence artificielle</p>' : ''}
@@ -4048,7 +4064,7 @@ async function toggleFollow(creatorId, btn) {
   isFollowing ? followingSet.delete(creatorId) : followingSet.add(creatorId);
   document.querySelectorAll('.follow-btn').forEach(b => {
     if (b.getAttribute('onclick') === btn.getAttribute('onclick')) {
-      b.textContent = isFollowing ? 'Suivre' : 'Suivi';
+      b.textContent = i18nT(isFollowing ? 'Ajouter' : 'Suivi');
       b.classList.toggle('following', !isFollowing);
     }
   });
@@ -4805,7 +4821,9 @@ async function openCreatorProfile(creatorId) {
   showScreen('s-creator');
 }
 function updateProfileFollowButton() {
-  document.getElementById('cp-follow').textContent = CP_FOLLOWING ? 'Abonné ✓' : "S'abonner";
+  const fb = document.getElementById('cp-follow');
+  fb.classList.add('add-btn'); fb.classList.toggle('following', !!CP_FOLLOWING);
+  fb.textContent = i18nT(CP_FOLLOWING ? 'Suivi ✓' : '➕ Ajouter');
 }
 async function toggleFollowFromProfile() {
   if (!CREATOR_TOKEN) return showToast('Connecte-toi pour t\'abonner.');
@@ -12031,11 +12049,29 @@ function openConversation(creatorId, name) {
   document.getElementById('dm-call-video').style.display = '';
   document.getElementById('dm-group-info').style.display = 'none';
   showThread(name || 'Conversation');
-  if (!name) apiCall(`/api/creators/${creatorId}/public`).then(p => { document.getElementById('dm-title').textContent = p.name; }).catch(() => {});
+  // Nom de la personne : le toucher ouvre son profil. « Ajouter » pour la suivre sans quitter la conversation.
+  const add = document.getElementById('dm-add'); add.style.display = 'none';
+  apiCall(`/api/creators/${creatorId}/public`).then(p => {
+    if (dmContactId !== creatorId) return;
+    if (!name) document.getElementById('dm-title').textContent = p.name;
+    if (p.isMe) return;
+    if (p.isFollowing) followingSet.add(creatorId); else followingSet.delete(creatorId);
+    add.classList.toggle('following', !!p.isFollowing);
+    add.textContent = i18nT(p.isFollowing ? 'Suivi' : 'Ajouter');
+    add.style.display = '';
+  }).catch(() => {});
+}
+async function dmToggleFollow(btn) {
+  const id = dmContactId; if (!id) return;
+  const was = followingSet.has(id);
+  try { await apiCall(`/api/creators/${id}/follow`, { method: was ? 'DELETE' : 'POST' }); } catch (e) { return showToast(e.message); }
+  was ? followingSet.delete(id) : followingSet.add(id);
+  btn.classList.toggle('following', !was); btn.textContent = i18nT(was ? 'Ajouter' : 'Suivi');
 }
 
 async function openGroup(groupId) {
   if (!CREATOR_TOKEN) return;
+  document.getElementById('dm-add').style.display = 'none';
   try { CHAT_GROUP_INFO = await apiCall(`/api/groups/${groupId}`, { pin: true }); }
   catch (e) { return showToast(e.message); }
   dmContactId = null;
@@ -13621,7 +13657,7 @@ function refreshPushUi() {
   // Le bouton reste toujours là : « Activer », « Réessayer » si bloquées, « Réactiver » si déjà activées (abonnement refait).
   if (btn) {
     btn.style.display = PUSH_SUPPORTED && CREATOR_TOKEN ? '' : (showBtn ? '' : 'none');
-    btn.textContent = perm === 'granted' ? '🔄 Réactiver les notifications' : perm === 'denied' ? '🔔 Réessayer d\'activer les notifications' : '🔔 Activer les notifications';
+    btn.textContent = perm === 'denied' ? '🔔 Réessayer d\'activer les notifications' : '🔔 Activer les notifications du téléphone';
   }
   const offBtn = document.getElementById('push-off-btn');
   if (offBtn) offBtn.style.display = perm === 'granted' ? '' : 'none';
@@ -13632,7 +13668,7 @@ function refreshPushUi() {
     // Sous la recherche : toujours visible. Activées → petite ligne avec « Tester » et « Désactiver ».
     const on = perm === 'granted';
     banner.classList.toggle('on', on);
-    banner.style.display = CREATOR_TOKEN && PUSH_SUPPORTED && (on || showBanner) ? 'flex' : 'none';
+    banner.style.display = CREATOR_TOKEN && PUSH_SUPPORTED && !on && showBanner ? 'flex' : 'none'; // déjà activées : plus de bandeau
     document.getElementById('push-banner-btn').style.display = perm === 'default' || perm === 'denied' || perm === 'off' ? '' : 'none';
     document.getElementById('push-banner-btn').textContent = perm === 'denied' ? i18nT('Réessayer') : i18nT('Activer');
     document.getElementById('push-banner-test').style.display = on ? '' : 'none';
@@ -13697,7 +13733,9 @@ async function disablePushForThisDevice() {
 async function testPush() {
   try {
     const r = await apiCall('/api/push/test', { method: 'POST' });
-    showToast(r.sent ? 'Notification envoyée : verrouille l\'écran pour la voir arriver.' : 'Aucun appareil abonné : touche « Activer ».');
+    if (r.sent) showToast(i18nT('✅ Google a bien reçu la notification pour ce téléphone. Si rien n\'apparaît dans la barre du haut, c\'est Android qui bloque Eaji : Réglages → Applications → Eaji → Notifications → Autoriser.'));
+    else if (r.devices) showToast(i18nF('❌ Le service de notification a refusé l\'envoi (code {0}). Touche « Activer les notifications du téléphone » puis réessaie.', (r.codes || []).join(', ')));
+    else showToast(i18nT('Aucun appareil abonné : touche « Activer les notifications du téléphone ».'));
   } catch (e) { showToast(e.message); }
 }
 
