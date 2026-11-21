@@ -1584,7 +1584,10 @@ window.eajiLoader = (function () {
         <div class="avatar-edit-label" id="login-code-note" style="margin:6px 0 0;">Il est d&eacute;j&agrave; &eacute;crit ci-dessous : appuie sur &laquo; Valider et entrer &raquo;.</div>
       </div>
       <label class="field-label">Code de v&eacute;rification</label>
-      <input class="field" id="login-otp" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" maxlength="8" style="font-size:22px;letter-spacing:6px;text-align:center;" onkeydown="if(event.key==='Enter')verifyLoginCode()" />
+      <div style="display:flex;gap:8px;align-items:stretch;">
+      <input class="field" id="login-otp" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" maxlength="8" style="font-size:22px;letter-spacing:6px;text-align:center;flex:1;min-width:0;" oninput="loginOtpInput(this)" onkeydown="if(event.key==='Enter')verifyLoginCode()" />
+      <button class="secondary-btn" type="button" id="login-paste" style="width:auto;flex:none;padding:0 12px;margin:0 0 14px;" onclick="pasteLoginCode()">📋 Coller</button>
+      </div>
       <p class="avatar-edit-label" id="login-dev-hint" style="margin:-8px 0 14px;"></p>
       <div id="fb-recaptcha"></div>
       <p class="form-error" id="login-error-2">Code invalide.</p>
@@ -1732,6 +1735,10 @@ window.eajiLoader = (function () {
         <button class="pub-tile" data-type="powerpoint" onclick="pickPubType('powerpoint')"><span class="pub-ic">📊</span><b>PowerPoint</b><small>Publier</small></button>
       </div>
       <div id="pub-form" style="display:none;">
+        <div id="pub-resume" style="display:none;background:#FFF4D6;border:1px solid #E0A800;border-radius:14px;padding:12px;margin-bottom:6px;font-size:13px;line-height:1.45;color:#2B1D03;">
+          ⚠️ <span>Le téléphone a fermé Eaji pendant le choix du fichier (mémoire pleine). Choisis-le à nouveau :</span>
+          <button class="primary-btn" style="margin-top:8px;" onclick="pubResumePick()">📁 Choisir le fichier</button>
+        </div>
       <div class="pub-head"><span class="pub-head-ic" id="pub-head-ic">📹</span><b id="pub-head-label">Vidéo courte</b><button class="mini-btn" onclick="pubBack()">← Changer de type</button></div>
       <div id="pub-ready" style="display:none;">
         <div class="pub-ready-top"><button class="pub-x" id="pub-cancel" onclick="pubCancel()" aria-label="Annuler">✕</button><b id="pub-ready-name"></b><button class="mini-btn" id="pub-change" onclick="pubChangeFile()">Changer</button><button class="pub-go" id="pub-go" onclick="pubGo()">Publier</button></div>
@@ -2348,7 +2355,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.18e';
+const APP_VERSION = '2026.11.21a';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
@@ -3186,7 +3193,7 @@ function renderMedia(item) {
     // Format d'origine connu : le cadre a tout de suite la bonne forme. Sinon, il la prend dès que la vidéo est lue.
     const w = Number(item.media_width), h = Number(item.media_height), known = w > 0 && h > 0;
     return `<div class="fv-wrap" onclick="openReel(this.querySelector('video'))" role="button" aria-label="Plein écran"${known ? ` style="--ar:${(w / h).toFixed(4)}"` : ''}>
-        <video playsinline muted preload="${known ? 'none' : 'metadata'}" src="${url}" data-dims="${known ? 1 : 0}" onloadedmetadata="fvRatio(this, '${id}')" onplay="countView('${id}', this)" onended="onFeedVideoEnded(this)"></video>
+        <video playsinline muted preload="${known ? 'none' : 'metadata'}"${item.thumbUrl ? ` poster="${escapeHtml(item.thumbUrl)}"` : ''} src="${url}" data-dims="${known ? 1 : 0}" onloadedmetadata="fvRatio(this, '${id}')" onplay="countView('${id}', this)" onended="onFeedVideoEnded(this)"></video>
         <button class="fv-snd" onclick="fvSound(event)" aria-label="Activer le son">${FEED_SOUND ? '🔊' : '🔇'}</button>
       </div>`;
   }
@@ -3326,8 +3333,13 @@ function pickPubType(t, formOnly) {
   else if (t === 'publication') { const ta = document.getElementById('up-title'); if (ta) setTimeout(() => ta.focus(), 50); }
   else pubPickFile();
 }
+const PUB_RESUME_KEY = 'eaji_pub_resume';
 function pubPickFile() {
   const input = document.getElementById('up-file');
+  // Moins de mémoire utilisée pendant le choix du fichier (les téléphones Samsung ferment sinon Eaji en arrière-plan),
+  // et de quoi reprendre au même endroit si le téléphone ferme quand même Eaji.
+  document.querySelectorAll('video').forEach((v) => { try { if (!v.paused) v.pause(); } catch (e) {} });
+  try { localStorage.setItem(PUB_RESUME_KEY, JSON.stringify({ type: document.getElementById('up-type').value, title: document.getElementById('up-title').value.slice(0, 2000), at: Date.now() })); } catch (e) {}
   if (!input.dataset.cancelHook) { input.dataset.cancelHook = '1'; input.addEventListener('cancel', () => { PUB_AUTO = null; pubCaptureOff(); pubWait(false); pubNothingChosen(); }); }
   input.click();
 }
@@ -4399,6 +4411,7 @@ async function requestLoginCode(identifier, password, isResend, { skipFirebase =
     LOGIN_PENDING = { identifier, password };
     FB_LOGIN.confirm = null;
     PENDING_LOGIN_ID = data.creatorId;
+    loginWaitSave(data);
     document.getElementById('login-error-1').style.display = 'none';
     document.getElementById('login-error-2').style.display = 'none';
     document.getElementById('login-step-credentials').style.display = 'none';
@@ -4503,7 +4516,66 @@ async function logoutCreator() {
   location.reload();
 }
 
+// ==== Code de connexion : on ne perd plus l'étape en allant le chercher dans Gmail ====
+// Certains téléphones (Samsung…) ferment Eaji en arrière-plan : au retour, l'écran du code est remis tel quel (15 minutes).
+// Le mot de passe n'est jamais gardé.
+const LOGIN_WAIT_KEY = 'eaji_login_wait';
+function loginWaitSave(data) {
+  if (!data || data.channel === 'firebase' || data.devCode) return; // SMS Firebase ou code affiché : rien à aller chercher
+  setTimeout(() => {
+    try { localStorage.setItem(LOGIN_WAIT_KEY, JSON.stringify({ id: PENDING_LOGIN_ID, hint: document.getElementById('login-dev-hint').textContent, at: Date.now() })); } catch (e) {}
+  }, 0);
+}
+function loginWaitClear() { try { localStorage.removeItem(LOGIN_WAIT_KEY); } catch (e) {} }
+function loginShowCodeStep(id, hint) {
+  PENDING_LOGIN_ID = id;
+  document.getElementById('onboarding-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-step-credentials').style.display = 'none';
+  document.getElementById('login-step-forgot').style.display = 'none';
+  document.getElementById('login-step-2fa').style.display = 'block';
+  if (hint) document.getElementById('login-dev-hint').textContent = hint;
+}
+// Au démarrage (pas encore connecté) : lien de l'email (?lid=…&lc=…) → code écrit et validé tout seul ;
+// sinon, retour sur l'étape du code si elle était en cours.
+function loginResume() {
+  if (CREATOR_TOKEN) { loginWaitClear(); return false; }
+  const q = new URLSearchParams(location.search);
+  const lid = q.get('lid'), lc = String(q.get('lc') || '').replace(/\D/g, '');
+  if (lid && /^[0-9a-f-]{36}$/i.test(lid) && lc.length >= 6) {
+    history.replaceState(null, '', location.pathname);
+    loginShowCodeStep(lid, i18nT('Code reçu par email : connexion…'));
+    document.getElementById('login-otp').value = lc;
+    setTimeout(verifyLoginCode, 300);
+    return true;
+  }
+  let w = null;
+  try { w = JSON.parse(localStorage.getItem(LOGIN_WAIT_KEY) || 'null'); } catch (e) {}
+  if (!w || !w.id || Date.now() - w.at > 15 * 60000) { loginWaitClear(); return false; }
+  loginShowCodeStep(w.id, w.hint);
+  return true;
+}
+// « 📋 Coller le code » : le code copié dans Gmail (bouton « Copier le code ») est écrit et validé.
+async function pasteLoginCode() {
+  let t = '';
+  try { t = await navigator.clipboard.readText(); } catch (e) { return showToast(i18nT('Appuie longuement dans la case puis « Coller ».')); }
+  const m = String(t || '').match(/\d{6}/);
+  if (!m) return showToast(i18nT('Aucun code à 6 chiffres copié.'));
+  document.getElementById('login-otp').value = m[0];
+  verifyLoginCode();
+}
+// 6 chiffres écrits ou collés (suggestion du clavier) : validation toute seule.
+function loginOtpInput(el) {
+  const d = el.value.replace(/\D/g, '');
+  if (d.length === 6 && !LOGIN_VERIFYING) verifyLoginCode();
+}
+let LOGIN_VERIFYING = false;
 async function verifyLoginCode() {
+  if (LOGIN_VERIFYING) return;
+  LOGIN_VERIFYING = true;
+  try { return await verifyLoginCodeOnce(); } finally { LOGIN_VERIFYING = false; }
+}
+async function verifyLoginCodeOnce() {
   const code = document.getElementById('login-otp').value.replace(/\D/g, '');
   const errorEl = document.getElementById('login-error-2');
   eajiLoader.show(); // petite animation « Eaji » en passant à l'application
@@ -4552,6 +4624,7 @@ async function verifyLoginCode() {
     const tempPassword = LOGIN_PENDING ? LOGIN_PENDING.password : '';
     LOGIN_PENDING = null;
     FB_LOGIN.confirm = null;
+    loginWaitClear();
 
     CREATOR_TOKEN = data.token;
     CREATOR_ID = PENDING_LOGIN_ID;
@@ -6501,25 +6574,34 @@ async function payMobileMoney() {
 async function payByCard() {
   if (!CURRENT_PAYMENT) return;
   const st = document.getElementById('pay-status');
-  // La fenêtre s'ouvre tout de suite (sinon le téléphone la bloque), puis va vers PayPal.
-  const win = window.open('', '_blank');
   try {
     const d = await apiCall(`/api/payments/${CURRENT_PAYMENT.id}/paypal`, { method: 'POST' });
-    if (win) win.location.href = d.approveUrl; else window.location.href = d.approveUrl;
+    payOpenPage(d.approveUrl);
     payWaiting('Termine le paiement sur la page PayPal, puis reviens ici : l\'achat s\'activera tout seul.');
-  } catch (e) { if (win) win.close(); st.style.color = 'var(--coral)'; st.textContent = e.message; }
+  } catch (e) { st.style.color = 'var(--coral)'; st.textContent = e.message; }
 }
 
 async function payCinetPay() {
   if (!CURRENT_PAYMENT) return;
   const st = document.getElementById('pay-status');
   st.style.color = ''; st.textContent = '';
-  const win = window.open('', '_blank'); // ouverte tout de suite, sinon le téléphone la bloque
   try {
     const d = await apiCall(`/api/payments/${CURRENT_PAYMENT.id}/cinetpay`, { method: 'POST' });
-    if (win) win.location.href = d.paymentUrl; else window.location.href = d.paymentUrl;
+    payOpenPage(d.paymentUrl);
     payWaiting(d.message + ' ' + i18nT("Reviens ici ensuite : l'achat s'activera tout seul dès que l'argent est reçu."));
-  } catch (e) { if (win) win.close(); st.style.color = 'var(--coral)'; st.textContent = e.message; }
+  } catch (e) { st.style.color = 'var(--coral)'; st.textContent = e.message; }
+}
+// Page de paiement : ouverte directement à la bonne adresse. Avant, une page vide s'ouvrait d'abord puis devait
+// changer d'adresse : dans l'application Play Store, elle restait bloquée sur « about:blank ».
+function payOpenPage(url) {
+  if (!/^https:\/\//.test(String(url || ''))) return;
+  const win = window.open(url, '_blank', 'noopener');
+  // Le téléphone a bloqué l'ouverture : un bouton à toucher pour l'ouvrir.
+  if (!win) {
+    const st = document.getElementById('pay-status');
+    st.style.color = '';
+    st.innerHTML = `<a class="primary-btn" style="display:block;text-align:center;text-decoration:none;margin-top:8px;" href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(i18nT('Ouvrir la page de paiement'))}</a>`;
+  }
 }
 
 function closePaymentSheet() {
@@ -7196,6 +7278,7 @@ async function importFromLink() {
 }
 
 async function onUploadFileChange() {
+  try { localStorage.removeItem(PUB_RESUME_KEY); } catch (e) {} // fichier bien reçu
   EDITED = null; refreshEditButton(); // nouveau fichier : l'ancien montage ne vaut plus
   const info = document.getElementById('up-duration');
   const file = document.getElementById('up-file').files[0];
@@ -9125,7 +9208,56 @@ async function pubGo() {
   if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 // Rien n'a été choisi (caméra fermée, fichiers annulés) : on revient aux tuiles au lieu de laisser le formulaire vide.
+// Eaji a été fermé par le téléphone pendant le choix du fichier : on revient sur « Publier », au même type,
+// avec un bouton pour choisir à nouveau le fichier (directement dans les fichiers, sans la caméra).
+// Fichier ou lien partagé vers Eaji : la vidéo/photo s'ouvre dans « Publier » ; un lien va dans « Télécharger avec le lien ».
+async function openSharedIntoEaji() {
+  if (new URLSearchParams(location.search).get('shared') !== '1') return;
+  history.replaceState(null, '', location.pathname);
+  let cache;
+  try { cache = await caches.open('eaji-share'); } catch (e) { return; }
+  const fr = await cache.match('./shared-file'), tr = await cache.match('./shared-text');
+  const text = tr ? await tr.text() : '';
+  for (const k of await cache.keys()) await cache.delete(k);
+  if (fr) {
+    const blob = await fr.blob();
+    const name = decodeURIComponent(fr.headers.get('X-Name') || 'fichier');
+    const type = blob.type || '';
+    const t = /^image\//.test(type) ? 'photo' : /^audio\//.test(type) ? 'musique' : 'video_courte';
+    pickPubType(t, true);
+    const f = new File([blob], name, { type });
+    const dt = new DataTransfer(); dt.items.add(f);
+    document.getElementById('up-file').files = dt.files;
+    const link = (text.match(/https?:\/\/\S+/) || [''])[0];
+    if (text && !link && !document.getElementById('up-title').value) document.getElementById('up-title').value = text;
+    await onUploadFileChange();
+    return;
+  }
+  const link = (text.match(/https?:\/\/\S+/) || [''])[0];
+  if (link) {
+    pickPubType('video_courte', true);
+    const box = document.getElementById('imp-url');
+    if (box) { box.value = link; box.scrollIntoView({ block: 'center' }); }
+    showToast(i18nT('Lien reçu : touche « Télécharger avec le lien et Publier ».'));
+  }
+}
+function pubResumeAfterKill() {
+  let r = null;
+  try { r = JSON.parse(localStorage.getItem(PUB_RESUME_KEY) || 'null'); localStorage.removeItem(PUB_RESUME_KEY); } catch (e) {}
+  if (!r || !r.type || Date.now() - r.at > 15 * 60000) return;
+  pickPubType(r.type, true);
+  if (r.title) document.getElementById('up-title').value = r.title;
+  const box = document.getElementById('pub-resume');
+  if (box) box.style.display = 'block';
+}
+function pubResumePick() {
+  const box = document.getElementById('pub-resume'); if (box) box.style.display = 'none';
+  PUB_AUTO = { at: Date.now() };
+  pubPickFile();
+  pubWaitBack();
+}
 function pubNothingChosen() {
+  try { localStorage.removeItem(PUB_RESUME_KEY); } catch (e) {}
   const t = edEl('up-type').value;
   if (t === 'publication' || EDITED || PENDING_SOUND || edEl('up-file').files[0]) return;
   if (edEl('up-title').value.trim()) return;
@@ -10967,6 +11099,7 @@ function showForgotForm() {
 }
 function backToLogin() {
   FB_LOGIN.confirm = null;
+  loginWaitClear();
   document.getElementById('login-step-forgot').style.display = 'none';
   document.getElementById('login-step-2fa').style.display = 'none';
   document.getElementById('login-step-credentials').style.display = 'block';
@@ -13537,7 +13670,19 @@ function podResume(a, t) {
 // ==== Vidéos du fil : lecture automatique quand la vidéo est à l'écran ====
 // Une seule vidéo joue à la fois (la plus visible). Sans le son au départ (les navigateurs l'imposent) :
 // le bouton 🔇 / 🔊 active le son pour toutes les vidéos. Mode « économie de données » du téléphone : pas de lecture auto.
-let FEED_SOUND = false;
+// Le son est mis dès l'ouverture (sauf si la personne l'a coupé). Si le téléphone refuse le son avant tout geste,
+// la vidéo démarre sans le son et le son arrive au premier toucher de l'écran (même un simple glissement).
+let FEED_SOUND = (() => { try { return localStorage.getItem('eaji_feed_sound') !== '0'; } catch (e) { return true; } })();
+let FEED_SOUND_WAIT = false;
+function fvUnlockSound(e) {
+  if (!FEED_SOUND_WAIT) return;
+  if (e && e.target && e.target.closest && e.target.closest('.fv-snd')) return; // le bouton 🔇/🔊 décide lui-même
+  FEED_SOUND_WAIT = false;
+  FEED_SOUND = true;
+  document.querySelectorAll('.fv-wrap video').forEach((v) => { v.muted = false; });
+  fvIcons();
+}
+['touchend', 'pointerup', 'keydown', 'click'].forEach((ev) => window.addEventListener(ev, fvUnlockSound, { capture: true, passive: true }));
 const FV = { seen: new WeakSet(), ratio: new Map(), io: null, cur: null };
 function fvBlocked() {
   return !!(REEL || (typeof MP !== 'undefined' && (MP.open || mpPlaying())) || (typeof DV !== 'undefined' && DV.open) || (typeof PV !== 'undefined' && PV.open) || document.hidden
@@ -13554,11 +13699,19 @@ function fvPick() {
     best.muted = !FEED_SOUND;
     best.preload = 'auto';
     const p = best.play();
-    if (p && p.catch) p.catch(() => { best.muted = true; FEED_SOUND = false; fvIcons(); best.play().catch(() => {}); });
+    if (p && p.catch) p.catch(() => {
+      // Son refusé avant le premier geste : lecture sans le son, le son viendra au premier toucher.
+      best.muted = true;
+      if (FEED_SOUND) { FEED_SOUND = false; FEED_SOUND_WAIT = true; }
+      fvIcons(); best.play().catch(() => {});
+    });
   }
   FV.cur = best;
 }
 function fvObserve() {
+  // La première vidéo du fil se charge tout de suite (elle est prête quand on arrive sur Découvrir).
+  const first = document.querySelector('#feed-list .fv-wrap video');
+  if (first && first.preload !== 'auto') first.preload = 'auto';
   if (!('IntersectionObserver' in window)) return;
   if (!FV.io) FV.io = new IntersectionObserver((entries) => {
     entries.forEach((en) => FV.ratio.set(en.target, en.isIntersecting ? en.intersectionRatio : 0));
@@ -13583,7 +13736,9 @@ function fvRatio(v, id) {
 }
 function fvSound(e) {
   e.stopPropagation(); // ne pas ouvrir le plein écran
+  FEED_SOUND_WAIT = false;
   FEED_SOUND = !FEED_SOUND;
+  try { localStorage.setItem('eaji_feed_sound', FEED_SOUND ? '1' : '0'); } catch (e) {}
   document.querySelectorAll('.fv-wrap video').forEach((v) => { v.muted = !FEED_SOUND; });
   fvIcons();
 }
@@ -14355,8 +14510,11 @@ window.addEventListener('load', async () => {
     loadMoney(); loadMyAds();
     startNotifications();
     openPendingLink(); // ouvert en touchant une notification du téléphone
+    pubResumeAfterKill(); // publication interrompue par le téléphone
+    openSharedIntoEaji(); // fichier ou lien partagé vers Eaji depuis une autre application
     loadStatuses();
   }
+  if (!CREATOR_TOKEN) loginResume(); // étape du code de connexion (retour depuis Gmail) ou lien de l'email
   setTimeout(openContentFromHash, 800); // lien d'une publication partagée (…#content-…)
   // Chiffres de l'accueil chargés tout de suite, en parallèle (plus rapide sur un réseau mobile lent).
   const realData = loadRealData().catch(() => {

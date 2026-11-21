@@ -3,7 +3,7 @@
 // la copie gardée sur le téléphone ne sert que si la connexion est coupée.
 // Les échanges avec le serveur (API) ne sont pas mis en cache ici (l'application garde elle-même le fil et les messages).
 // Les images déjà vues (photos des publications, photos de profil) sont gardées pour le mode hors connexion.
-const CACHE_NAME = 'eaji-v66';
+const CACHE_NAME = 'eaji-v67';
 const IMG_CACHE = 'eaji-images';
 const IMG_MAX = 120; // images gardées au maximum (les plus anciennes sont retirées)
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
@@ -21,6 +21,23 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
+  // « Partager » vers Eaji depuis une autre application (galerie, TikTok…) : le fichier ou le lien est gardé,
+  // puis Eaji s'ouvre sur « Publier ».
+  if (req.method === 'POST' && url.origin === self.location.origin && url.pathname.endsWith('/share-target')) {
+    event.respondWith((async () => {
+      try {
+        const form = await req.formData();
+        const cache = await caches.open('eaji-share');
+        for (const k of await cache.keys()) await cache.delete(k);
+        const file = form.get('media');
+        const text = [form.get('title'), form.get('text'), form.get('url')].filter(Boolean).join(' ').slice(0, 2000);
+        if (file && file.size) await cache.put('./shared-file', new Response(file, { headers: { 'Content-Type': file.type || 'application/octet-stream', 'X-Name': encodeURIComponent(file.name || 'fichier') } }));
+        await cache.put('./shared-text', new Response(text));
+      } catch (e) { /* rien de lisible : Eaji s'ouvre quand même */ }
+      return Response.redirect('./index.html?shared=1', 303);
+    })());
+    return;
+  }
   // Images d'autres adresses (stockage des photos) : Internet d'abord ; sans connexion, la copie gardée.
   // Les liens de stockage changent avec le temps : la copie est retrouvée sans tenir compte de la fin du lien (?…).
   if (req.method === 'GET' && url.origin !== self.location.origin && req.destination === 'image' && /^https:/.test(url.protocol)) {
