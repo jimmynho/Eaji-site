@@ -2355,7 +2355,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.21a';
+const APP_VERSION = '2026.11.21b';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
@@ -13675,11 +13675,13 @@ function podResume(a, t) {
 let FEED_SOUND = (() => { try { return localStorage.getItem('eaji_feed_sound') !== '0'; } catch (e) { return true; } })();
 let FEED_SOUND_WAIT = false;
 function fvUnlockSound(e) {
+  FV_SOUND_OK = true;
   if (!FEED_SOUND_WAIT) return;
   if (e && e.target && e.target.closest && e.target.closest('.fv-snd')) return; // le bouton 🔇/🔊 décide lui-même
   FEED_SOUND_WAIT = false;
   FEED_SOUND = true;
   document.querySelectorAll('.fv-wrap video').forEach((v) => { v.muted = false; });
+  if (FV.cur && FV.cur.paused && !REEL) FV.cur.play().catch(() => {});
   fvIcons();
 }
 ['touchend', 'pointerup', 'keydown', 'click'].forEach((ev) => window.addEventListener(ev, fvUnlockSound, { capture: true, passive: true }));
@@ -13696,17 +13698,42 @@ function fvPick() {
     if (v !== best && !v.paused) v.pause();
   });
   if (best && best.paused) {
-    best.muted = !FEED_SOUND;
+    // La vidéo démarre TOUJOURS toute seule. Le son est mis tout de suite si le téléphone l'autorise ;
+    // sinon elle démarre sans le son (au lieu de rester arrêtée) et le son arrive au premier toucher de l'écran.
+    const wantSound = FEED_SOUND || FEED_SOUND_WAIT;
+    const withSound = wantSound && fvSoundAllowed();
+    if (wantSound && !withSound) { FEED_SOUND = false; FEED_SOUND_WAIT = true; }
+    if (withSound) { FEED_SOUND = true; FEED_SOUND_WAIT = false; }
+    best.muted = !withSound;
     best.preload = 'auto';
-    const p = best.play();
+    fvIcons();
+    const v = best;
+    const p = v.play();
     if (p && p.catch) p.catch(() => {
-      // Son refusé avant le premier geste : lecture sans le son, le son viendra au premier toucher.
-      best.muted = true;
+      v.muted = true;
       if (FEED_SOUND) { FEED_SOUND = false; FEED_SOUND_WAIT = true; }
-      fvIcons(); best.play().catch(() => {});
+      fvIcons(); v.play().catch(() => {});
     });
+    // Sécurité : si elle est encore arrêtée un instant après (téléphone lent), on la relance sans le son.
+    setTimeout(() => {
+      if (FV.cur === v && v.paused && v.isConnected && !REEL && !fvBlocked() && document.visibilityState === 'visible') {
+        v.muted = true; if (FEED_SOUND) { FEED_SOUND = false; FEED_SOUND_WAIT = true; fvIcons(); }
+        v.play().catch(() => {});
+      }
+    }, 1500);
   }
   FV.cur = best;
+}
+// Le téléphone laisse-t-il jouer le son sans toucher l'écran ? (déjà touché, ou son autorisé pour Eaji)
+let FV_SOUND_OK = false;
+function fvSoundAllowed() {
+  if (FV_SOUND_OK) return true;
+  try { if (navigator.userActivation && navigator.userActivation.hasBeenActive) return (FV_SOUND_OK = true); } catch (e) {}
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) { const ac = new AC(); const ok = ac.state === 'running'; ac.close().catch(() => {}); if (ok) return (FV_SOUND_OK = true); }
+  } catch (e) {}
+  return false;
 }
 function fvObserve() {
   // La première vidéo du fil se charge tout de suite (elle est prête quand on arrive sur Découvrir).
