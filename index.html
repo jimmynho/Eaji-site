@@ -11219,6 +11219,18 @@ function openNotification(link) {
   else if (kind === 'live') openLive(id);
   else if (kind === 'support') openSupport(id);
   else if (kind === 'post') openSharedContent(id); // nouvelle publication d'un créateur suivi
+  else if (kind === 'answer') answerFromNative(id); // « Répondre » sur l'écran d'appel de l'application Android
+}
+// Application Android : « Répondre » sur l'écran d'appel natif → Eaji s'ouvre et décroche tout de suite.
+async function answerFromNative(callId) {
+  for (let i = 0; i < 16; i++) {
+    if (CREATOR_TOKEN) {
+      if (!incomingCall && !callPc) await checkIncomingCall();
+      if (incomingCall && (!callId || incomingCall.id === callId)) { acceptCall(); return; }
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  showToast(i18nT('📞 Appel manqué : l\'appelant a raccroché.'));
 }
 
 // ==== Application installable (écran d'accueil du téléphone) ====
@@ -13801,7 +13813,9 @@ function onFeedVideoEnded(video) {
 // ==== Notifications du téléphone (même écran verrouillé ou application fermée) ====
 const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
 const IS_STANDALONE = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
-const PUSH_SUPPORTED = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && window.isSecureContext && location.protocol.startsWith('http');
+// Application Android native (Eaji-android) : notifications et appels par Firebase, pas par le navigateur.
+const EAJI_NATIVE = (() => { try { return !!(window.EajiNative && window.EajiNative.isNative()); } catch (e) { return false; } })();
+const PUSH_SUPPORTED = EAJI_NATIVE || ('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && window.isSecureContext && location.protocol.startsWith('http'));
 
 function b64uToBytes(s) {
   const pad = '='.repeat((4 - (s.length % 4)) % 4);
@@ -13812,7 +13826,43 @@ async function pushRegistration() {
   const reg = await navigator.serviceWorker.register('sw.js');
   return navigator.serviceWorker.ready.then(() => reg);
 }
-function pushPermission() { return PUSH_SUPPORTED ? Notification.permission : 'unsupported'; }
+function pushPermission() {
+  if (EAJI_NATIVE) { try { return window.EajiNative.notificationsEnabled() ? 'granted' : 'denied'; } catch (e) { return 'granted'; } }
+  return PUSH_SUPPORTED ? Notification.permission : 'unsupported';
+}
+// Jeton Firebase du téléphone (application native) : tout de suite s'il est connu, sinon dès que l'application le donne.
+function nativeFcmToken() {
+  return new Promise((resolve) => {
+    let t = '';
+    try { t = String(window.EajiNative.fcmToken() || ''); } catch (e) {}
+    if (t) return resolve(t);
+    const on = (e) => { window.removeEventListener('eaji-fcm-token', on); resolve(String(e.detail || '')); };
+    window.addEventListener('eaji-fcm-token', on);
+    setTimeout(() => { window.removeEventListener('eaji-fcm-token', on); resolve(''); }, 8000);
+  });
+}
+// Application native : ce téléphone reçoit les notifications et les appels de ce compte (même Eaji fermé).
+async function enableNativePush(fromUser) {
+  if (pushPermission() !== 'granted') {
+    refreshPushUi();
+    if (fromUser) { try { window.EajiNative.openNotificationSettings(); } catch (e) {} } // réglages d'Eaji → Notifications
+    return false;
+  }
+  const token = await nativeFcmToken();
+  if (!token) { refreshPushUi(); if (fromUser) showToast(i18nT('Notifications pas encore prêtes : réessaie dans quelques secondes.')); return false; }
+  try {
+    await apiCall('/api/push/fcm-register', { method: 'POST', body: { token } });
+    refreshPushUi();
+    if (fromUser) { showToast('🔔 Notifications activées sur ce téléphone. Une notification de test arrive…'); apiCall('/api/push/test', { method: 'POST' }).catch(() => {}); }
+    return true;
+  } catch (e) {
+    refreshPushUi();
+    if (fromUser) showToast('Activation impossible : ' + (e.message || 'réessaie plus tard.'));
+    return false;
+  }
+}
+// Le jeton du téléphone a changé (ou vient d'arriver) : on le renvoie au serveur.
+window.addEventListener('eaji-fcm-token', () => { if (EAJI_NATIVE && CREATOR_TOKEN && !pushOff()) enableNativePush(false); });
 
 // « Désactiver » : ce téléphone ne reçoit plus les notifications (jusqu'à « Activer »).
 function pushOff() { try { return localStorage.getItem('eaji_push_off') === '1'; } catch (e) { return false; } }
@@ -13870,6 +13920,7 @@ async function enablePush(fromUser) {
   if (fromUser) { try { localStorage.removeItem('eaji_push_off'); } catch (e) {} }
   else if (pushOff()) { refreshPushUi(); return false; }
   if (!CREATOR_TOKEN || !PUSH_SUPPORTED) { refreshPushUi(); if (fromUser && !PUSH_SUPPORTED) showToast(document.getElementById('push-state')?.textContent || 'Notifications non disponibles ici.'); return false; }
+  if (EAJI_NATIVE) return enableNativePush(fromUser);
   try {
     if (Notification.permission === 'default' || (fromUser && Notification.permission === 'denied')) {
       if (!fromUser) return false;
@@ -13899,10 +13950,16 @@ async function enablePush(fromUser) {
 // À chaque ouverture : renvoie l'abonnement (il change parfois), sans redemander l'autorisation.
 function syncPush() {
   refreshPushUi();
-  if (PUSH_SUPPORTED && CREATOR_TOKEN && Notification.permission === 'granted') enablePush(false);
+  if (PUSH_SUPPORTED && CREATOR_TOKEN && pushPermission() === 'granted') enablePush(false);
 }
 async function disablePushForThisDevice() {
   if (!PUSH_SUPPORTED || !CREATOR_TOKEN) return;
+  if (EAJI_NATIVE) {
+    let t = '';
+    try { t = String(window.EajiNative.fcmToken() || ''); } catch (e) {}
+    if (t) await apiCall('/api/push/fcm-unregister', { method: 'POST', body: { token: t } }).catch(() => {});
+    return;
+  }
   try {
     const reg = await navigator.serviceWorker.getRegistration();
     const sub = reg && await reg.pushManager.getSubscription();
@@ -13928,21 +13985,25 @@ function openPendingLink() {
   history.replaceState(null, '', location.pathname);
   if (go) setTimeout(() => openNotification(go), 300);
 }
+// Application ouverte : on met à jour la cloche et la conversation, sans notification système.
+function onPushWhileOpen(d) {
+  const callKind = d.kind === 'appel' || d.kind === 'appel_fin' || d.kind === 'appel_stop';
+  if (!callKind && !pushOff()) notifPing();
+  loadNotifications();
+  if (d.kind === 'appel') checkIncomingCall(); // sonne tout de suite
+  if (d.kind === 'message') refreshUnread();
+  if (d.kind === 'message' && (dmContactId || CHAT_GROUP_ID)) renderDmThread(true);
+  else if (!callKind && d.body) showToast(`${d.title ? d.title + ' — ' : ''}${d.body}`);
+}
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', (e) => {
     const d = e.data || {};
     if (d.type === 'eaji-open' && d.link) openNotification(d.link);
-    if (d.type === 'eaji-push') {
-      // Application ouverte : on met à jour la cloche et la conversation, sans notification système.
-      if (d.kind !== 'appel' && d.kind !== 'appel_fin' && !pushOff()) notifPing();
-      loadNotifications();
-      if (d.kind === 'appel') checkIncomingCall(); // sonne tout de suite
-      if (d.kind === 'message') refreshUnread();
-      if (d.kind === 'message' && (dmContactId || CHAT_GROUP_ID)) renderDmThread(true);
-      else if (d.kind !== 'appel' && d.kind !== 'appel_fin' && d.body) showToast(`${d.title ? d.title + ' — ' : ''}${d.body}`);
-    }
+    if (d.type === 'eaji-push') onPushWhileOpen(d);
   });
 }
+// Application Android native : la notification arrivée pendant qu'Eaji est à l'écran est transmise ici.
+window.addEventListener('eaji-push', (e) => { if (e.detail) onPushWhileOpen(e.detail); });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshPushUi(); });
 // Petit son (deux notes) + vibration quand un message ou une notification arrive pendant qu'Eaji est ouvert.
 let PING_AC = null;
