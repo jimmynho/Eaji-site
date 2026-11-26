@@ -522,7 +522,11 @@ a.primary-btn.adv-wa{display:block;text-align:center;text-decoration:none;backgr
 .pub-ready-top b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;}
 .pub-go{border:none;border-radius:99px;background:#1B1E29;color:var(--gold);font-weight:800;font-size:15px;padding:10px 22px;cursor:pointer;}
 .pub-go:disabled{opacity:.5;}
-.pub-ready-media{border-radius:16px;overflow:hidden;background:#0c0d12;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.pub-ready-media{border-radius:16px;overflow:hidden;background:#0c0d12;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}
+.pub-prog{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:rgba(0,0,0,.55);color:#fff;pointer-events:none;}
+.pub-prog-clock{font-size:46px;line-height:1;}
+.pub-prog-pct{font-size:30px;font-weight:800;letter-spacing:.5px;}
+.pub-prog-txt{font-size:13px;opacity:.9;}
 .pub-ready-media video,.pub-ready-media img{display:block;width:100%;max-height:52vh;object-fit:contain;background:#000;}
 .pub-ready-media audio{width:100%;}
 .pub-ready-doc{font-size:64px;padding:18px;}
@@ -980,6 +984,10 @@ body.reel-on .toast{z-index:130;}
 .reel-info .reel-cap.open{display:block;-webkit-line-clamp:unset;max-height:45vh;overflow-y:auto;}
 .reel-info.open{background:linear-gradient(transparent,rgba(0,0,0,.85) 40px);padding-right:78px;} /* le texte ouvert ne passe pas sous les boutons ❤ 💬 */
 .reel-info .reel-more{pointer-events:auto;align-self:flex-start;background:none;border:none;color:#fff;font-weight:800;font-size:13px;padding:2px 0;cursor:pointer;}
+.reel-who{display:flex;align-items:center;gap:8px;pointer-events:auto;margin-bottom:2px;}
+.reel-who b{font-size:15px;cursor:pointer;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+.reel-av{width:36px;height:36px;border-radius:50%;flex:none;background:#2563EB center/cover no-repeat;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;cursor:pointer;}
+.reel-follow{font-size:12px !important;padding:5px 12px !important;margin:0 !important;}
 .reel-count{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;color:#fff;font-size:12px;background:rgba(0,0,0,.45);border-radius:99px;padding:4px 10px;}
 .reel-close{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px;z-index:2;width:40px;height:40px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:18px;cursor:pointer;}
 .reel-hint{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:13px;border-radius:99px;padding:8px 14px;pointer-events:none;white-space:nowrap;}
@@ -2355,7 +2363,7 @@ const PLAY_APP = (() => {
 })();
 if (PLAY_APP) document.documentElement.classList.add('play-store');
 // Numéro de version affiché dans le Profil (pour vérifier que le téléphone a bien la dernière version).
-const APP_VERSION = '2026.11.21b';
+const APP_VERSION = '2026.11.26a';
 
 // Logo « Eaji » : chaque lettre change de couleur au hasard pendant que l'appli est utilisée.
 const BRAND_COLORS = ['#E8304F', '#F07C1A', '#E0A100', '#7BC21F', '#1FAF8C', '#1E88E5', '#6C4CE0', '#C2187A', '#2B1D03', '#8A3F00'];
@@ -3283,24 +3291,75 @@ async function fileFingerprint(file) {
   } catch (e) { return null; }
 }
 
-async function sendFileToStorage(uploadInfo, file) {
+// Envoi du fichier avec suivi de l'avancement (onProgress reçoit 0 → 1).
+function xhrPut(url, headers, body, onProgress) {
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    x.open('PUT', url);
+    Object.entries(headers || {}).forEach(([k, v]) => x.setRequestHeader(k, v));
+    if (onProgress && x.upload) x.upload.onprogress = (e) => { if (e.lengthComputable && e.total) onProgress(e.loaded / e.total); };
+    x.onload = () => resolve({ ok: x.status >= 200 && x.status < 300, status: x.status, text: x.responseText });
+    x.onerror = () => reject(new TypeError('Failed to fetch'));
+    x.onabort = () => reject(new TypeError('Failed to fetch'));
+    x.send(body);
+  });
+}
+async function sendFileToStorage(uploadInfo, file, onProgress) {
   const type = file.type || 'application/octet-stream';
   try {
-    const direct = await fetch(uploadInfo.uploadUrl, { method: 'PUT', headers: { 'Content-Type': type }, body: file });
-    if (direct.ok) return;
+    const direct = await xhrPut(uploadInfo.uploadUrl, { 'Content-Type': type }, file, onProgress);
+    if (direct.ok) { if (onProgress) onProgress(1); return; }
   } catch (e) { /* envoi direct bloqué (réglage CORS) : on passe par le serveur */ }
+  if (onProgress) onProgress(0);
   let relay;
   try {
-    relay = await fetch(`${API_BASE_URL}/api/content/upload-proxy?key=${encodeURIComponent(uploadInfo.storageKey)}`, {
-      method: 'PUT', headers: { 'Content-Type': type, Authorization: `Bearer ${CREATOR_TOKEN}` }, body: file,
-    });
+    relay = await xhrPut(`${API_BASE_URL}/api/content/upload-proxy?key=${encodeURIComponent(uploadInfo.storageKey)}`,
+      { 'Content-Type': type, Authorization: `Bearer ${CREATOR_TOKEN}` }, file, onProgress);
   } catch (e) {
     throw new Error('Envoi interrompu. Vérifie ta connexion internet et réessaie.');
   }
   if (!relay.ok) {
-    const data = await relay.json().catch(() => ({}));
+    let data = {}; try { data = JSON.parse(relay.text || '{}'); } catch (e) {}
     throw new Error(data.error || 'Le stockage a refusé le fichier.');
   }
+  if (onProgress) onProgress(1);
+}
+// Pendant la publication : « 🕜 42 % » au milieu de la vidéo (l'horloge tourne), et sur le bouton.
+const PUB_CLOCKS = ['🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚', '🕛'];
+let PUB_PROG = null;
+function pubProgressStart() {
+  pubProgressStop();
+  const media = document.getElementById('pub-ready-media');
+  let box = null;
+  if (media && media.offsetParent !== null) {
+    box = document.createElement('div');
+    box.className = 'pub-prog';
+    box.innerHTML = '<span class="pub-prog-clock">🕐</span><b class="pub-prog-pct">0 %</b><small class="pub-prog-txt"></small>';
+    media.appendChild(box);
+  }
+  PUB_PROG = { box, pct: 0, i: 0, timer: setInterval(() => {
+    if (!PUB_PROG || !PUB_PROG.box) return;
+    PUB_PROG.i = (PUB_PROG.i + 1) % PUB_CLOCKS.length;
+    PUB_PROG.box.querySelector('.pub-prog-clock').textContent = PUB_CLOCKS[PUB_PROG.i];
+  }, 160) };
+}
+function pubProgressSet(pct, txt) {
+  if (!PUB_PROG) return;
+  pct = Math.max(PUB_PROG.pct, Math.min(100, Math.round(pct))); // n'avance jamais à reculons
+  PUB_PROG.pct = pct;
+  if (PUB_PROG.box) {
+    PUB_PROG.box.querySelector('.pub-prog-pct').textContent = `${pct} %`;
+    if (txt !== undefined) PUB_PROG.box.querySelector('.pub-prog-txt').textContent = txt;
+  }
+  const btn = document.getElementById('up-btn'); if (btn) btn.textContent = `🕜 ${i18nT('Publication…')} ${pct} %`;
+  const go = document.getElementById('pub-go'); if (go) go.textContent = `🕜 ${pct} %`;
+}
+function pubProgressStop() {
+  if (!PUB_PROG) return;
+  clearInterval(PUB_PROG.timer);
+  if (PUB_PROG.box) PUB_PROG.box.remove();
+  PUB_PROG = null;
+  const go = document.getElementById('pub-go'); if (go) go.textContent = i18nT('Publier');
 }
 
 // Envoi réel d'un fichier : 1) adresse temporaire, 2) envoi au stockage, 3) enregistrement.
@@ -3555,9 +3614,15 @@ async function uploadContentOnce() {
     importedFrom: IMPORTED ? IMPORTED.url : null, fingerprint, sourceFingerprint,
     lyrics: ['musique', 'podcast', 'audio'].includes(contentType) ? (document.getElementById('up-lyrics').value || '').trim() || undefined : undefined };
   btn.textContent = 'Envoi en cours…';
+  pubProgressStart();
+  pubProgressSet(3, i18nT('Préparation…'));
   try {
     let d3;
-    try { if (offline) throw offlineError(); d3 = await sendMediaPost(params, file); }
+    try { if (offline) throw offlineError(); d3 = await sendMediaPost(params, file, (step, f) => {
+      // 3 % préparation · 5 → 90 % envoi du fichier · 90 → 100 % enregistrement
+      if (step === 'upload') pubProgressSet(5 + f * 85, i18nT('Envoi de la vidéo…'));
+      else if (step === 'save') pubProgressSet(92, i18nT('Enregistrement…'));
+    }); pubProgressSet(100, i18nT('Publié !')); }
     catch (e) {
       if (!isOfflineErr(e)) throw e;
       // Pas d'Internet : la publication (avec son fichier) attend sur le téléphone et sera publiée toute seule.
@@ -3582,6 +3647,7 @@ async function uploadContentOnce() {
       : e.message;
     errorEl.style.display = 'block';
   } finally {
+    pubProgressStop();
     btn.disabled = false;
     btn.textContent = 'Publier';
   }
@@ -3595,7 +3661,7 @@ function resetUploadForm() {
   EDITED = null; PENDING_SOUND = null; IMPORTED = null; refreshEditButton();
 }
 // Envoi d'une publication avec fichier (photo, vidéo, musique…) : utilisé tout de suite, ou plus tard pour une publication en attente.
-async function sendMediaPost(p, file) {
+async function sendMediaPost(p, file, onStep) {
   const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CREATOR_TOKEN}` };
   const net = async (f) => { try { return await f(); } catch (e) { throw isOfflineErr(e) ? offlineError() : e; } };
   const r1 = await net(() => fetch(`${API_BASE_URL}/api/content/upload-url`, {
@@ -3604,7 +3670,8 @@ async function sendMediaPost(p, file) {
   }));
   const d1 = await r1.json();
   if (!r1.ok) { const e = new Error(d1.error || 'Envoi refusé.'); e.status = r1.status; throw e; }
-  await net(() => sendFileToStorage(d1, file));
+  await net(() => sendFileToStorage(d1, file, onStep ? (f) => onStep('upload', f) : null));
+  if (onStep) onStep('save');
   // Image d'aperçu pour les liens partagés (ne bloque jamais la publication).
   const thumbKind = thumbKindOf(p.contentType, file);
   const thumb = thumbKind ? await prepareThumb(thumbKind, { file }) : null;
@@ -14041,9 +14108,13 @@ function collectReelVideos(fromVideo) {
         likes: parseInt(q('.like-count')?.textContent) || 0,
         comments: parseInt(q('.comment-count')?.textContent) || 0,
         fav: !!q('.save-btn[data-kind="favori"].on'), later: !!q('.save-btn[data-kind="plus_tard"].on'),
-        mine: !q('.follow-btn') && !!CREATOR_ID };
+        mine: !q('.follow-btn') && !!CREATOR_ID,
+        creatorId: (/openCreatorProfile\('([^']+)'\)/.exec(q('.feed-creator')?.getAttribute('onclick') || '') || [])[1] || null,
+        photo: (/url\('([^']+)'\)/.exec(q('.feed-avatar')?.getAttribute('style') || '') || [])[1] || '' };
     });
 }
+// Plein écran : toucher le nom ou la photo ouvre le profil du créateur.
+function reelOpenCreator(id) { if (!id) return; closeReel(); setTimeout(() => openCreatorProfile(id), 150); }
 function openReel(fromVideo) {
   if (!fromVideo || REEL) return;
   const list = collectReelVideos(fromVideo);
@@ -14056,7 +14127,7 @@ function openReel(fromVideo) {
   box.innerHTML = list.map((x, i) => `
     <div class="reel-slide" data-i="${i}" data-cid="${escapeHtml(x.id || '')}">
       <video playsinline preload="${Math.abs(i - start) <= 1 ? 'auto' : 'none'}" src="${escapeHtml(x.src)}"></video>
-      <div class="reel-info"><b translate="no">${escapeHtml(x.creator)}</b><span class="reel-cap" translate="no" onclick="event.stopPropagation();reelMore(this.nextElementSibling)">${escapeHtml(x.title)}</span><button class="reel-more" style="display:none;" onclick="event.stopPropagation();reelMore(this)">${escapeHtml(i18nT('Voir plus'))}</button>${x.repostId ? `<small>🔁 ${escapeHtml(i18nT('Republication'))}</small>` : ''}</div>
+      <div class="reel-info"><div class="reel-who">${x.creatorId ? `<span class="reel-av" onclick="event.stopPropagation();reelOpenCreator('${escapeHtml(x.creatorId)}')" ${x.photo ? `style="background-image:url('${escapeHtml(x.photo)}');color:transparent;"` : ''}>${escapeHtml((x.creator || '?')[0].toUpperCase())}</span>` : ''}<b translate="no" onclick="event.stopPropagation();reelOpenCreator('${escapeHtml(x.creatorId || '')}')">${escapeHtml(x.creator)}</b>${x.creatorId && !x.mine && CREATOR_ID !== x.creatorId ? `<span onclick="event.stopPropagation()"><button class="follow-btn add-btn reel-follow${followingSet.has(x.creatorId) ? ' following' : ''}" onclick="toggleFollow('${escapeHtml(x.creatorId)}', this)">${escapeHtml(i18nT(followingSet.has(x.creatorId) ? 'Suivi' : 'Ajouter'))}</button></span>` : ''}</div><span class="reel-cap" translate="no" onclick="event.stopPropagation();reelMore(this.nextElementSibling)">${escapeHtml(x.title)}</span><button class="reel-more" style="display:none;" onclick="event.stopPropagation();reelMore(this)">${escapeHtml(i18nT('Voir plus'))}</button>${x.repostId ? `<small>🔁 ${escapeHtml(i18nT('Republication'))}</small>` : ''}</div>
       <div class="reel-count">${i + 1} / ${list.length}</div>
       ${x.id ? `<div class="reel-actions">
         <button class="reel-act${x.liked ? ' on' : ''}" data-kind="like" onclick="reelLike(${i}, this)"><span class="ic">❤</span><span class="n">${escapeHtml(kfmt(x.likes))}</span></button>
@@ -14228,6 +14299,88 @@ async function reelPostComment() {
 }
 // Bouton « retour » du téléphone : ferme le plein écran au lieu de quitter Eaji.
 window.addEventListener('popstate', () => { if (REEL) closeReel(true); });
+// ==== Bouton « Retour » du téléphone : il revient en arrière dans Eaji au lieu de fermer l'application ====
+// Une étape « garde » est toujours placée dans l'historique : « Retour » la consomme, Eaji ferme ce qui est ouvert
+// (fenêtre, conversation, profil…) ou revient à l'onglet précédent, puis remet la garde.
+// Sur Découvrir, sans rien d'ouvert : « Appuie encore sur Retour pour quitter » ; un deuxième appui ferme Eaji.
+const TAB_BACK = [];
+let TAB_BACK_SKIP = false;
+document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
+  const cur = document.querySelector('.tab.active');
+  if (!TAB_BACK_SKIP && cur && cur !== t && cur.dataset.target) { TAB_BACK.push(cur.dataset.target); if (TAB_BACK.length > 20) TAB_BACK.shift(); }
+}, true));
+function backVisible(el) {
+  if (!el) return false;
+  const cs = getComputedStyle(el);
+  return cs.display !== 'none' && cs.visibility !== 'hidden' && (el.offsetWidth > 0 || el.offsetHeight > 0);
+}
+function backById(id) { return backVisible(document.getElementById(id)); }
+function eajiBack() {
+  // Appel en cours : on ne raccroche jamais avec « Retour »
+  if (backById('call-overlay') || backById('gcall')) { showToast(i18nT('Appel en cours : touche le bouton rouge pour raccrocher.')); return true; }
+  // Live : celui qui fait le live le termine avec son bouton ; un spectateur le quitte
+  if (typeof LIVE !== 'undefined' && LIVE) {
+    if (LIVE.role === 'host') { showToast(i18nT('Touche « Terminer » pour arrêter ton live.')); return true; }
+    closeLive(); return true;
+  }
+  if (typeof CAM !== 'undefined' && CAM && backById('cam-overlay')) { closeCamera(); return true; }
+  if (typeof EDITOR !== 'undefined' && EDITOR && backById('ed-overlay')) { closeEditor(); return true; }
+  if (backById('cl-overlay') && typeof closeCollage === 'function') { closeCollage(); return true; }
+  if (backById('reel-cm')) { closeReelComments(); return true; }
+  if (backById('st-view') && typeof closeStatusViewer === 'function') { closeStatusViewer(); return true; }
+  const cp = document.getElementById('cpick'); if (cp && cp.classList.contains('open')) { closeCountryPicker(); return true; }
+  const lt = document.getElementById('live-type-sheet'); if (lt && lt.classList.contains('open')) { closeLiveTypes(); return true; }
+  // Fenêtres qui se ferment en touchant à côté : la plus haute d'abord
+  const sheets = [...document.querySelectorAll('[onclick*="event.target === this"]')].filter(backVisible);
+  if (sheets.length) {
+    sheets.sort((a, b) => (parseInt(getComputedStyle(b).zIndex) || 0) - (parseInt(getComputedStyle(a).zIndex) || 0));
+    const top = sheets[0];
+    try { top.onclick.call(top, { target: top, currentTarget: top, stopPropagation() {}, preventDefault() {} }); } catch (e) { top.style.display = 'none'; }
+    if (!backVisible(top)) return true;
+  }
+  const simple = [['msg-menu', closeMsgMenu], ['picker', closePicker], ['ginfo', closeGroupInfo], ['sup-overlay', closeSupport],
+    ['shared-view', closeSharedContent], ['st-new', closeStatusComposer], ['share-sheet', closeShareSheet], ['se-sheet', closeShareEaji]];
+  for (const [id, fn] of simple) if (backById(id) && typeof fn === 'function') { fn(); return true; }
+  if (backById('notif-panel')) { document.getElementById('notif-panel').style.display = 'none'; return true; }
+  if (backById('app-menu')) { document.getElementById('app-menu').style.display = 'none'; return true; }
+  if (document.body.classList.contains('search-open')) { searchClose(); return true; }
+  // Connexion : de l'étape du code à l'étape précédente
+  if (backById('login-screen') && backById('login-step-2fa')) { backToLogin(); return true; }
+  if (backById('login-screen') && backById('login-step-forgot')) { backToLogin(); return true; }
+  // Dans les onglets
+  if (backById('dm-thread-view')) { closeConversation(); return true; }
+  const active = document.querySelector('.screen.active');
+  if (active && active.id === 's-creator') { closeCreatorProfile(); return true; }
+  if (active && active.id === 's-contenu' && backById('pub-form')) { pubBack(); return true; }
+  if (typeof TAG_VIEW !== 'undefined' && TAG_VIEW) { closeHashtag(); return true; }
+  if (!backById('app-shell')) return false; // pas encore connecté : rien d'autre
+  // Sur Découvrir (l'accueil) : rien de plus, c'est la porte de sortie. Ailleurs : onglet précédent, sinon Découvrir.
+  if (!active || active.id === 's-decouvrir') { TAB_BACK.length = 0; return false; }
+  let prev = null;
+  while (TAB_BACK.length && !prev) { const p = TAB_BACK.pop(); if (!active || p !== active.id) prev = p; }
+  if (!prev && active && active.id !== 's-decouvrir') prev = 's-decouvrir';
+  if (prev) {
+    const tab = document.querySelector(`.tab[data-target="${prev}"]`);
+    if (tab) { TAB_BACK_SKIP = true; tab.click(); TAB_BACK_SKIP = false; return true; }
+  }
+  return false; // Découvrir, rien d'ouvert
+}
+let BACK_EXIT_AT = 0;
+function backArm() { try { if (!(history.state && history.state.eajiGuard)) history.pushState({ eajiGuard: 1 }, ''); } catch (e) {} }
+window.addEventListener('popstate', (e) => {
+  const st = e.state || {};
+  // Retour depuis le plein écran, un document ou une photo : déjà géré par eux (on retombe sur la garde).
+  if (st.eajiGuard || st.reel || st.dv || st.pv) return;
+  if (eajiBack()) { BACK_EXIT_AT = 0; backArm(); return; }
+  if (Date.now() - BACK_EXIT_AT < 2500) return; // deuxième appui : on laisse Eaji se fermer
+  BACK_EXIT_AT = Date.now();
+  showToast(i18nT('Appuie encore sur Retour pour quitter Eaji.'));
+  setTimeout(() => { if (Date.now() - BACK_EXIT_AT >= 2400) backArm(); }, 2500);
+});
+// Mise en place de la garde au démarrage (après les nettoyages d'adresse du démarrage).
+setTimeout(() => {
+  try { if (!history.state || !history.state.eajiGuard) { history.replaceState({ ...(history.state || {}), eajiRoot: 1 }, ''); history.pushState({ eajiGuard: 1 }, ''); } } catch (e) {}
+}, 1500);
 document.addEventListener('keydown', (e) => {
   if (!REEL) return;
   if (e.key === 'Escape') closeReel();
